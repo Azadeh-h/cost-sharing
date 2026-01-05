@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:CostSharingApp.ViewModels.Groups"
+             x:Class="CostSharingApp.Views.Groups.GroupDetailsPage"
+             Title="{Binding Title}">
+
+    <ContentPage.BindingContext>
+        <vm:GroupDetailsViewModel />
+    </ContentPage.BindingContext>
+
+    <ScrollView Padding="16">
+        <VerticalStackLayout Spacing="16">
+            <!-- Error message -->
+            <Label Text="{Binding ErrorMessage}"
+                   TextColor="Red"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource StringIsNotNullOrEmptyConverter}}" />
+
+            <!-- Group info -->
+            <Frame BorderColor="{StaticResource Primary}" Padding="16" CornerRadius="8">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="{Binding Group.Name}"
+                           FontSize="24"
+                           FontAttributes="Bold" />
+                    <Label Text="{Binding Group.Currency}"
+                           TextColor="{StaticResource Gray600}"
+                           FontSize="16" />
+                    <Label Text="{Binding Group.CreatedAt, StringFormat='Created: {0:MMM dd, yyyy}'}"
+                           TextColor="{StaticResource Gray500}"
+                           FontSize="14" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Admin actions -->
+            <StackLayout Spacing="8" IsVisible="{Binding IsAdmin}">
+                <Label Text="Admin Actions" FontSize="18" FontAttributes="Bold" />
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                    <Button Grid.Column="0"
+                            Text="Edit Group"
+                            Command="{Binding EditGroupCommand}"
+                            BackgroundColor="{StaticResource Secondary}"
+                            TextColor="{StaticResource SecondaryDarkText}" />
+                    <Button Grid.Column="1"
+                            Text="Delete Group"
+                            Command="{Binding DeleteGroupCommand}"
+                            BackgroundColor="#D32F2F"
+                            TextColor="White" />
+                </Grid>
+            </StackLayout>
+
+            <!-- Members section -->
+            <Label Text="Members" FontSize="18" FontAttributes="Bold" Margin="0,8,0,0" />
+
+            <CollectionView ItemsSource="{Binding Members}">
+                <CollectionView.EmptyView>
+                    <Label Text="No members yet"
+                           TextColor="{StaticResource Gray500}"
+                           HorizontalTextAlignment="Center"
+                           Margin="0,16,0,0" />
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame Margin="0,0,0,8" Padding="12" CornerRadius="8">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <Label Grid.Column="0"
+                                       Text="👤"
+                                       FontSize="24"
+                                       VerticalOptions="Center"
+                                       Margin="0,0,12,0" />
+                                <StackLayout Grid.Column="1" VerticalOptions="Center">
+                                    <Label Text="{Binding UserId, StringFormat='User ID: {0}'}"
+                                           FontSize="14"
+                                           FontAttributes="Bold" />
+                                    <Label Text="{Binding JoinedAt, StringFormat='Joined: {0:MMM dd, yyyy}'}"
+                                           TextColor="{StaticResource Gray500}"
+                                           FontSize="12" />
+                                </StackLayout>
+                                <Frame Grid.Column="2"
+                                       Padding="8,4"
+                                       CornerRadius="4"
+                                       BackgroundColor="{StaticResource Primary}"
+                                       VerticalOptions="Center"
+                                       IsVisible="{Binding Role, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Admin}">
+                                    <Label Text="Admin"
+                                           TextColor="White"
+                                           FontSize="12"
+                                           FontAttributes="Bold" />
+                                </Frame>
+                            </Grid>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Invite member button -->
+            <Button Text="Invite Member"
+                    Command="{Binding InviteMemberCommand}"
+                    IsVisible="{Binding IsAdmin}"
+                    Margin="0,8,0,0" />
+
+            <!-- Loading indicator -->
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                              IsVisible="{Binding IsBusy}"
+                              Color="{StaticResource Primary}"
+                              HorizontalOptions="Center"
+                              Margin="0,16,0,0" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

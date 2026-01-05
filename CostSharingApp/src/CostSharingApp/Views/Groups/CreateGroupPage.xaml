@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:CostSharingApp.ViewModels.Groups"
+             x:Class="CostSharingApp.Views.Groups.CreateGroupPage"
+             Title="{Binding Title}">
+
+    <ContentPage.BindingContext>
+        <vm:CreateGroupViewModel />
+    </ContentPage.BindingContext>
+
+    <ScrollView Padding="16">
+        <VerticalStackLayout Spacing="16">
+            <!-- Error message -->
+            <Label Text="{Binding ErrorMessage}"
+                   TextColor="Red"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource StringIsNotNullOrEmptyConverter}}" />
+
+            <!-- Instructions -->
+            <Label Text="Create a new cost-sharing group"
+                   FontSize="18"
+                   FontAttributes="Bold" />
+
+            <Label Text="Group members can add expenses, split costs, and track balances together."
+                   TextColor="{StaticResource Gray600}"
+                   FontSize="14" />
+
+            <!-- Group name input -->
+            <Label Text="Group Name" FontAttributes="Bold" />
+            <Entry Text="{Binding GroupName}"
+                   Placeholder="e.g., Weekend Trip, Roommates, Team Lunch"
+                   MaxLength="100"
+                   ReturnType="Done" />
+
+            <Label Text="{Binding GroupName.Length, StringFormat='{0}/100 characters'}"
+                   TextColor="{StaticResource Gray500}"
+                   FontSize="12"
+                   HorizontalTextAlignment="End" />
+
+            <!-- Currency info -->
+            <Frame BorderColor="{StaticResource Gray300}" Padding="12" CornerRadius="8">
+                <HorizontalStackLayout Spacing="8">
+                    <Label Text="💰" FontSize="20" />
+                    <Label Text="Currency: AUD (Australian Dollar)"
+                           VerticalOptions="Center"
+                           TextColor="{StaticResource Gray600}" />
+                </HorizontalStackLayout>
+            </Frame>
+
+            <!-- Action buttons -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" Margin="0,16,0,0">
+                <Button Grid.Column="0"
+                        Text="Cancel"
+                        Command="{Binding CancelCommand}"
+                        BackgroundColor="{StaticResource Gray300}"
+                        TextColor="{StaticResource Gray900}" />
+
+                <Button Grid.Column="1"
+                        Text="Create"
+                        Command="{Binding CreateCommand}"
+                        IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />
+            </Grid>
+
+            <!-- Loading indicator -->
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                              IsVisible="{Binding IsBusy}"
+                              Color="{StaticResource Primary}"
+                              HorizontalOptions="Center" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
