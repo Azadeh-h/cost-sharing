@@ -47,6 +47,8 @@ public partial class AddExpenseViewModel : BaseViewModel, IQueryAttributable
     [ObservableProperty]
     private string errorMessage = string.Empty;
 
+    private Dictionary<Guid, decimal>? customPercentages;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="AddExpenseViewModel"/> class.
     /// </summary>
@@ -74,6 +76,12 @@ public partial class AddExpenseViewModel : BaseViewModel, IQueryAttributable
             this.GroupId = Guid.Parse(groupIdStr);
             _ = this.LoadMembersAsync();
         }
+
+        // Receive custom percentages from CustomSplitPage
+        if (query.TryGetValue("customPercentages", out var percentagesObj) && percentagesObj is Dictionary<Guid, decimal> percentages)
+        {
+            this.customPercentages = percentages;
+        }
     }
 
     /// <summary>
@@ -86,6 +94,31 @@ public partial class AddExpenseViewModel : BaseViewModel, IQueryAttributable
         {
             member.IsSelected = true;
         }
+    }
+
+    /// <summary>
+    /// Navigate to custom split page command.
+    /// </summary>
+    [RelayCommand]
+    private async Task ConfigureCustomSplitAsync()
+    {
+        // Validation
+        if (!decimal.TryParse(this.Amount, out var amountValue) || amountValue <= 0)
+        {
+            this.ErrorMessage = "Please enter a valid amount first";
+            return;
+        }
+
+        var selectedMembers = this.Members.Where(m => m.IsSelected).ToList();
+        if (selectedMembers.Count == 0)
+        {
+            this.ErrorMessage = "Please select at least one member";
+            return;
+        }
+
+        // Navigate to custom split page
+        var memberIdsStr = string.Join(",", selectedMembers.Select(m => m.UserId));
+        await Shell.Current.GoToAsync($"customsplit?amount={amountValue}&memberIds={memberIdsStr}");
     }
 
     /// <summary>
@@ -139,7 +172,23 @@ public partial class AddExpenseViewModel : BaseViewModel, IQueryAttributable
 
             // Calculate splits
             var participantIds = selectedMembers.Select(m => m.UserId).ToList();
-            var splits = this.splitCalculationService.CalculateEvenSplit(amountValue, participantIds);
+            List<ExpenseSplit> splits;
+
+            if (this.IsEvenSplit)
+            {
+                splits = this.splitCalculationService.CalculateEvenSplit(amountValue, participantIds);
+            }
+            else
+            {
+                // Use custom percentages
+                if (this.customPercentages == null || this.customPercentages.Count == 0)
+                {
+                    this.ErrorMessage = "Please configure custom split percentages";
+                    return;
+                }
+
+                splits = this.splitCalculationService.CalculateCustomSplit(amountValue, this.customPercentages);
+            }
 
             // Save expense
             var success = await this.expenseService.CreateExpenseAsync(expense, splits);

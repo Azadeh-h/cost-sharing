@@ -156,15 +156,15 @@ Based on plan.md, the project structure is:
 
 ### Implementation for User Story 4
 
-- [ ] T068 [P] [US4] Create CustomSplitPage XAML in CostSharingApp/Views/Expenses/CustomSplitPage.xaml (list members with percentage input fields)
-- [ ] T069 [P] [US4] Create CustomSplitViewModel in CostSharingApp/ViewModels/Expenses/CustomSplitViewModel.cs
-- [ ] T070 [US4] Implement custom split calculation in CostSharing.Core/Services/SplitCalculationService.cs (percentage validation, amount calculation)
-- [ ] T071 [US4] Add percentage validation: sum must equal 100%, display error if not
-- [ ] T072 [US4] Implement percentage-to-amount conversion with proper rounding (2 decimal places, extra penny to first member)
-- [ ] T073 [US4] Add 0% exclusion logic (member with 0% is not included in expense splits)
-- [ ] T074 [US4] Update ExpenseDetailsPage to show percentage breakdown for custom split expenses
-- [ ] T075 [US4] Add navigation from AddExpensePage to CustomSplitPage when "Custom" split type selected
-- [ ] T076 [US4] Implement real-time percentage sum display in CustomSplitPage (shows running total as user types)
+- [X] T068 [P] [US4] Create CustomSplitPage XAML in CostSharingApp/Views/Expenses/CustomSplitPage.xaml (list members with percentage input fields)
+- [X] T069 [P] [US4] Create CustomSplitViewModel in CostSharingApp/ViewModels/Expenses/CustomSplitViewModel.cs
+- [X] T070 [US4] Implement custom split calculation in CostSharing.Core/Services/SplitCalculationService.cs (percentage validation, amount calculation)
+- [X] T071 [US4] Add percentage validation: sum must equal 100%, display error if not
+- [X] T072 [US4] Implement percentage-to-amount conversion with proper rounding (2 decimal places, extra penny to first member)
+- [X] T073 [US4] Add 0% exclusion logic (member with 0% is not included in expense splits)
+- [X] T074 [US4] Update ExpenseDetailsPage to show percentage breakdown for custom split expenses
+- [X] T075 [US4] Add navigation from AddExpensePage to CustomSplitPage when "Custom" split type selected
+- [X] T076 [US4] Implement real-time percentage sum display in CustomSplitPage (shows running total as user types)
 
 **Checkpoint**: At this point, custom percentage splitting should work alongside even splitting
 

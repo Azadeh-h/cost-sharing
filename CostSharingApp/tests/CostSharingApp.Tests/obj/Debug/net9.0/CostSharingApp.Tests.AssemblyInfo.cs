@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CostSharingApp.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0276883ac52c64da600785993527e39df7a7614d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+332d02d0e7a7513cfc506408a1beceb3177799cb")]
 [assembly: System.Reflection.AssemblyProductAttribute("CostSharingApp.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CostSharingApp.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
