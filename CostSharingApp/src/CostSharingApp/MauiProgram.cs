@@ -36,6 +36,19 @@ public static class MauiProgram
 		services.AddSingleton<IErrorService, ErrorService>();
 		services.AddSingleton<IAuthService, AuthService>();
 
+		// Phase 3: US1 - Group Services
+		services.AddSingleton<IGroupService, GroupService>();
+
+		// Phase 3: US1 - ViewModels
+		services.AddTransient<ViewModels.Groups.GroupListViewModel>();
+		services.AddTransient<ViewModels.Groups.CreateGroupViewModel>();
+		services.AddTransient<ViewModels.Groups.GroupDetailsViewModel>();
+
+		// Phase 3: US1 - Pages
+		services.AddTransient<Views.Groups.GroupListPage>();
+		services.AddTransient<Views.Groups.CreateGroupPage>();
+		services.AddTransient<Views.Groups.GroupDetailsPage>();
+
 		// Initialize cache on startup
 		var serviceProvider = services.BuildServiceProvider();
 		var cacheService = serviceProvider.GetRequiredService<ICacheService>();

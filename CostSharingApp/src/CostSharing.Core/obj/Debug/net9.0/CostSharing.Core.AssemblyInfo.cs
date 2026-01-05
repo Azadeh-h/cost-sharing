@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CostSharing.Core")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0276883ac52c64da600785993527e39df7a7614d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+edaa239567db24821b2aeb23ba3df7ef7f7ea22e")]
 [assembly: System.Reflection.AssemblyProductAttribute("CostSharing.Core")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CostSharing.Core")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

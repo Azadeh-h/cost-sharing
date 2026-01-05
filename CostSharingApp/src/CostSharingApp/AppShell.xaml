@@ -14,7 +14,7 @@
     <FlyoutItem Title="Groups" Icon="icon_groups.png">
         <ShellContent
             Title="My Groups"
-            ContentTemplate="{DataTemplate local:MainPage}"
+            ContentTemplate="{DataTemplate local:Views.Groups.GroupListPage}"
             Route="groups" />
     </FlyoutItem>
 

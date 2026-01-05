@@ -13,6 +13,9 @@ public partial class AppShell : Shell
         this.InitializeComponent();
 
         // Register routes for navigation
-        // Additional routes will be registered here as pages are implemented
+        Routing.RegisterRoute("creategroup", typeof(Views.Groups.CreateGroupPage));
+        Routing.RegisterRoute("groupdetails", typeof(Views.Groups.GroupDetailsPage));
+        Routing.RegisterRoute("editgroup", typeof(Views.Groups.CreateGroupPage));
+        Routing.RegisterRoute("invitemember", typeof(Views.Members.InviteMemberPage));
     }
 }

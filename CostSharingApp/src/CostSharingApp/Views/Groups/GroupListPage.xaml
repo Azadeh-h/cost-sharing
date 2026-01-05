@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:CostSharingApp.ViewModels.Groups"
+             x:Class="CostSharingApp.Views.Groups.GroupListPage"
+             Title="{Binding Title}">
+
+    <ContentPage.BindingContext>
+        <vm:GroupListViewModel />
+    </ContentPage.BindingContext>
+
+    <Grid RowDefinitions="Auto,*" Padding="16">
+        <!-- Error message -->
+        <Label Grid.Row="0"
+               Text="{Binding ErrorMessage}"
+               TextColor="Red"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource StringIsNotNullOrEmptyConverter}}"
+               Margin="0,0,0,8" />
+
+        <!-- Groups list -->
+        <RefreshView Grid.Row="1"
+                     IsRefreshing="{Binding IsBusy}"
+                     Command="{Binding LoadGroupsCommand}">
+            <CollectionView ItemsSource="{Binding Groups}"
+                            SelectionMode="Single"
+                            SelectionChangedCommand="{Binding SelectGroupCommand}"
+                            SelectionChangedCommandParameter="{Binding SelectedItem, Source={RelativeSource Self}}">
+                <CollectionView.EmptyView>
+                    <StackLayout Padding="20" VerticalOptions="Center">
+                        <Label Text="No groups yet"
+                               FontSize="20"
+                               FontAttributes="Bold"
+                               HorizontalTextAlignment="Center"
+                               Margin="0,0,0,8" />
+                        <Label Text="Create your first group to start sharing costs"
+                               HorizontalTextAlignment="Center"
+                               TextColor="{StaticResource Gray500}" />
+                    </StackLayout>
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame Margin="0,0,0,8" Padding="12" CornerRadius="8" HasShadow="True">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <StackLayout Grid.Column="0">
+                                    <Label Text="{Binding Name}"
+                                           FontSize="18"
+                                           FontAttributes="Bold" />
+                                    <Label Text="{Binding Currency}"
+                                           TextColor="{StaticResource Gray600}"
+                                           FontSize="14" />
+                                    <Label Text="{Binding UpdatedAt, StringFormat='Updated: {0:MMM dd, yyyy}'}"
+                                           TextColor="{StaticResource Gray500}"
+                                           FontSize="12" />
+                                </StackLayout>
+                                <Image Grid.Column="1"
+                                       Source="chevron_right.png"
+                                       WidthRequest="24"
+                                       HeightRequest="24"
+                                       VerticalOptions="Center" />
+                            </Grid>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+
+        <!-- Create group button -->
+        <Button Grid.Row="1"
+                Text="Create Group"
+                Command="{Binding CreateGroupCommand}"
+                VerticalOptions="End"
+                HorizontalOptions="Center"
+                Margin="0,0,0,16"
+                WidthRequest="200" />
+    </Grid>
+</ContentPage>
