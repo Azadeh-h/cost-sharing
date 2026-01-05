@@ -1,0 +1,64 @@
+# Build outputs
+**/bin/
+**/obj/
+**/output/
+
+# User-specific files
+**/*.user
+**/*.suo
+**/*.userosscache
+**/*.sln.docstates
+
+# Build results
+**/[Dd]ebug/
+**/[Dd]ebugPublic/
+**/[Rr]elease/
+**/[Rr]eleases/
+**/x64/
+**/x86/
+**/[Ww][Ii][Nn]32/
+**/[Aa][Rr][Mm]/
+**/[Aa][Rr][Mm]64/
+**/bld/
+**/[Bb]in/
+**/[Oo]bj/
+**/[Ll]og/
+**/[Ll]ogs/
+
+# Visual Studio cache/options directory
+**/.vs/
+**/.vscode/
+
+# Mac files
+**/.DS_Store
+**/._*
+
+# NuGet packages
+**/*.nupkg
+**/*.snupkg
+**/packages/
+**/.nuget/
+
+# Test results
+**/[Tt]est[Rr]esult*/
+**/[Bb]uild[Ll]og.*
+
+# Android
+**/[Aa]ndroid/obj/
+**/[Aa]ndroid/bin/
+
+# iOS
+**/iOS/obj/
+**/iOS/bin/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+**/docs/
+README.md
+
+# CI/CD
+.github/
