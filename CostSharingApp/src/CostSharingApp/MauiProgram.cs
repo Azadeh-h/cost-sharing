@@ -39,11 +39,23 @@ public static class MauiProgram
 		// Phase 3: US1 - Group Services
 		services.AddSingleton<IGroupService, GroupService>();
 
+		// Phase 4: US2 - Invitation Services
+		services.AddSingleton<INotificationService, NotificationService>();
+		services.AddSingleton<IInvitationService, InvitationService>();
+
 		// Phase 3: US1 - ViewModels
 		services.AddTransient<ViewModels.Groups.GroupListViewModel>();
 		services.AddTransient<ViewModels.Groups.CreateGroupViewModel>();
 		services.AddTransient<ViewModels.Groups.GroupDetailsViewModel>();
 
+		// Phase 4: US2 - ViewModels
+		services.AddTransient<ViewModels.Members.InviteMemberViewModel>();
+		services.AddTransient<ViewModels.Members.AcceptInvitationViewModel>();
+
+
+		// Phase 4: US2 - Pages
+		services.AddTransient<Views.Members.InviteMemberPage>();
+		services.AddTransient<Views.Members.AcceptInvitationPage>();
 		// Phase 3: US1 - Pages
 		services.AddTransient<Views.Groups.GroupListPage>();
 		services.AddTransient<Views.Groups.CreateGroupPage>();

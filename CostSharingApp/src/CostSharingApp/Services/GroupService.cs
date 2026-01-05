@@ -246,8 +246,61 @@ public class GroupService : IGroupService
             return new List<GroupMember>();
         }
     }
+
+    /// <summary>
+    /// Removes a member from a group (admin only).
+    /// </summary>
+    /// <param name="groupId">Group ID.</param>
+    /// <param name="userId">User ID to remove.</param>
+    /// <returns>True if successful.</returns>
+    public async Task<bool> RemoveMemberAsync(Guid groupId, Guid userId)
+    {
+        try
+        {
+            var currentUser = this.authService.GetCurrentUser();
+            if (currentUser == null)
+            {
+                return false;
+            }
+
+            // Check if current user is admin
+            var members = await this.GetGroupMembersAsync(groupId);
+            var currentUserMembership = members.FirstOrDefault(m => m.UserId == currentUser.Id);
+            if (currentUserMembership == null || currentUserMembership.Role != GroupRole.Admin)
+            {
+                this.loggingService.LogWarning($"User {currentUser.Id} not authorized to remove members from group {groupId}");
+                return false;
+            }
+
+            // Find member to remove
+            var memberToRemove = members.FirstOrDefault(m => m.UserId == userId);
+            if (memberToRemove == null)
+            {
+                return false;
+            }
+
+            // Delete member
+            await this.cacheService.DeleteAsync(memberToRemove);
+
+            this.loggingService.LogInfo($"User {userId} removed from group {groupId}");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            this.loggingService.LogError("Failed to remove member", ex);
+            return false;
+        }
+    }
 }
 
+
+    /// <summary>
+    /// Removes a member from a group.
+    /// </summary>
+    /// <param name="groupId">Group ID.</param>
+    /// <param name="userId">User ID to remove.</param>
+    /// <returns>True if successful.</returns>
+    Task<bool> RemoveMemberAsync(Guid groupId, Guid userId);
 /// <summary>
 /// Interface for group service.
 /// </summary>
