@@ -1,0 +1,1107 @@
+openapi: 3.0.3
+info:
+  title: Cost-Sharing API
+  description: REST API for collaborative cost-sharing and expense tracking
+  version: 1.0.0
+  contact:
+    name: CostSharing Support
+servers:
+  - url: https://api.costsharing.app/v1
+    description: Production server
+  - url: http://localhost:5000/v1
+    description: Local development server
+
+tags:
+  - name: Auth
+    description: Authentication and user management
+  - name: Groups
+    description: Group creation and management
+  - name: Members
+    description: Group member operations
+  - name: Invitations
+    description: Group invitation management
+  - name: Expenses
+    description: Expense tracking and splitting
+  - name: Debts
+    description: Debt calculation and settlements
+
+paths:
+  # ==================== AUTH ENDPOINTS ====================
+  
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, name]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: john@example.com
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                  example: SecurePass123
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 100
+                  example: John Doe
+                phone:
+                  type: string
+                  pattern: '^\+[1-9]\d{1,14}$'
+                  example: '+61412345678'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT access token
+                  user:
+                    $ref: '#/components/schemas/UserResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/magic-link:
+    post:
+      tags: [Auth]
+      summary: Request a magic link for passwordless login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Magic link sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Magic link sent to your email
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/magic-link/verify:
+    get:
+      tags: [Auth]
+      summary: Verify magic link token and login
+      parameters:
+        - name: token
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: email
+          in: query
+          required: true
+          schema:
+            type: string
+            format: email
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/UserResponse'
+        '401':
+          description: Invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ==================== GROUP ENDPOINTS ====================
+
+  /groups:
+    get:
+      tags: [Groups]
+      summary: Get all groups for current user
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of groups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GroupResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags: [Groups]
+      summary: Create a new group
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 100
+                  example: Weekend Trip
+      responses:
+        '201':
+          description: Group created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /groups/{groupId}:
+    get:
+      tags: [Groups]
+      summary: Get group details
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupId'
+      responses:
+        '200':
+          description: Group details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupDetailResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Groups]
+      summary: Update group details
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 100
+      responses:
+        '200':
+          description: Group updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Groups]
+      summary: Delete a group
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupId'
+      responses:
+        '204':
+          description: Group deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ==================== INVITATION ENDPOINTS ====================
+
+  /groups/{groupId}/invitations:
+    post:
+      tags: [Invitations]
+      summary: Invite a member to the group
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              oneOf:
+                - required: [email]
+                - required: [phone]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: friend@example.com
+                phone:
+                  type: string
+                  pattern: '^\+[1-9]\d{1,14}$'
+                  example: '+61412345678'
+      responses:
+        '201':
+          description: Invitation sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: User already invited or is a member
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      tags: [Invitations]
+      summary: Get all pending invitations for a group
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupId'
+      responses:
+        '200':
+          description: List of pending invitations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InvitationResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /groups/{groupId}/invitations/{invitationId}:
+    delete:
+      tags: [Invitations]
+      summary: Cancel an invitation
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupId'
+        - name: invitationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Invitation cancelled
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags: [Invitations]
+      summary: Resend an invitation
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupId'
+        - name: invitationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Invitation resent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitationResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /invitations/accept:
+    post:
+      tags: [Invitations]
+      summary: Accept a group invitation
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+                  description: Invitation token from email/SMS
+      responses:
+        '200':
+          description: Invitation accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Invalid or expired invitation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ==================== MEMBER ENDPOINTS ====================
+
+  /groups/{groupId}/members:
+    get:
+      tags: [Members]
+      summary: Get all members of a group
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupId'
+      responses:
+        '200':
+          description: List of group members
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GroupMemberResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /groups/{groupId}/members/{memberId}:
+    delete:
+      tags: [Members]
+      summary: Remove a member from the group
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupId'
+        - name: memberId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Member removed
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Cannot remove member with expenses
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ==================== EXPENSE ENDPOINTS ====================
+
+  /groups/{groupId}/expenses:
+    get:
+      tags: [Expenses]
+      summary: Get all expenses for a group
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupId'
+      responses:
+        '200':
+          description: List of expenses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExpenseResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags: [Expenses]
+      summary: Add a new expense
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateExpenseRequest'
+      responses:
+        '201':
+          description: Expense created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpenseResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /groups/{groupId}/expenses/{expenseId}:
+    get:
+      tags: [Expenses]
+      summary: Get expense details
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupId'
+        - $ref: '#/components/parameters/ExpenseId'
+      responses:
+        '200':
+          description: Expense details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpenseDetailResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Expenses]
+      summary: Update an expense
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupId'
+        - $ref: '#/components/parameters/ExpenseId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateExpenseRequest'
+      responses:
+        '200':
+          description: Expense updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpenseResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Expenses]
+      summary: Delete an expense
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupId'
+        - $ref: '#/components/parameters/ExpenseId'
+      responses:
+        '204':
+          description: Expense deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ==================== DEBT ENDPOINTS ====================
+
+  /groups/{groupId}/debts:
+    get:
+      tags: [Debts]
+      summary: Get all debts for a group (raw or simplified)
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupId'
+        - name: simplified
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+          description: Return simplified debts using Min-Cash-Flow algorithm
+      responses:
+        '200':
+          description: List of debts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DebtResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /groups/{groupId}/debts/settlements:
+    post:
+      tags: [Debts]
+      summary: Record a debt settlement
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [recipientId, amount]
+              properties:
+                recipientId:
+                  type: string
+                  format: uuid
+                  description: User who received payment
+                amount:
+                  type: number
+                  format: decimal
+                  minimum: 0.01
+                  example: 45.50
+                notes:
+                  type: string
+                  maxLength: 500
+                  example: Venmo transfer
+      responses:
+        '201':
+          description: Settlement recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettlementResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    get:
+      tags: [Debts]
+      summary: Get all settlements for a group
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupId'
+      responses:
+        '200':
+          description: List of settlements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SettlementResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ==================== USER DASHBOARD ====================
+
+  /users/me/dashboard:
+    get:
+      tags: [Auth]
+      summary: Get user dashboard with balances across all groups
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User dashboard data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/UserResponse'
+                  totalBalance:
+                    type: number
+                    format: decimal
+                    description: Net balance across all groups (positive = owed, negative = owes)
+                    example: -25.50
+                  groups:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        groupId:
+                          type: string
+                          format: uuid
+                        groupName:
+                          type: string
+                        balance:
+                          type: number
+                          format: decimal
+                        memberCount:
+                          type: integer
+                        expenseCount:
+                          type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+# ==================== COMPONENTS ====================
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    GroupId:
+      name: groupId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Group identifier
+
+    ExpenseId:
+      name: expenseId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Expense identifier
+
+  schemas:
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        phone:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        isEmailVerified:
+          type: boolean
+
+    GroupResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        creatorId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        currency:
+          type: string
+          enum: [AUD]
+        memberCount:
+          type: integer
+        expenseCount:
+          type: integer
+
+    GroupDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/GroupResponse'
+        - type: object
+          properties:
+            members:
+              type: array
+              items:
+                $ref: '#/components/schemas/GroupMemberResponse'
+            recentExpenses:
+              type: array
+              items:
+                $ref: '#/components/schemas/ExpenseResponse'
+
+    GroupMemberResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        userName:
+          type: string
+        userEmail:
+          type: string
+        role:
+          type: string
+          enum: [Member, Admin]
+        joinedAt:
+          type: string
+          format: date-time
+
+    InvitationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        groupId:
+          type: string
+          format: uuid
+        groupName:
+          type: string
+        invitedBy:
+          type: string
+          format: uuid
+        inviterName:
+          type: string
+        recipientEmail:
+          type: string
+          nullable: true
+        recipientPhone:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [Pending, Accepted, Expired, Cancelled]
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+
+    CreateExpenseRequest:
+      type: object
+      required: [description, amount, splitType, splits]
+      properties:
+        description:
+          type: string
+          minLength: 1
+          maxLength: 200
+          example: Dinner at restaurant
+        amount:
+          type: number
+          format: decimal
+          minimum: 0.01
+          example: 120.00
+        splitType:
+          type: string
+          enum: [Even, Custom]
+        splits:
+          type: array
+          items:
+            type: object
+            required: [memberId, percentage]
+            properties:
+              memberId:
+                type: string
+                format: uuid
+              percentage:
+                type: number
+                format: decimal
+                minimum: 0
+                maximum: 100
+                example: 33.33
+
+    ExpenseResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        groupId:
+          type: string
+          format: uuid
+        description:
+          type: string
+        amount:
+          type: number
+          format: decimal
+        payerId:
+          type: string
+          format: uuid
+        payerName:
+          type: string
+        splitType:
+          type: string
+          enum: [Even, Custom]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ExpenseDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/ExpenseResponse'
+        - type: object
+          properties:
+            splits:
+              type: array
+              items:
+                type: object
+                properties:
+                  memberId:
+                    type: string
+                    format: uuid
+                  memberName:
+                    type: string
+                  amount:
+                    type: number
+                    format: decimal
+                  percentage:
+                    type: number
+                    format: decimal
+
+    DebtResponse:
+      type: object
+      properties:
+        debtorId:
+          type: string
+          format: uuid
+        debtorName:
+          type: string
+        creditorId:
+          type: string
+          format: uuid
+        creditorName:
+          type: string
+        amount:
+          type: number
+          format: decimal
+        isSimplified:
+          type: boolean
+
+    SettlementResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        groupId:
+          type: string
+          format: uuid
+        payerId:
+          type: string
+          format: uuid
+        payerName:
+          type: string
+        recipientId:
+          type: string
+          format: uuid
+        recipientName:
+          type: string
+        amount:
+          type: number
+          format: decimal
+        settledAt:
+          type: string
+          format: date-time
+        notes:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [Pending, Completed]
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error type
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: object
+          nullable: true
+          description: Additional error details
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Unauthorized:
+      description: Unauthorized - authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
