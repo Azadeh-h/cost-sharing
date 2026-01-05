@@ -28,15 +28,15 @@ Based on plan.md, the project structure is:
 
 **Purpose**: Project initialization and .NET MAUI setup
 
-- [ ] T001 Create solution structure: CostSharingApp.sln with CostSharingApp (MAUI), CostSharing.Core (library), and test projects
-- [ ] T002 Initialize .NET MAUI project in CostSharingApp/src/CostSharingApp/ with target frameworks for Android, iOS, Windows, MacCatalyst
-- [ ] T003 [P] Configure .editorconfig with C# and XAML formatting rules per constitution
-- [ ] T004 [P] Add NuGet packages: CommunityToolkit.Mvvm, Google.Apis.Drive.v3, SendGrid, Twilio, SQLite-net-pcl
-- [ ] T005 [P] Setup Roslyn analyzers and StyleCop in CostSharingApp.csproj for linting
-- [ ] T006 Create CostSharing.Core library project in CostSharingApp/src/CostSharing.Core/ for shared business logic
-- [ ] T007 [P] Configure dependency injection in CostSharingApp/MauiProgram.cs
-- [ ] T008 [P] Create platform-specific folders structure in CostSharingApp/Platforms/ (Android, iOS, Windows, MacCatalyst)
-- [ ] T009-DOCKER [P] Setup Docker build environment: Dockerfile, docker-compose.yml, .dockerignore, build script in CostSharingApp/build/
+- [X] T001 Create solution structure: CostSharingApp.sln with CostSharingApp (MAUI), CostSharing.Core (library), and test projects
+- [X] T002 Initialize .NET MAUI project in CostSharingApp/src/CostSharingApp/ with target frameworks for Android, iOS, Windows, MacCatalyst
+- [X] T003 [P] Configure .editorconfig with C# and XAML formatting rules per constitution
+- [X] T004 [P] Add NuGet packages: CommunityToolkit.Mvvm, Google.Apis.Drive.v3, SendGrid, Twilio, SQLite-net-pcl
+- [X] T005 [P] Setup Roslyn analyzers and StyleCop in CostSharingApp.csproj for linting
+- [X] T006 Create CostSharing.Core library project in CostSharingApp/src/CostSharing.Core/ for shared business logic
+- [X] T007 [P] Configure dependency injection in CostSharingApp/MauiProgram.cs
+- [X] T008 [P] Create platform-specific folders structure in CostSharingApp/Platforms/ (Android, iOS, Windows, MacCatalyst)
+- [X] T009-DOCKER [P] Setup Docker build environment: Dockerfile, docker-compose.yml, .dockerignore, build script in CostSharingApp/build/
 
 ---
 
@@ -45,18 +45,17 @@ Based on plan.md, the project structure is:
 **Purpose**: Core infrastructure that MUST be complete before ANY user story can be implemented
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
-10 Create base domain entities in CostSharing.Core/Models/: User.cs, Group.cs, GroupMember.cs
-- [ ] T011 [P] Implement Google Drive authentication service in CostSharingApp/Services/DriveAuthService.cs (OAuth flow for native apps)
-- [ ] T012 [P] Implement local SQLite cache service in CostSharingApp/Services/CacheService.cs for offline storage
-- [ ] T013 Implement DriveService base class in CostSharingApp/Services/DriveService.cs with file read/write/sync operations
-- [ ] T014 [P] Create base ViewModel class in CostSharingApp/ViewModels/BaseViewModel.cs with INotifyPropertyChanged
-- [ ] T015 [P] Setup app navigation shell in CostSharingApp/AppShell.xaml with route configuration
-- [ ] T016 [P] Implement error handling service in CostSharingApp/Services/ErrorService.cs for user-friendly error messages
-- [ ] T017 [P] Create logging service in CostSharingApp/Services/LoggingService.cs
-- [ ] T018 Implement authentication service in CostSharingApp/Services/AuthService.cs (email/password + magic link with local credential storage)
-- [ ] T019 [P] Create app resources and styles in CostSharingApp/Resources/Styles/ (Colors.xaml, Styles.xaml)
-- [ ] T020 [P] Create app resources and styles in CostSharingApp/Resources/Styles/ (Colors.xaml, Styles.xaml)
-- [ ] T019 [P] Setup environment configuration in CostSharingApp/appsettings.json (Google Drive API, SendGrid, Twilio credentials)
+- [X] T010 Create base domain entities in CostSharing.Core/Models/: User.cs, Group.cs, GroupMember.cs, Invitation.cs, Expense.cs, ExpenseSplit.cs, Debt.cs, Settlement.cs
+- [X] T011 [P] Implement Google Drive authentication service in CostSharingApp/Services/DriveAuthService.cs (OAuth flow for native apps)
+- [X] T012 [P] Implement local SQLite cache service in CostSharingApp/Services/CacheService.cs for offline storage
+- [X] T013 Implement DriveService base class in CostSharingApp/Services/DriveService.cs with file read/write/sync operations
+- [X] T014 [P] Create base ViewModel class in CostSharingApp/ViewModels/BaseViewModel.cs with INotifyPropertyChanged
+- [X] T015 [P] Setup app navigation shell in CostSharingApp/AppShell.xaml with route configuration
+- [X] T016 [P] Implement error handling service in CostSharingApp/Services/ErrorService.cs for user-friendly error messages
+- [X] T017 [P] Create logging service in CostSharingApp/Services/LoggingService.cs
+- [X] T018 Implement authentication service in CostSharingApp/Services/AuthService.cs (email/password + magic link with local credential storage)
+- [X] T019 [P] App resources and styles already exist in CostSharingApp/Resources/Styles/ (Colors.xaml, Styles.xaml - MAUI template default)
+- [X] T020 [P] Setup environment configuration in CostSharingApp/appsettings.json (Google Drive API, SendGrid, Twilio credentials)
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
