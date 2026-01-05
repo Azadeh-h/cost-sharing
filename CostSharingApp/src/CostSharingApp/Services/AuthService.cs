@@ -1,0 +1,234 @@
+using System.Security.Cryptography;
+using System.Text;
+
+namespace CostSharingApp.Services;
+
+/// <summary>
+/// Provides authentication services including email/password and magic link.
+/// </summary>
+public class AuthService : IAuthService
+{
+    private readonly ICacheService cacheService;
+    private readonly ILoggingService loggingService;
+    private CostSharing.Core.Models.User? currentUser;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AuthService"/> class.
+    /// </summary>
+    /// <param name="cacheService">Cache service for credential storage.</param>
+    /// <param name="loggingService">Logging service.</param>
+    public AuthService(ICacheService cacheService, ILoggingService loggingService)
+    {
+        this.cacheService = cacheService;
+        this.loggingService = loggingService;
+    }
+
+    /// <summary>
+    /// Registers new user with email and password.
+    /// </summary>
+    /// <param name="email">User email.</param>
+    /// <param name="password">User password.</param>
+    /// <param name="name">User display name.</param>
+    /// <param name="phone">Optional phone number.</param>
+    /// <returns>True if successful.</returns>
+    public async Task<bool> RegisterAsync(string email, string password, string name, string? phone = null)
+    {
+        try
+        {
+            // Check if user already exists
+            var existingUsers = await this.cacheService.GetAllAsync<CostSharing.Core.Models.User>();
+            if (existingUsers.Any(u => u.Email == email))
+            {
+                this.loggingService.LogWarning($"Registration failed: Email {email} already exists");
+                return false;
+            }
+
+            var user = new CostSharing.Core.Models.User
+            {
+                Id = Guid.NewGuid(),
+                Email = email,
+                PasswordHash = this.HashPassword(password),
+                Name = name,
+                Phone = phone,
+                CreatedAt = DateTime.UtcNow,
+                IsEmailVerified = false
+            };
+
+            await this.cacheService.SaveAsync(user);
+            this.currentUser = user;
+            this.loggingService.LogInfo($"User registered: {email}");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            this.loggingService.LogError("Registration failed", ex);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Authenticates user with email and password.
+    /// </summary>
+    /// <param name="email">User email.</param>
+    /// <param name="password">User password.</param>
+    /// <returns>True if successful.</returns>
+    public async Task<bool> LoginAsync(string email, string password)
+    {
+        try
+        {
+            var users = await this.cacheService.GetAllAsync<CostSharing.Core.Models.User>();
+            var user = users.FirstOrDefault(u => u.Email == email);
+
+            if (user == null)
+            {
+                this.loggingService.LogWarning($"Login failed: User {email} not found");
+                return false;
+            }
+
+            if (!this.VerifyPassword(password, user.PasswordHash))
+            {
+                this.loggingService.LogWarning($"Login failed: Invalid password for {email}");
+                return false;
+            }
+
+            user.LastLoginAt = DateTime.UtcNow;
+            await this.cacheService.SaveAsync(user);
+
+            this.currentUser = user;
+            this.loggingService.LogInfo($"User logged in: {email}");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            this.loggingService.LogError("Login failed", ex);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Generates magic link token for passwordless authentication.
+    /// </summary>
+    /// <param name="email">User email.</param>
+    /// <returns>Magic link token or null if failed.</returns>
+    public async Task<string?> GenerateMagicLinkAsync(string email)
+    {
+        try
+        {
+            var users = await this.cacheService.GetAllAsync<CostSharing.Core.Models.User>();
+            var user = users.FirstOrDefault(u => u.Email == email);
+
+            if (user == null)
+            {
+                return null;
+            }
+
+            // Generate secure random token
+            var token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+            this.loggingService.LogInfo($"Magic link generated for {email}");
+            return token;
+        }
+        catch (Exception ex)
+        {
+            this.loggingService.LogError("Magic link generation failed", ex);
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Signs out current user.
+    /// </summary>
+    public void SignOut()
+    {
+        this.loggingService.LogInfo($"User signed out: {this.currentUser?.Email}");
+        this.currentUser = null;
+    }
+
+    /// <summary>
+    /// Gets currently authenticated user.
+    /// </summary>
+    /// <returns>Current user or null.</returns>
+    public CostSharing.Core.Models.User? GetCurrentUser()
+    {
+        return this.currentUser;
+    }
+
+    /// <summary>
+    /// Checks if user is authenticated.
+    /// </summary>
+    /// <returns>True if authenticated.</returns>
+    public bool IsAuthenticated()
+    {
+        return this.currentUser != null;
+    }
+
+    /// <summary>
+    /// Hashes password using SHA256.
+    /// </summary>
+    /// <param name="password">Plain password.</param>
+    /// <returns>Hashed password.</returns>
+    private string HashPassword(string password)
+    {
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(password));
+        return Convert.ToBase64String(bytes);
+    }
+
+    /// <summary>
+    /// Verifies password against hash.
+    /// </summary>
+    /// <param name="password">Plain password.</param>
+    /// <param name="hash">Stored hash.</param>
+    /// <returns>True if match.</returns>
+    private bool VerifyPassword(string password, string hash)
+    {
+        var computedHash = this.HashPassword(password);
+        return computedHash == hash;
+    }
+}
+
+/// <summary>
+/// Interface for authentication service.
+/// </summary>
+public interface IAuthService
+{
+    /// <summary>
+    /// Registers new user.
+    /// </summary>
+    /// <param name="email">Email.</param>
+    /// <param name="password">Password.</param>
+    /// <param name="name">Name.</param>
+    /// <param name="phone">Phone.</param>
+    /// <returns>True if successful.</returns>
+    Task<bool> RegisterAsync(string email, string password, string name, string? phone = null);
+
+    /// <summary>
+    /// Logs in user.
+    /// </summary>
+    /// <param name="email">Email.</param>
+    /// <param name="password">Password.</param>
+    /// <returns>True if successful.</returns>
+    Task<bool> LoginAsync(string email, string password);
+
+    /// <summary>
+    /// Generates magic link token.
+    /// </summary>
+    /// <param name="email">Email.</param>
+    /// <returns>Token or null.</returns>
+    Task<string?> GenerateMagicLinkAsync(string email);
+
+    /// <summary>
+    /// Signs out user.
+    /// </summary>
+    void SignOut();
+
+    /// <summary>
+    /// Gets current user.
+    /// </summary>
+    /// <returns>User or null.</returns>
+    CostSharing.Core.Models.User? GetCurrentUser();
+
+    /// <summary>
+    /// Checks if authenticated.
+    /// </summary>
+    /// <returns>True if authenticated.</returns>
+    bool IsAuthenticated();
+}
