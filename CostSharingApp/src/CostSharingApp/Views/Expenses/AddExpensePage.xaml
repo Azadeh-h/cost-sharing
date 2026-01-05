@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:CostSharingApp.ViewModels.Expenses"
+             x:Class="CostSharingApp.Views.Expenses.AddExpensePage"
+             x:DataType="vm:AddExpenseViewModel"
+             Title="Add Expense">
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="16">
+            <!-- Description -->
+            <Label Text="Description" FontSize="14" FontAttributes="Bold" />
+            <Entry Text="{Binding Description}"
+                   Placeholder="e.g., Dinner at restaurant"
+                   MaxLength="200" />
+            <Label Text="{Binding Description.Length, StringFormat='{0}/200'}"
+                   FontSize="12"
+                   TextColor="{StaticResource Gray500}"
+                   HorizontalOptions="End" />
+
+            <!-- Amount -->
+            <Label Text="Amount (AUD)" FontSize="14" FontAttributes="Bold" Margin="0,8,0,0" />
+            <Entry Text="{Binding Amount}"
+                   Placeholder="0.00"
+                   Keyboard="Numeric" />
+
+            <!-- Expense Date -->
+            <Label Text="Expense Date" FontSize="14" FontAttributes="Bold" Margin="0,8,0,0" />
+            <DatePicker Date="{Binding ExpenseDate}"
+                        Format="dd MMM yyyy" />
+
+            <!-- Paid By -->
+            <Label Text="Paid By" FontSize="14" FontAttributes="Bold" Margin="0,8,0,0" />
+            <Picker ItemsSource="{Binding Members}"
+                    ItemDisplayBinding="{Binding UserId}"
+                    SelectedItem="{Binding SelectedPayer}"
+                    Title="Select who paid" />
+
+            <!-- Split Type -->
+            <Label Text="Split Type" FontSize="14" FontAttributes="Bold" Margin="0,8,0,0" />
+            <HorizontalStackLayout Spacing="16">
+                <RadioButton Content="Even Split"
+                             IsChecked="{Binding IsEvenSplit}"
+                             GroupName="SplitType" />
+                <RadioButton Content="Custom Split"
+                             IsChecked="{Binding IsCustomSplit}"
+                             GroupName="SplitType" />
+            </HorizontalStackLayout>
+
+            <!-- Member Selection -->
+            <Label Text="Split Between" FontSize="14" FontAttributes="Bold" Margin="0,8,0,0" />
+            <Button Text="Select All"
+                    Command="{Binding SelectAllMembersCommand}"
+                    HorizontalOptions="Start"
+                    FontSize="12"
+                    Padding="12,6" />
+
+            <CollectionView ItemsSource="{Binding Members}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame Padding="8" Margin="0,0,0,4">
+                            <HorizontalStackLayout Spacing="12">
+                                <CheckBox IsChecked="{Binding IsSelected}" />
+                                <Label Text="{Binding UserId}"
+                                       VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Error Message -->
+            <Label Text="{Binding ErrorMessage}"
+                   TextColor="{StaticResource Danger}"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}"
+                   Margin="0,8,0,0" />
+
+            <!-- Action Buttons -->
+            <HorizontalStackLayout Spacing="12" Margin="0,16,0,0">
+                <Button Text="Cancel"
+                        Command="{Binding CancelCommand}"
+                        BackgroundColor="{StaticResource Gray300}"
+                        TextColor="{StaticResource Gray900}"
+                        HorizontalOptions="FillAndExpand" />
+                <Button Text="Add Expense"
+                        Command="{Binding AddExpenseCommand}"
+                        HorizontalOptions="FillAndExpand" />
+            </HorizontalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

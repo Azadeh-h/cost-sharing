@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using CostSharing.Core.Models;
+using CostSharing.Core.Services;
 
 namespace CostSharingApp.ViewModels.Groups;
 
@@ -13,9 +14,13 @@ public class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     private readonly IInvitationService invitationService;
     private readonly IAuthService authService;
     private readonly IErrorService errorService;
+    private readonly IExpenseService expenseService;
+    private readonly IDebtCalculationService debtCalculationService;
     private Group? group;
     private ObservableCollection<GroupMember> members = new();
     private ObservableCollection<Invitation> pendingInvitations = new();
+    private ObservableCollection<Expense> expenses = new();
+    private ObservableCollection<Debt> debts = new();
     private string errorMessage = string.Empty;
     private bool isAdmin;
 
@@ -26,16 +31,21 @@ public class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
         IGroupService groupService,
         IInvitationService invitationService,
         IAuthService authService,
-        IErrorService errorService)
+        IErrorService errorService,
+        IExpenseService expenseService,
+        IDebtCalculationService debtCalculationService)
     {
         this.groupService = groupService;
         this.invitationService = invitationService;
         this.authService = authService;
         this.errorService = errorService;
+        this.expenseService = expenseService;
+        this.debtCalculationService = debtCalculationService;
 
         this.DeleteGroupCommand = new Command(async () => await this.DeleteGroupAsync(), () => this.isAdmin);
         this.EditGroupCommand = new Command(async () => await this.EditGroupAsync(), () => this.isAdmin);
         this.InviteMemberCommand = new Command(async () => await this.InviteMemberAsync(), () => this.isAdmin);
+        this.AddExpenseCommand = new Command(async () => await this.AddExpenseAsync());
         this.RemoveMemberCommand = new Command<GroupMember>(async (member) => await this.RemoveMemberAsync(member), (_) => this.isAdmin);
         this.ResendInvitationCommand = new Command<Invitation>(async (inv) => await this.ResendInvitationAsync(inv), (_) => this.isAdmin);
         this.CancelInvitationCommand = new Command<Invitation>(async (inv) => await this.CancelInvitationAsync(inv), (_) => this.isAdmin);
@@ -53,7 +63,8 @@ public class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
             {
                 this.Title = value?.Name ?? "Group Details";
             }
-     
+        }
+    }
 
     /// <summary>
     /// Gets the collection of pending invitations.
@@ -62,7 +73,6 @@ public class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     {
         get => this.pendingInvitations;
         set => this.SetProperty(ref this.pendingInvitations, value);
-    }   }
     }
 
     /// <summary>
@@ -120,6 +130,29 @@ public class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     /// Gets the command to cancel an invitation.
     /// </summary>
     public ICommand CancelInvitationCommand { get; }
+
+    /// <summary>
+    /// Gets the command to add an expense.
+    /// </summary>
+    public ICommand AddExpenseCommand { get; }
+
+    /// <summary>
+    /// Gets the collection of expenses.
+    /// </summary>
+    public ObservableCollection<Expense> Expenses
+    {
+        get => this.expenses;
+        set => this.SetProperty(ref this.expenses, value);
+    }
+
+    /// <summary>
+    /// Gets the collection of debts.
+    /// </summary>
+    public ObservableCollection<Debt> Debts
+    {
+        get => this.debts;
+        set => this.SetProperty(ref this.debts, value);
+    }
     /// <summary>
     /// Gets the command to edit the group.
     /// </summary>
@@ -152,16 +185,8 @@ public class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     /// <returns>Task for async operation.</returns>
     private async Task LoadGroupAsync(Guid groupId)
     {
-        if (thiLoad pending invitations
-            var invitations = await this.invitationService.GetPendingInvitationsAsync(groupId);
-            this.PendingInvitations.Clear();
-            foreach (var invitation in invitations)
-            {
-                this.PendingInvitations.Add(invitation);
-            }
-
-            // Check if current user is admin
-            var currentUser = this.authService
+        if (this.IsBusy)
+        {
             return;
         }
 
@@ -184,8 +209,27 @@ public class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
                 this.Members.Add(member);
             }
 
+            // Load pending invitations
+            var invitations = await this.invitationService.GetPendingInvitationsAsync(groupId);
+            this.PendingInvitations.Clear();
+            foreach (var invitation in invitations)
+            {
+                this.PendingInvitations.Add(invitation);
+            }
+
+            // Load expenses
+            var expenses = await this.expenseService.GetGroupExpensesAsync(groupId);
+            this.Expenses.Clear();
+            foreach (var expense in expenses)
+            {
+                this.Expenses.Add(expense);
+            }
+
+            // Calculate debts
+            await this.CalculateDebtsAsync();
+
             // Check if current user is admin
-            var currentUser = (this.groupService as GroupService)?.GetCurrentUser();
+            var currentUser = this.authService.GetCurrentUser();
             this.IsAdmin = members.Any(m => m.UserId == currentUser?.Id && m.Role == GroupRole.Admin);
         }
         catch (Exception ex)
@@ -406,5 +450,55 @@ public class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
         }
 
         await Shell.Current.GoToAsync($"invitemember?groupId={this.group.Id}");
+    }
+
+    /// <summary>
+    /// Navigates to add expense page.
+    /// </summary>
+    /// <returns>Task for async operation.</returns>
+    private async Task AddExpenseAsync()
+    {
+        if (this.group == null)
+        {
+            return;
+        }
+
+        await Shell.Current.GoToAsync($"addexpense?groupId={this.group.Id}");
+    }
+
+    /// <summary>
+    /// Calculates debts for the group.
+    /// </summary>
+    /// <returns>Task for async operation.</returns>
+    private async Task CalculateDebtsAsync()
+    {
+        if (this.group == null)
+        {
+            return;
+        }
+
+        try
+        {
+            var expenses = this.Expenses.ToList();
+            var allSplits = new List<ExpenseSplit>();
+
+            foreach (var expense in expenses)
+            {
+                var splits = await this.expenseService.GetExpenseSplitsAsync(expense.Id);
+                allSplits.AddRange(splits);
+            }
+
+            var debts = this.debtCalculationService.CalculateDebts(expenses, allSplits);
+
+            this.Debts.Clear();
+            foreach (var debt in debts)
+            {
+                this.Debts.Add(debt);
+            }
+        }
+        catch (Exception ex)
+        {
+            this.ErrorMessage = this.errorService.HandleException(ex, "calculating debts");
+        }
     }
 }

@@ -13,6 +13,8 @@
             
             <!-- Value Converters -->
             <converters:EnumToBoolConverter x:Key="EnumToBoolConverter" />
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+            <converters:StringToBoolConverter x:Key="StringToBoolConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

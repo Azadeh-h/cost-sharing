@@ -43,6 +43,11 @@ public static class MauiProgram
 		services.AddSingleton<INotificationService, NotificationService>();
 		services.AddSingleton<IInvitationService, InvitationService>();
 
+		// Phase 5: US3 - Expense Services
+		services.AddSingleton<ISplitCalculationService, SplitCalculationService>();
+		services.AddSingleton<IExpenseService, ExpenseService>();
+		services.AddSingleton<IDebtCalculationService, DebtCalculationService>();
+
 		// Phase 3: US1 - ViewModels
 		services.AddTransient<ViewModels.Groups.GroupListViewModel>();
 		services.AddTransient<ViewModels.Groups.CreateGroupViewModel>();
@@ -52,10 +57,19 @@ public static class MauiProgram
 		services.AddTransient<ViewModels.Members.InviteMemberViewModel>();
 		services.AddTransient<ViewModels.Members.AcceptInvitationViewModel>();
 
+		// Phase 5: US3 - ViewModels
+		services.AddTransient<ViewModels.Expenses.AddExpenseViewModel>();
+		services.AddTransient<ViewModels.Expenses.ExpenseListViewModel>();
+		services.AddTransient<ViewModels.Expenses.ExpenseDetailsViewModel>();
+
 
 		// Phase 4: US2 - Pages
 		services.AddTransient<Views.Members.InviteMemberPage>();
 		services.AddTransient<Views.Members.AcceptInvitationPage>();
+
+		// Phase 5: US3 - Pages
+		services.AddTransient<Views.Expenses.AddExpensePage>();
+		services.AddTransient<Views.Expenses.ExpenseDetailsPage>();
 		// Phase 3: US1 - Pages
 		services.AddTransient<Views.Groups.GroupListPage>();
 		services.AddTransient<Views.Groups.CreateGroupPage>();
