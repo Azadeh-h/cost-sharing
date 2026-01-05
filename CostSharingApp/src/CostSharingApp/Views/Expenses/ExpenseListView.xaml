@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:CostSharingApp.ViewModels.Expenses"
+             x:Class="CostSharingApp.Views.Expenses.ExpenseListView"
+             x:DataType="vm:ExpenseListViewModel">
+    <StackLayout Spacing="8">
+        <Label Text="Expenses" FontSize="18" FontAttributes="Bold" />
+
+        <CollectionView ItemsSource="{Binding Expenses}">
+            <CollectionView.EmptyView>
+                <Label Text="No expenses yet"
+                       TextColor="{StaticResource Gray500}"
+                       HorizontalTextAlignment="Center"
+                       Margin="0,16,0,0" />
+            </CollectionView.EmptyView>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame Margin="0,0,0,8" Padding="12" CornerRadius="8">
+                        <Frame.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ExpenseListViewModel}}, Path=ViewExpenseCommand}"
+                                                  CommandParameter="{Binding .}" />
+                        </Frame.GestureRecognizers>
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                            <Label Grid.Column="0"
+                                   Text="💰"
+                                   FontSize="24"
+                                   VerticalOptions="Center" />
+                            <StackLayout Grid.Column="1" VerticalOptions="Center">
+                                <Label Text="{Binding Description}"
+                                       FontSize="14"
+                                       FontAttributes="Bold" />
+                                <Label Text="{Binding ExpenseDate, StringFormat='{0:MMM dd, yyyy}'}"
+                                       TextColor="{StaticResource Gray500}"
+                                       FontSize="12" />
+                            </StackLayout>
+                            <Label Grid.Column="2"
+                                   Text="{Binding TotalAmount, StringFormat='${0:F2}'}"
+                                   FontSize="16"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="Center" />
+                        </Grid>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </StackLayout>
+</ContentView>

@@ -69,19 +69,19 @@ Based on plan.md, the project structure is:
 
 ### Implementation for User Story 1
 
-- [ ] T021 [P] [US1] Complete Group model in CostSharing.Core/Models/Group.cs with validation rules (name 1-100 chars, AUD currency)
-- [ ] T022 [P] [US1] Create GroupMember model in CostSharing.Core/Models/GroupMember.cs with role enum (Admin/Member)
-- [ ] T023 [US1] Implement GroupService in CostSharingApp/Services/GroupService.cs (CRUD operations, Google Drive sync)
-- [ ] T024 [US1] Implement group file storage format in CostSharingApp/Services/GroupFileService.cs (JSON serialization to Google Drive)
-- [ ] T025 [P] [US1] Create GroupListPage XAML in CostSharingApp/Views/Groups/GroupListPage.xaml (list of all user's groups)
-- [ ] T026 [P] [US1] Create GroupListViewModel in CostSharingApp/ViewModels/Groups/GroupListViewModel.cs with observable collection
-- [ ] T027 [P] [US1] Create CreateGroupPage XAML in CostSharingApp/Views/Groups/CreateGroupPage.xaml (form with group name input)
-- [ ] T028 [P] [US1] Create CreateGroupViewModel in CostSharingApp/ViewModels/Groups/CreateGroupViewModel.cs with validation
-- [ ] T029 [US1] Create GroupDetailsPage XAML in CostSharingApp/Views/Groups/GroupDetailsPage.xaml (show group info, members, expenses)
-- [ ] T030 [US1] Create GroupDetailsViewModel in CostSharingApp/ViewModels/Groups/GroupDetailsViewModel.cs
-- [ ] T031 [US1] Implement group update functionality in GroupService with optimistic concurrency (check Google Drive modifiedTime)
-- [ ] T032 [US1] Implement group deletion with confirmation dialog in GroupDetailsViewModel
-- [ ] T033 [US1] Add navigation from GroupListPage to CreateGroupPage and GroupDetailsPage in AppShell.xaml
+- [X] T021 [P] [US1] Group and GroupMember models already complete in Phase 2 (T010)
+- [X] T022 [P] [US1] Group and GroupMember models already complete in Phase 2 (T010)
+- [X] T023 [US1] Implement GroupService in CostSharingApp/Services/GroupService.cs (CRUD operations, Google Drive sync)
+- [X] T024 [US1] Group file storage implemented in DriveService (JSON serialization to Google Drive)
+- [X] T025 [P] [US1] Create GroupListPage XAML in CostSharingApp/Views/Groups/GroupListPage.xaml (list of all user's groups)
+- [X] T026 [P] [US1] Create GroupListViewModel in CostSharingApp/ViewModels/Groups/GroupListViewModel.cs with observable collection
+- [X] T027 [P] [US1] Create CreateGroupPage XAML in CostSharingApp/Views/Groups/CreateGroupPage.xaml (form with group name input)
+- [X] T028 [P] [US1] Create CreateGroupViewModel in CostSharingApp/ViewModels/Groups/CreateGroupViewModel.cs with validation
+- [X] T029 [US1] Create GroupDetailsPage XAML in CostSharingApp/Views/Groups/GroupDetailsPage.xaml (show group info, members, expenses)
+- [X] T030 [US1] Create GroupDetailsViewModel in CostSharingApp/ViewModels/Groups/GroupDetailsViewModel.cs
+- [X] T031 [US1] Group update functionality implemented in GroupService.UpdateGroupAsync()
+- [X] T032 [US1] Group deletion with confirmation dialog implemented in GroupDetailsViewModel.DeleteGroupAsync()
+- [X] T033 [US1] Navigation routes registered in AppShell.xaml.cs (creategroup, groupdetails, editgroup)
 
 **Checkpoint**: At this point, User Story 1 should be fully functional - users can create, view, update, and delete groups
 
@@ -95,22 +95,22 @@ Based on plan.md, the project structure is:
 
 ### Implementation for User Story 2
 
-- [ ] T034 [P] [US2] Create Invitation model in CostSharing.Core/Models/Invitation.cs with token, status, expiration
-- [ ] T034 [P] [US2] Implement NotificationService in CostSharingApp/Services/NotificationService.cs (SendGrid SDK for email, Twilio SDK for SMS)
-- [ ] T035 [US2] Implement InvitationService in CostSharingApp/Services/InvitationService.cs (create invitations, generate tokens, validate)
-- [ ] T036 [P] [US2] Create InviteMemberPage XAML in CostSharingApp/Views/Members/InviteMemberPage.xaml (email/phone input, method selection)
-- [ ] T037 [P] [US2] Create InviteMemberViewModel in CostSharingApp/ViewModels/Members/InviteMemberViewModel.cs
-- [ ] T038 [US2] Implement invitation link generation with unique tokens (256-bit cryptographic random)
-- [ ] T039 [US2] Create invitation email template for SendGrid with variables: {inviterName}, {groupName}, {invitationLink}, {expirationDate}
-- [ ] T040 [US2] Create invitation SMS template for Twilio (max 256 chars with URL shortening)
-- [ ] T041 [P] [US2] Create AcceptInvitationPage XAML in CostSharingApp/Views/Members/AcceptInvitationPage.xaml (handles deep links)
-- [ ] T042 [P] [US2] Create AcceptInvitationViewModel in CostSharingApp/ViewModels/Members/AcceptInvitationViewModel.cs
-- [ ] T043 [US2] Implement deep link handling for invitation URLs in CostSharingApp/AppShell.xaml
-- [ ] T044 [US2] Add auto-join logic: if user not registered, prompt for account creation; if registered, add to group immediately
-- [ ] T045 [P] [US2] Create MemberListView user control in CostSharingApp/Views/Members/MemberListView.xaml (show members in GroupDetailsPage)
-- [ ] T046 [US2] Implement remove member functionality in GroupDetailsViewModel (admin only, prevent if member has expenses)
-- [ ] T047 [US2] Add pending invitations view in GroupDetailsPage with resend/cancel options
-- [ ] T048 [US2] Implement invitation expiration handling (7-day default, mark as expired, allow resend)
+- [X] T034 [P] [US2] Create Invitation model in CostSharing.Core/Models/Invitation.cs with token, status, expiration
+- [X] T034 [P] [US2] Implement NotificationService in CostSharingApp/Services/NotificationService.cs (SendGrid SDK for email, Twilio SDK for SMS)
+- [X] T035 [US2] Implement InvitationService in CostSharingApp/Services/InvitationService.cs (create invitations, generate tokens, validate)
+- [X] T036 [P] [US2] Create InviteMemberPage XAML in CostSharingApp/Views/Members/InviteMemberPage.xaml (email/phone input, method selection)
+- [X] T037 [P] [US2] Create InviteMemberViewModel in CostSharingApp/ViewModels/Members/InviteMemberViewModel.cs
+- [X] T038 [US2] Implement invitation link generation with unique tokens (256-bit cryptographic random)
+- [X] T039 [US2] Create invitation email template for SendGrid with variables: {inviterName}, {groupName}, {invitationLink}, {expirationDate}
+- [X] T040 [US2] Create invitation SMS template for Twilio (max 256 chars with URL shortening)
+- [X] T041 [P] [US2] Create AcceptInvitationPage XAML in CostSharingApp/Views/Members/AcceptInvitationPage.xaml (handles deep links)
+- [X] T042 [P] [US2] Create AcceptInvitationViewModel in CostSharingApp/ViewModels/Members/AcceptInvitationViewModel.cs
+- [X] T043 [US2] Implement deep link handling for invitation URLs in CostSharingApp/AppShell.xaml
+- [X] T044 [US2] Add auto-join logic: if user not registered, prompt for account creation; if registered, add to group immediately
+- [X] T045 [P] [US2] Create MemberListView user control in CostSharingApp/Views/Members/MemberListView.xaml (show members in GroupDetailsPage)
+- [X] T046 [US2] Implement remove member functionality in GroupDetailsViewModel (admin only, prevent if member has expenses)
+- [X] T047 [US2] Add pending invitations view in GroupDetailsPage with resend/cancel options
+- [X] T048 [US2] Implement invitation expiration handling (7-day default, mark as expired, allow resend)
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work - groups with members can be created
 
@@ -124,25 +124,25 @@ Based on plan.md, the project structure is:
 
 ### Implementation for User Story 3
 
-- [ ] T049 [P] [US3] Create Expense model in CostSharing.Core/Models/Expense.cs with description, amount, payer, splitType
-- [ ] T050 [P] [US3] Create ExpenseSplit model in CostSharing.Core/Models/ExpenseSplit.cs with member, amount, percentage
-- [ ] T051 [P] [US3] Create Debt model in CostSharing.Core/Models/Debt.cs (calculated, not persisted)
-- [ ] T052 [US3] Implement ExpenseService in CostSharingApp/Services/ExpenseService.cs (CRUD operations, sync to Google Drive)
-- [ ] T053 [US3] Implement even split calculation in CostSharing.Core/Services/SplitCalculationService.cs (divide amount by participant count, handle rounding)
-- [ ] T054 [P] [US3] Create AddExpensePage XAML in CostSharingApp/Views/Expenses/AddExpensePage.xaml (description, amount, member selection)
-- [ ] T055 [P] [US3] Create AddExpenseViewModel in CostSharingApp/ViewModels/Expenses/AddExpenseViewModel.cs with validation (amount > 0, description 1-200 chars)
-- [ ] T056 [US3] Implement member multi-select UI in AddExpensePage (checkbox list or picker with "Select All" option)
-- [ ] T057 [US3] Add split type selection in AddExpensePage (Even/Custom radio buttons)
-- [ ] T058 [P] [US3] Create ExpenseListView user control in CostSharingApp/Views/Expenses/ExpenseListView.xaml (show in GroupDetailsPage)
-- [ ] T059 [P] [US3] Create ExpenseListViewModel in CostSharingApp/ViewModels/Expenses/ExpenseListViewModel.cs
-- [ ] T060 [US3] Create ExpenseDetailsPage XAML in CostSharingApp/Views/Expenses/ExpenseDetailsPage.xaml (show description, amount, payer, split breakdown)
-- [ ] T061 [US3] Create ExpenseDetailsViewModel in CostSharingApp/ViewModels/Expenses/ExpenseDetailsViewModel.cs
-- [ ] T062 [US3] Implement expense edit functionality (only creator can edit) in ExpenseDetailsViewModel
-- [ ] T063 [US3] Implement expense deletion with confirmation (only creator can delete) in ExpenseDetailsViewModel
-- [ ] T064 [US3] Implement debt calculation in CostSharing.Core/Services/DebtCalculationService.cs (calculate who owes whom from all expenses)
-- [ ] T065 [US3] Add debt summary view in GroupDetailsPage (show all debts: "Alice owes Bob $30")
-- [ ] T066 [US3] Implement recalculation of debts when expense is added/edited/deleted in ExpenseService
-- [ ] T067 [US3] Add navigation from GroupDetailsPage to AddExpensePage and ExpenseDetailsPage in AppShell.xaml
+- [X] T049 [P] [US3] Create Expense model in CostSharing.Core/Models/Expense.cs with description, amount, payer, splitType
+- [X] T050 [P] [US3] Create ExpenseSplit model in CostSharing.Core/Models/ExpenseSplit.cs with member, amount, percentage
+- [X] T051 [P] [US3] Create Debt model in CostSharing.Core/Models/Debt.cs (calculated, not persisted)
+- [X] T052 [US3] Implement ExpenseService in CostSharingApp/Services/ExpenseService.cs (CRUD operations, sync to Google Drive)
+- [X] T053 [US3] Implement even split calculation in CostSharing.Core/Services/SplitCalculationService.cs (divide amount by participant count, handle rounding)
+- [X] T054 [P] [US3] Create AddExpensePage XAML in CostSharingApp/Views/Expenses/AddExpensePage.xaml (description, amount, member selection)
+- [X] T055 [P] [US3] Create AddExpenseViewModel in CostSharingApp/ViewModels/Expenses/AddExpenseViewModel.cs with validation (amount > 0, description 1-200 chars)
+- [X] T056 [US3] Implement member multi-select UI in AddExpensePage (checkbox list or picker with "Select All" option)
+- [X] T057 [US3] Add split type selection in AddExpensePage (Even/Custom radio buttons)
+- [X] T058 [P] [US3] Create ExpenseListView user control in CostSharingApp/Views/Expenses/ExpenseListView.xaml (show in GroupDetailsPage)
+- [X] T059 [P] [US3] Create ExpenseListViewModel in CostSharingApp/ViewModels/Expenses/ExpenseListViewModel.cs
+- [X] T060 [US3] Create ExpenseDetailsPage XAML in CostSharingApp/Views/Expenses/ExpenseDetailsPage.xaml (show description, amount, payer, split breakdown)
+- [X] T061 [US3] Create ExpenseDetailsViewModel in CostSharingApp/ViewModels/Expenses/ExpenseDetailsViewModel.cs
+- [X] T062 [US3] Implement expense edit functionality (only creator can edit) in ExpenseDetailsViewModel
+- [X] T063 [US3] Implement expense deletion with confirmation (only creator can delete) in ExpenseDetailsViewModel
+- [X] T064 [US3] Implement debt calculation in CostSharing.Core/Services/DebtCalculationService.cs (calculate who owes whom from all expenses)
+- [X] T065 [US3] Add debt summary view in GroupDetailsPage (show all debts: "Alice owes Bob $30")
+- [X] T066 [US3] Implement recalculation of debts when expense is added/edited/deleted in ExpenseService
+- [X] T067 [US3] Add navigation from GroupDetailsPage to AddExpensePage and ExpenseDetailsPage in AppShell.xaml
 
 **Checkpoint**: At this point, User Stories 1, 2, AND 3 should all work - complete MVP for even expense splitting
 

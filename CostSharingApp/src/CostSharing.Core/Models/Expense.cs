@@ -1,6 +1,22 @@
 namespace CostSharing.Core.Models;
 
 /// <summary>
+/// Split type for expenses.
+/// </summary>
+public enum SplitType
+{
+    /// <summary>
+    /// Split evenly among all participants.
+    /// </summary>
+    Even,
+
+    /// <summary>
+    /// Split by custom percentages.
+    /// </summary>
+    Custom,
+}
+
+/// <summary>
 /// Represents an expense within a group, paid by one member for multiple participants.
 /// </summary>
 public class Expense
@@ -29,6 +45,11 @@ public class Expense
     /// Gets or sets who paid the expense.
     /// </summary>
     public Guid PaidBy { get; set; }
+
+    /// <summary>
+    /// Gets or sets the split type (even or custom).
+    /// </summary>
+    public SplitType SplitType { get; set; }
 
     /// <summary>
     /// Gets or sets when expense occurred.

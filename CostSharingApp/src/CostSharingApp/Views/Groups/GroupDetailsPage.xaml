@@ -160,6 +160,85 @@
                     IsVisible="{Binding IsAdmin}"
                     Margin="0,8,0,0" />
 
+            <!-- Expenses section -->
+            <Label Text="Expenses" FontSize="18" FontAttributes="Bold" Margin="0,24,0,8" />
+            <Button Text="+ Add Expense"
+                    Command="{Binding AddExpenseCommand}"
+                    HorizontalOptions="Start"
+                    Margin="0,0,0,8" />
+
+            <CollectionView ItemsSource="{Binding Expenses}">
+                <CollectionView.EmptyView>
+                    <Label Text="No expenses yet"
+                           TextColor="{StaticResource Gray500}"
+                           HorizontalTextAlignment="Center"
+                           Margin="0,8,0,0" />
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame Margin="0,0,0,8" Padding="12" CornerRadius="8">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                <Label Grid.Column="0"
+                                       Text="💰"
+                                       FontSize="24"
+                                       VerticalOptions="Center" />
+                                <StackLayout Grid.Column="1" VerticalOptions="Center">
+                                    <Label Text="{Binding Description}"
+                                           FontSize="14"
+                                           FontAttributes="Bold" />
+                                    <Label Text="{Binding ExpenseDate, StringFormat='{0:MMM dd, yyyy}'}"
+                                           TextColor="{StaticResource Gray500}"
+                                           FontSize="12" />
+                                </StackLayout>
+                                <Label Grid.Column="2"
+                                       Text="{Binding TotalAmount, StringFormat='${0:F2}'}"
+                                       FontSize="16"
+                                       FontAttributes="Bold"
+                                       VerticalOptions="Center" />
+                            </Grid>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Debts section -->
+            <Label Text="Debts Summary" FontSize="18" FontAttributes="Bold" Margin="0,16,0,8" />
+
+            <CollectionView ItemsSource="{Binding Debts}">
+                <CollectionView.EmptyView>
+                    <Label Text="All settled up! 🎉"
+                           TextColor="{StaticResource Gray500}"
+                           HorizontalTextAlignment="Center"
+                           Margin="0,8,0,0" />
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame Margin="0,0,0,8" Padding="12" CornerRadius="8" BackgroundColor="{StaticResource Secondary}">
+                            <HorizontalStackLayout Spacing="8">
+                                <Label Text="{Binding DebtorId, StringFormat='User {0}'}"
+                                       FontSize="14"
+                                       VerticalOptions="Center" />
+                                <Label Text="owes"
+                                       TextColor="{StaticResource Gray600}"
+                                       FontSize="12"
+                                       VerticalOptions="Center" />
+                                <Label Text="{Binding CreditorId, StringFormat='User {0}'}"
+                                       FontSize="14"
+                                       VerticalOptions="Center" />
+                                <Label Text="{Binding Amount, StringFormat='${0:F2}'}"
+                                       FontSize="16"
+                                       FontAttributes="Bold"
+                                       TextColor="{StaticResource Danger}"
+                                       VerticalOptions="Center"
+                                       HorizontalOptions="EndAndExpand" />
+                            </HorizontalStackLayout>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
             <!-- Loading indicator -->
             <ActivityIndicator IsRunning="{Binding IsBusy}"
                               IsVisible="{Binding IsBusy}"
