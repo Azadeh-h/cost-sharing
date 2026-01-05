@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:CostSharingApp.ViewModels.Debts"
+             x:Class="CostSharingApp.Views.Debts.SimplifiedDebtsPage"
+             x:DataType="vm:SimplifiedDebtsViewModel"
+             Title="Simplified Settlements">
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="16">
+            <!-- Loading Indicator -->
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center" />
+
+            <StackLayout IsVisible="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
+                         Spacing="16">
+                <!-- Summary Card -->
+                <Frame Padding="16" CornerRadius="8" BackgroundColor="{StaticResource Primary}">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="💡 Debt Simplification"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="White" />
+                        <Label TextColor="White" FontSize="14">
+                            <Label.FormattedText>
+                                <FormattedString>
+                                    <Span Text="Optimized from " />
+                                    <Span Text="{Binding OriginalTransactionCount}"
+                                          FontAttributes="Bold" />
+                                    <Span Text=" transactions to " />
+                                    <Span Text="{Binding SimplifiedTransactionCount}"
+                                          FontAttributes="Bold" />
+                                    <Span Text=" settlements" />
+                                </FormattedString>
+                            </Label.FormattedText>
+                        </Label>
+                        <Label Text="{Binding TransactionsSaved, StringFormat='Saves {0} transactions!'}"
+                               TextColor="White"
+                               FontSize="12"
+                               FontAttributes="Italic" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Instructions -->
+                <Frame Padding="12" CornerRadius="8" BackgroundColor="{StaticResource Gray100}">
+                    <Label FontSize="12" TextColor="{StaticResource Gray600}">
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="📋 These settlements will completely settle all debts with the minimum number of transactions. " />
+                                <Span Text="Each person only needs to make one payment." />
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+                </Frame>
+
+                <!-- Simplified Transactions List -->
+                <Label Text="Settlement Plan"
+                       FontSize="18"
+                       FontAttributes="Bold"
+                       Margin="0,8,0,0" />
+
+                <CollectionView ItemsSource="{Binding SimplifiedTransactions}">
+                    <CollectionView.EmptyView>
+                        <StackLayout Padding="20" HorizontalOptions="Center">
+                            <Label Text="🎉"
+                                   FontSize="48"
+                                   HorizontalOptions="Center" />
+                            <Label Text="All settled up!"
+                                   FontSize="16"
+                                   FontAttributes="Bold"
+                                   HorizontalOptions="Center" />
+                            <Label Text="No outstanding debts in this group."
+                                   FontSize="12"
+                                   TextColor="{StaticResource Gray500}"
+                                   HorizontalOptions="Center" />
+                        </StackLayout>
+                    </CollectionView.EmptyView>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame Margin="0,0,0,12" Padding="16" CornerRadius="8" HasShadow="False">
+                                <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto">
+                                    <!-- From User -->
+                                    <HorizontalStackLayout Grid.Row="0" Grid.Column="0" Spacing="8">
+                                        <Label Text="👤" FontSize="16" />
+                                        <Label Text="{Binding FromUserName}"
+                                               FontSize="16"
+                                               FontAttributes="Bold"
+                                               VerticalOptions="Center" />
+                                    </HorizontalStackLayout>
+
+                                    <!-- Arrow and Amount -->
+                                    <HorizontalStackLayout Grid.Row="1" Grid.Column="0" Spacing="8" Margin="24,4,0,4">
+                                        <Label Text="↓ pays" FontSize="14" TextColor="{StaticResource Gray500}" />
+                                        <Label Text="{Binding Amount, StringFormat='${0:F2}'}"
+                                               FontSize="18"
+                                               FontAttributes="Bold"
+                                               TextColor="{StaticResource Primary}" />
+                                    </HorizontalStackLayout>
+
+                                    <!-- To User -->
+                                    <HorizontalStackLayout Grid.Row="2" Grid.Column="0" Spacing="8">
+                                        <Label Text="👤" FontSize="16" />
+                                        <Label Text="{Binding ToUserName}"
+                                               FontSize="16"
+                                               FontAttributes="Bold"
+                                               VerticalOptions="Center" />
+                                    </HorizontalStackLayout>
+
+                                    <!-- Record Settlement Button -->
+                                    <Button Grid.Row="0" Grid.RowSpan="3" Grid.Column="1"
+                                            Text="✓ Paid"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:SimplifiedDebtsViewModel}}, Path=RecordSettlementCommand}"
+                                            CommandParameter="{Binding .}"
+                                            FontSize="12"
+                                            Padding="12,6"
+                                            VerticalOptions="Center"
+                                            BackgroundColor="{StaticResource Success}" />
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <!-- Total Amount -->
+                <Frame Padding="16" CornerRadius="8" BackgroundColor="{StaticResource Gray100}">
+                    <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
+                        <Label Text="Total to Settle:"
+                               FontSize="16"
+                               FontAttributes="Bold" />
+                        <Label Text="{Binding TotalAmount, StringFormat='${0:F2}'}"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource Primary}" />
+                    </HorizontalStackLayout>
+                </Frame>
+
+                <!-- Action Buttons -->
+                <Button Text="View Detailed Debts"
+                        Command="{Binding ViewDetailedDebtsCommand}"
+                        Margin="0,8,0,0" />
+            </StackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

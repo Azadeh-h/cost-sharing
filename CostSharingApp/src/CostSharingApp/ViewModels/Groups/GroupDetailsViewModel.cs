@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Windows.Input;
 using CostSharing.Core.Models;
 using CostSharing.Core.Services;
+using CostSharingApp.Services;
 
 namespace CostSharingApp.ViewModels.Groups;
 
@@ -16,11 +17,13 @@ public class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     private readonly IErrorService errorService;
     private readonly IExpenseService expenseService;
     private readonly IDebtCalculationService debtCalculationService;
+    private readonly ISettlementService settlementService;
     private Group? group;
     private ObservableCollection<GroupMember> members = new();
     private ObservableCollection<Invitation> pendingInvitations = new();
     private ObservableCollection<Expense> expenses = new();
     private ObservableCollection<Debt> debts = new();
+    private ObservableCollection<Settlement> settlements = new();
     private string errorMessage = string.Empty;
     private bool isAdmin;
 
@@ -33,7 +36,8 @@ public class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
         IAuthService authService,
         IErrorService errorService,
         IExpenseService expenseService,
-        IDebtCalculationService debtCalculationService)
+        IDebtCalculationService debtCalculationService,
+        ISettlementService settlementService)
     {
         this.groupService = groupService;
         this.invitationService = invitationService;
@@ -41,6 +45,7 @@ public class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
         this.errorService = errorService;
         this.expenseService = expenseService;
         this.debtCalculationService = debtCalculationService;
+        this.settlementService = settlementService;
 
         this.DeleteGroupCommand = new Command(async () => await this.DeleteGroupAsync(), () => this.isAdmin);
         this.EditGroupCommand = new Command(async () => await this.EditGroupAsync(), () => this.isAdmin);
@@ -49,6 +54,7 @@ public class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
         this.RemoveMemberCommand = new Command<GroupMember>(async (member) => await this.RemoveMemberAsync(member), (_) => this.isAdmin);
         this.ResendInvitationCommand = new Command<Invitation>(async (inv) => await this.ResendInvitationAsync(inv), (_) => this.isAdmin);
         this.CancelInvitationCommand = new Command<Invitation>(async (inv) => await this.CancelInvitationAsync(inv), (_) => this.isAdmin);
+        this.RefreshCommand = new Command(async () => await this.RefreshAsync());
     }
 
     /// <summary>
@@ -137,6 +143,11 @@ public class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     public ICommand AddExpenseCommand { get; }
 
     /// <summary>
+    /// Gets the command to refresh group data.
+    /// </summary>
+    public ICommand RefreshCommand { get; }
+
+    /// <summary>
     /// Gets the collection of expenses.
     /// </summary>
     public ObservableCollection<Expense> Expenses
@@ -153,6 +164,16 @@ public class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
         get => this.debts;
         set => this.SetProperty(ref this.debts, value);
     }
+
+    /// <summary>
+    /// Gets the collection of settlements.
+    /// </summary>
+    public ObservableCollection<Settlement> Settlements
+    {
+        get => this.settlements;
+        set => this.SetProperty(ref this.settlements, value);
+    }
+
     /// <summary>
     /// Gets the command to edit the group.
     /// </summary>
@@ -227,6 +248,14 @@ public class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
 
             // Calculate debts
             await this.CalculateDebtsAsync();
+
+            // Load settlements
+            var settlements = await this.settlementService.GetGroupSettlementsAsync(groupId);
+            this.Settlements.Clear();
+            foreach (var settlement in settlements)
+            {
+                this.Settlements.Add(settlement);
+            }
 
             // Check if current user is admin
             var currentUser = this.authService.GetCurrentUser();
@@ -488,7 +517,9 @@ public class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
                 allSplits.AddRange(splits);
             }
 
-            var debts = this.debtCalculationService.CalculateDebts(expenses, allSplits);
+            // Get settlements and pass them to debt calculation
+            var settlements = this.Settlements.ToList();
+            var debts = this.debtCalculationService.CalculateDebts(expenses, allSplits, settlements);
 
             this.Debts.Clear();
             foreach (var debt in debts)
@@ -499,6 +530,55 @@ public class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
         catch (Exception ex)
         {
             this.ErrorMessage = this.errorService.HandleException(ex, "calculating debts");
+        }
+    }
+
+    /// <summary>
+    /// Navigates to the simplified debts page.
+    /// </summary>
+    /// <returns>Task for async operation.</returns>
+    [RelayCommand]
+    private async Task ViewSimplifiedDebtsAsync()
+    {
+        await Shell.Current.GoToAsync($"simplifieddebts?groupId={this.groupId}");
+    }
+
+    /// <summary>
+    /// Refreshes group data (expenses, settlements, debts).
+    /// Called when returning from add expense or settlement recording.
+    /// </summary>
+    /// <returns>Task for async operation.</returns>
+    private async Task RefreshAsync()
+    {
+        if (this.group == null || this.IsBusy)
+        {
+            return;
+        }
+
+        try
+        {
+            // Reload expenses
+            var expenses = await this.expenseService.GetGroupExpensesAsync(this.group.Id);
+            this.Expenses.Clear();
+            foreach (var expense in expenses)
+            {
+                this.Expenses.Add(expense);
+            }
+
+            // Reload settlements
+            var settlements = await this.settlementService.GetGroupSettlementsAsync(this.group.Id);
+            this.Settlements.Clear();
+            foreach (var settlement in settlements)
+            {
+                this.Settlements.Add(settlement);
+            }
+
+            // Recalculate debts (will account for new expenses and settlements)
+            await this.CalculateDebtsAsync();
+        }
+        catch (Exception ex)
+        {
+            this.ErrorMessage = this.errorService.HandleException(ex, "refreshing group data");
         }
     }
 }

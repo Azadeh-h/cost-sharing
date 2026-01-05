@@ -48,6 +48,9 @@ public static class MauiProgram
 		services.AddSingleton<IExpenseService, ExpenseService>();
 		services.AddSingleton<IDebtCalculationService, DebtCalculationService>();
 
+		// Phase 7: US5 - Settlement Services
+		services.AddSingleton<ISettlementService, SettlementService>();
+
 		// Phase 3: US1 - ViewModels
 		services.AddTransient<ViewModels.Groups.GroupListViewModel>();
 		services.AddTransient<ViewModels.Groups.CreateGroupViewModel>();
@@ -65,6 +68,8 @@ public static class MauiProgram
 		// Phase 6: US4 - ViewModels
 		services.AddTransient<ViewModels.Expenses.CustomSplitViewModel>();
 
+		// Phase 7: US5 - ViewModels
+		services.AddTransient<ViewModels.Debts.SimplifiedDebtsViewModel>();
 
 		// Phase 4: US2 - Pages
 		services.AddTransient<Views.Members.InviteMemberPage>();
@@ -76,6 +81,9 @@ public static class MauiProgram
 
 		// Phase 6: US4 - Pages
 		services.AddTransient<Views.Expenses.CustomSplitPage>();
+
+		// Phase 7: US5 - Pages
+		services.AddTransient<Views.Debts.SimplifiedDebtsPage>();
 
 		// Phase 3: US1 - Pages
 		services.AddTransient<Views.Groups.GroupListPage>();

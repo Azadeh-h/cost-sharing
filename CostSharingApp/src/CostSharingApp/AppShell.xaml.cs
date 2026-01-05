@@ -21,5 +21,6 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("addexpense", typeof(Views.Expenses.AddExpensePage));
         Routing.RegisterRoute("expensedetails", typeof(Views.Expenses.ExpenseDetailsPage));
         Routing.RegisterRoute("customsplit", typeof(Views.Expenses.CustomSplitPage));
+        Routing.RegisterRoute("simplifieddebts", typeof(Views.Debts.SimplifiedDebtsPage));
     }
 }

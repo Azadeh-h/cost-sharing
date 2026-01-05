@@ -178,18 +178,18 @@ Based on plan.md, the project structure is:
 
 ### Implementation for User Story 5
 
-- [ ] T077 [P] [US5] Create Settlement model in CostSharing.Core/Models/Settlement.cs (from/to user, amount, status)
-- [ ] T078 [US5] Implement Min-Cash-Flow algorithm in CostSharing.Core/Algorithms/DebtSimplificationAlgorithm.cs (calculate net balances, greedy matching)
-- [ ] T079 [US5] Implement net balance calculation in DebtSimplificationAlgorithm (total paid - total owed per member)
-- [ ] T080 [US5] Implement greedy matching: max creditor + max debtor, settle min amount, repeat
-- [ ] T081 [P] [US5] Create SimplifiedDebtsPage XAML in CostSharingApp/Views/Debts/SimplifiedDebtsPage.xaml (show settlement plan)
-- [ ] T082 [P] [US5] Create SimplifiedDebtsViewModel in CostSharingApp/ViewModels/Debts/SimplifiedDebtsViewModel.cs
-- [ ] T083 [US5] Add toggle in GroupDetailsPage debt summary: "Show Detailed" vs "Show Simplified"
-- [ ] T084 [US5] Implement settlement recording: mark debt as paid in SimplifiedDebtsPage
-- [ ] T085 [US5] Create SettlementService in CostSharingApp/Services/SettlementService.cs (persist settlements to Google Drive)
-- [ ] T086 [US5] Add settlement history view in GroupDetailsPage (show past payments)
-- [ ] T087 [US5] Update debt calculations to account for recorded settlements (reduce outstanding balances)
-- [ ] T088 [US5] Add automatic recalculation of simplified debts when new expense added or settlement recorded
+- [X] T077 [P] [US5] Create Settlement model in CostSharing.Core/Models/Settlement.cs (from/to user, amount, status)
+- [X] T078 [US5] Implement Min-Cash-Flow algorithm in CostSharing.Core/Algorithms/DebtSimplificationAlgorithm.cs (calculate net balances, greedy matching)
+- [X] T079 [US5] Implement net balance calculation in DebtSimplificationAlgorithm (total paid - total owed per member)
+- [X] T080 [US5] Implement greedy matching: max creditor + max debtor, settle min amount, repeat
+- [X] T081 [P] [US5] Create SimplifiedDebtsPage XAML in CostSharingApp/Views/Debts/SimplifiedDebtsPage.xaml (show settlement plan)
+- [X] T082 [P] [US5] Create SimplifiedDebtsViewModel in CostSharingApp/ViewModels/Debts/SimplifiedDebtsViewModel.cs
+- [X] T083 [US5] Add toggle in GroupDetailsPage debt summary: "Show Detailed" vs "Show Simplified"
+- [X] T084 [US5] Implement settlement recording: mark debt as paid in SimplifiedDebtsPage
+- [X] T085 [US5] Create SettlementService in CostSharingApp/Services/SettlementService.cs (persist settlements to Google Drive)
+- [X] T086 [US5] Add settlement history view in GroupDetailsPage (show past payments)
+- [X] T087 [US5] Update debt calculations to account for recorded settlements (reduce outstanding balances)
+- [X] T088 [US5] Add automatic recalculation of simplified debts when new expense added or settlement recorded
 
 **Checkpoint**: At this point, debt simplification should work, reducing transaction complexity
 
