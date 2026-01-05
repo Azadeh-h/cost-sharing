@@ -1,3 +1,5 @@
+using CostSharingApp.ViewModels.Groups;
+
 namespace CostSharingApp.Views.Groups;
 
 /// <summary>
@@ -11,5 +13,17 @@ public partial class GroupDetailsPage : ContentPage
     public GroupDetailsPage()
     {
         this.InitializeComponent();
+    }
+
+    /// <inheritdoc/>
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+
+        // Refresh data when returning to page (after adding expense or recording settlement)
+        if (this.BindingContext is GroupDetailsViewModel viewModel)
+        {
+            viewModel.RefreshCommand?.Execute(null);
+        }
     }
 }
