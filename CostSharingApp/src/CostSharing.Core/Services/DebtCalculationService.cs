@@ -169,21 +169,21 @@ public class DebtCalculationService : IDebtCalculationService
             foreach (var settlement in settlements.Where(s => s.Status == SettlementStatus.Confirmed))
             {
                 // Settlement: PaidBy paid PaidTo the amount
-                // This reduces PaidBy's debt (or increases credit)
+                // PaidBy's balance increases (they have less debt or more credit)
                 if (!balances.ContainsKey(settlement.PaidBy))
                 {
                     balances[settlement.PaidBy] = 0;
                 }
 
-                balances[settlement.PaidBy] -= settlement.Amount;
+                balances[settlement.PaidBy] += settlement.Amount;
 
-                // This increases PaidTo's debt (or reduces credit)
+                // PaidTo's balance decreases (they have less credit or more debt)
                 if (!balances.ContainsKey(settlement.PaidTo))
                 {
                     balances[settlement.PaidTo] = 0;
                 }
 
-                balances[settlement.PaidTo] += settlement.Amount;
+                balances[settlement.PaidTo] -= settlement.Amount;
             }
         }
 
