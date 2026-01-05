@@ -10,25 +10,35 @@ namespace CostSharingApp.ViewModels.Groups;
 public class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
 {
     private readonly IGroupService groupService;
+    private readonly IInvitationService invitationService;
+    private readonly IAuthService authService;
     private readonly IErrorService errorService;
     private Group? group;
     private ObservableCollection<GroupMember> members = new();
+    private ObservableCollection<Invitation> pendingInvitations = new();
     private string errorMessage = string.Empty;
     private bool isAdmin;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GroupDetailsViewModel"/> class.
     /// </summary>
-    /// <param name="groupService">Group service.</param>
-    /// <param name="errorService">Error service.</param>
-    public GroupDetailsViewModel(IGroupService groupService, IErrorService errorService)
+    public GroupDetailsViewModel(
+        IGroupService groupService,
+        IInvitationService invitationService,
+        IAuthService authService,
+        IErrorService errorService)
     {
         this.groupService = groupService;
+        this.invitationService = invitationService;
+        this.authService = authService;
         this.errorService = errorService;
 
         this.DeleteGroupCommand = new Command(async () => await this.DeleteGroupAsync(), () => this.isAdmin);
         this.EditGroupCommand = new Command(async () => await this.EditGroupAsync(), () => this.isAdmin);
         this.InviteMemberCommand = new Command(async () => await this.InviteMemberAsync(), () => this.isAdmin);
+        this.RemoveMemberCommand = new Command<GroupMember>(async (member) => await this.RemoveMemberAsync(member), (_) => this.isAdmin);
+        this.ResendInvitationCommand = new Command<Invitation>(async (inv) => await this.ResendInvitationAsync(inv), (_) => this.isAdmin);
+        this.CancelInvitationCommand = new Command<Invitation>(async (inv) => await this.CancelInvitationAsync(inv), (_) => this.isAdmin);
     }
 
     /// <summary>
@@ -43,7 +53,16 @@ public class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
             {
                 this.Title = value?.Name ?? "Group Details";
             }
-        }
+     
+
+    /// <summary>
+    /// Gets the collection of pending invitations.
+    /// </summary>
+    public ObservableCollection<Invitation> PendingInvitations
+    {
+        get => this.pendingInvitations;
+        set => this.SetProperty(ref this.pendingInvitations, value);
+    }   }
     }
 
     /// <summary>
@@ -86,6 +105,21 @@ public class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     /// </summary>
     public ICommand DeleteGroupCommand { get; }
 
+
+    /// <summary>
+    /// Gets the command to remove a member.
+    /// </summary>
+    public ICommand RemoveMemberCommand { get; }
+
+    /// <summary>
+    /// Gets the command to resend an invitation.
+    /// </summary>
+    public ICommand ResendInvitationCommand { get; }
+
+    /// <summary>
+    /// Gets the command to cancel an invitation.
+    /// </summary>
+    public ICommand CancelInvitationCommand { get; }
     /// <summary>
     /// Gets the command to edit the group.
     /// </summary>
@@ -118,8 +152,16 @@ public class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     /// <returns>Task for async operation.</returns>
     private async Task LoadGroupAsync(Guid groupId)
     {
-        if (this.IsBusy)
-        {
+        if (thiLoad pending invitations
+            var invitations = await this.invitationService.GetPendingInvitationsAsync(groupId);
+            this.PendingInvitations.Clear();
+            foreach (var invitation in invitations)
+            {
+                this.PendingInvitations.Add(invitation);
+            }
+
+            // Check if current user is admin
+            var currentUser = this.authService
             return;
         }
 
@@ -206,6 +248,142 @@ public class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     /// Navigates to edit group page.
     /// </summary>
     /// <returns>Task for async operation.</returns>
+
+    /// <summary>
+    /// Removes a member from the group.
+    /// </summary>
+    private async Task RemoveMemberAsync(GroupMember? member)
+    {
+        if (member == null || this.group == null)
+        {
+            return;
+        }
+
+        var currentUser = this.authService.GetCurrentUser();
+        if (currentUser == null)
+        {
+            return;
+        }
+
+        // Cannot remove yourself if you're the only admin
+        var admins = this.Members.Where(m => m.Role == GroupRole.Admin).ToList();
+        if (member.UserId == currentUser.Id && admins.Count == 1)
+        {
+            await Application.Current!.MainPage!.DisplayAlert(
+                "Cannot Remove",
+                "You are the only admin. Please promote another member to admin first.",
+                "OK");
+            return;
+        }
+
+        bool confirmed = await Application.Current!.MainPage!.DisplayAlert(
+            "Remove Member",
+            $"Remove this member from '{this.group.Name}'?",
+            "Remove",
+            "Cancel");
+
+        if (!confirmed)
+        {
+            return;
+        }
+
+        try
+        {
+            this.IsBusy = true;
+            await this.groupService.RemoveMemberAsync(this.group.Id, member.UserId);
+            this.Members.Remove(member);
+        }
+        catch (Exception ex)
+        {
+            this.ErrorMessage = this.errorService.HandleException(ex, "removing member");
+        }
+        finally
+        {
+            this.IsBusy = false;
+        }
+    }
+
+    /// <summary>
+    /// Resends an invitation.
+    /// </summary>
+    private async Task ResendInvitationAsync(Invitation? invitation)
+    {
+        if (invitation == null)
+        {
+            return;
+        }
+
+        try
+        {
+            this.IsBusy = true;
+            var success = await this.invitationService.ResendInvitationAsync(invitation.Id);
+
+            if (success)
+            {
+                await Application.Current!.MainPage!.DisplayAlert(
+                    "Invitation Resent",
+                    $"Invitation resent to {invitation.InviteeContact}",
+                    "OK");
+            }
+            else
+            {
+                this.ErrorMessage = "Failed to resend invitation.";
+            }
+        }
+        catch (Exception ex)
+        {
+            this.ErrorMessage = this.errorService.HandleException(ex, "resending invitation");
+        }
+        finally
+        {
+            this.IsBusy = false;
+        }
+    }
+
+    /// <summary>
+    /// Cancels an invitation.
+    /// </summary>
+    private async Task CancelInvitationAsync(Invitation? invitation)
+    {
+        if (invitation == null)
+        {
+            return;
+        }
+
+        bool confirmed = await Application.Current!.MainPage!.DisplayAlert(
+            "Cancel Invitation",
+            $"Cancel invitation to {invitation.InviteeContact}?",
+            "Cancel Invitation",
+            "Keep");
+
+        if (!confirmed)
+        {
+            return;
+        }
+
+        try
+        {
+            this.IsBusy = true;
+            var success = await this.invitationService.CancelInvitationAsync(invitation.Id);
+
+            if (success)
+            {
+                this.PendingInvitations.Remove(invitation);
+            }
+            else
+            {
+                this.ErrorMessage = "Failed to cancel invitation.";
+            }
+        }
+        catch (Exception ex)
+        {
+            this.ErrorMessage = this.errorService.HandleException(ex, "cancelling invitation");
+        }
+        finally
+        {
+            this.IsBusy = false;
+        }
+    }
     private async Task EditGroupAsync()
     {
         if (this.group == null)
