@@ -46,6 +46,15 @@
                              GroupName="SplitType" />
             </HorizontalStackLayout>
 
+            <!-- Custom Split Configuration Button -->
+            <Button Text="⚙️ Configure Custom Split"
+                    Command="{Binding ConfigureCustomSplitCommand}"
+                    IsVisible="{Binding IsCustomSplit}"
+                    HorizontalOptions="Start"
+                    FontSize="12"
+                    Padding="12,6"
+                    Margin="0,4,0,0" />
+
             <!-- Member Selection -->
             <Label Text="Split Between" FontSize="14" FontAttributes="Bold" Margin="0,8,0,0" />
             <Button Text="Select All"

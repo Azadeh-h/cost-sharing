@@ -18,4 +18,8 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\CostSharing.Core\CostSharing.Core.csproj" />
+  </ItemGroup>
+
 </Project>

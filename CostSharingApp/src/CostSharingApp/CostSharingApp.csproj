@@ -6,6 +6,10 @@
 		<!-- Uncomment to also build the tizen app. You will need to install tizen by following this: https://github.com/Samsung/Tizen.NET -->
 		<!-- <TargetFrameworks>$(TargetFrameworks);net9.0-tizen</TargetFrameworks> -->
 
+		<!-- Use older iOS SDK version that's compatible with Xcode 26.2 -->
+		<_XamarinSdkRoot>/usr/local/share/dotnet/packs/Microsoft.iOS.Sdk.net9.0_18.0/18.0.9617</_XamarinSdkRoot>
+		<_XamarinMacRoot>/usr/local/share/dotnet/packs/Microsoft.MacCatalyst.Sdk.net9.0_18.0/18.0.9617</_XamarinMacRoot>
+
 		<!-- Note for MacCatalyst:
 		The default runtime is maccatalyst-x64, except in Release config, in which case the default is maccatalyst-x64;maccatalyst-arm64.
 		When specifying both architectures, use the plural <RuntimeIdentifiers> instead of the singular <RuntimeIdentifier>.

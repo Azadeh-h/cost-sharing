@@ -411,6 +411,16 @@
         "build": {
           "build/net6.0/xunit.runner.visualstudio.props": {}
         }
+      },
+      "CostSharing.Core/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "compile": {
+          "bin/placeholder/CostSharing.Core.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/CostSharing.Core.dll": {}
+        }
       }
     }
   },
@@ -932,10 +942,16 @@
         "xunit.runner.visualstudio.2.8.2.nupkg.sha512",
         "xunit.runner.visualstudio.nuspec"
       ]
+    },
+    "CostSharing.Core/1.0.0": {
+      "type": "project",
+      "path": "../../src/CostSharing.Core/CostSharing.Core.csproj",
+      "msbuildProject": "../../src/CostSharing.Core/CostSharing.Core.csproj"
     }
   },
   "projectFileDependencyGroups": {
     "net9.0": [
+      "CostSharing.Core >= 1.0.0",
       "Microsoft.NET.Test.Sdk >= 17.12.0",
       "coverlet.collector >= 6.0.2",
       "xunit >= 2.9.2",
@@ -967,7 +983,11 @@
       "frameworks": {
         "net9.0": {
           "targetAlias": "net9.0",
-          "projectReferences": {}
+          "projectReferences": {
+            "/Users/azadehhassanzadeh/Source/cost-sharing/CostSharingApp/src/CostSharing.Core/CostSharing.Core.csproj": {
+              "projectPath": "/Users/azadehhassanzadeh/Source/cost-sharing/CostSharingApp/src/CostSharing.Core/CostSharing.Core.csproj"
+            }
+          }
         }
       },
       "warningProperties": {
