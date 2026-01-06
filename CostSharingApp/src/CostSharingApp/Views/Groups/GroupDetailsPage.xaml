@@ -2,12 +2,10 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:CostSharingApp.ViewModels.Groups"
+             xmlns:models="clr-namespace:CostSharing.Core.Models;assembly=CostSharing.Core"
              x:Class="CostSharingApp.Views.Groups.GroupDetailsPage"
+             x:DataType="vm:GroupDetailsViewModel"
              Title="{Binding Title}">
-
-    <ContentPage.BindingContext>
-        <vm:GroupDetailsViewModel />
-    </ContentPage.BindingContext>
 
     <RefreshView IsRefreshing="{Binding IsRefreshing}"
                  Command="{Binding RefreshCommand}">
@@ -62,7 +60,7 @@
                 </CollectionView.EmptyView>
 
                 <CollectionView.ItemTemplate>
-                    <DataTemplate>
+                    <DataTemplate x:DataType="models:GroupMember">
                         <SwipeView>
                             <SwipeView.RightItems>
                                 <SwipeItems>
@@ -178,7 +176,7 @@
                 </CollectionView.EmptyView>
 
                 <CollectionView.ItemTemplate>
-                    <DataTemplate>
+                    <DataTemplate x:DataType="models:Expense">
                         <Frame Margin="0,0,0,8" Padding="12" CornerRadius="8">
                             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
                                 <Label Grid.Column="0"
@@ -229,7 +227,7 @@
                 </CollectionView.EmptyView>
 
                 <CollectionView.ItemTemplate>
-                    <DataTemplate>
+                    <DataTemplate x:DataType="models:Debt">
                         <Frame Margin="0,0,0,8" Padding="12" CornerRadius="8" BackgroundColor="{StaticResource Secondary}">
                             <HorizontalStackLayout Spacing="8">
                                 <Label Text="{Binding DebtorId, StringFormat='User {0}'}"
@@ -269,7 +267,7 @@
                 </CollectionView.EmptyView>
 
                 <CollectionView.ItemTemplate>
-                    <DataTemplate>
+                    <DataTemplate x:DataType="models:Settlement">
                         <Frame Margin="0,0,0,8" Padding="12" CornerRadius="8" BackgroundColor="{StaticResource Tertiary}">
                             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
                                 <Label Grid.Column="0"

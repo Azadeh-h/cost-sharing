@@ -293,14 +293,6 @@ public class GroupService : IGroupService
     }
 }
 
-
-    /// <summary>
-    /// Removes a member from a group.
-    /// </summary>
-    /// <param name="groupId">Group ID.</param>
-    /// <param name="userId">User ID to remove.</param>
-    /// <returns>True if successful.</returns>
-    Task<bool> RemoveMemberAsync(Guid groupId, Guid userId);
 /// <summary>
 /// Interface for group service.
 /// </summary>
@@ -346,4 +338,12 @@ public interface IGroupService
     /// <param name="groupId">Group ID.</param>
     /// <returns>List of members.</returns>
     Task<List<GroupMember>> GetGroupMembersAsync(Guid groupId);
+
+    /// <summary>
+    /// Removes a member from a group.
+    /// </summary>
+    /// <param name="groupId">Group ID.</param>
+    /// <param name="userId">User ID to remove.</param>
+    /// <returns>True if successful.</returns>
+    Task<bool> RemoveMemberAsync(Guid groupId, Guid userId);
 }

@@ -1,4 +1,5 @@
-﻿using CostSharingApp.Services;
+﻿using CostSharing.Core.Services;
+using CostSharingApp.Services;
 using Microsoft.Extensions.Logging;
 
 namespace CostSharingApp;

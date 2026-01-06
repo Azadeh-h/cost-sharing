@@ -1,4 +1,5 @@
 using System.Windows.Input;
+using CostSharingApp.Services;
 using CostSharing.Core.Models;
 
 namespace CostSharingApp.ViewModels.Members;
@@ -19,6 +20,22 @@ public class AcceptInvitationViewModel : BaseViewModel, IQueryAttributable
     private string errorMessage = string.Empty;
     private bool hasInvitation;
     private bool needsAuthentication;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AcceptInvitationViewModel"/> class.
+    /// Default constructor for XAML.
+    /// </summary>
+    public AcceptInvitationViewModel()
+    {
+        this.invitationService = null!;
+        this.authService = null!;
+        this.groupService = null!;
+        this.errorService = null!;
+        this.cacheService = null!;
+        this.Title = "Accept Invitation";
+        this.AcceptCommand = new Command(async () => await this.AcceptInvitationAsync());
+        this.SignInCommand = new Command(async () => await this.NavigateToSignInAsync());
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AcceptInvitationViewModel"/> class.

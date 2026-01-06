@@ -1,11 +1,11 @@
+namespace CostSharingApp.ViewModels.Dashboard;
+
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using CostSharingApp.Core.Interfaces;
-using CostSharingApp.Core.Models;
-
-namespace CostSharingApp.ViewModels.Dashboard;
+using CostSharing.Core.Models;
+using CostSharingApp.Services;
 
 /// <summary>
 /// View model for the transaction history page.
@@ -99,15 +99,15 @@ public partial class TransactionHistoryViewModel : ObservableObject
         try
         {
             this.IsBusy = true;
-            var currentUser = await this.authService.GetCurrentUserAsync();
+            var currentUser = this.authService.GetCurrentUser();
             if (currentUser == null)
             {
-                await this.errorService.HandleErrorAsync(new Exception("User not logged in"), "Please log in to view transactions");
+                this.errorService.HandleException(new Exception("User not logged in"), "Please log in to view transactions");
                 return;
             }
 
             // Get all groups for the user
-            var groups = await this.groupService.GetUserGroupsAsync(currentUser.Id);
+            var groups = await this.groupService.GetUserGroupsAsync();
 
             // Collect all expenses from all groups
             this.allTransactions.Clear();
@@ -126,11 +126,11 @@ public partial class TransactionHistoryViewModel : ObservableObject
                         {
                             ExpenseId = expense.Id,
                             Description = expense.Description,
-                            Amount = expense.Amount,
-                            Date = expense.Date,
+                            Amount = expense.TotalAmount,
+                            Date = expense.ExpenseDate,
                             GroupName = group.Name,
                             GroupId = group.Id,
-                            PaidByUserId = expense.PaidByUserId,
+                            PaidByUserId = expense.PaidBy,
                             CurrentUserId = currentUser.Id,
                             YourShare = userSplit.Amount,
                         };
@@ -145,7 +145,7 @@ public partial class TransactionHistoryViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            await this.errorService.HandleErrorAsync(ex, "Failed to load transactions");
+            this.errorService.HandleException(ex, "Failed to load transactions");
         }
         finally
         {
@@ -187,7 +187,7 @@ public partial class TransactionHistoryViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            await this.errorService.HandleErrorAsync(ex, "Failed to apply filters");
+            this.errorService.HandleException(ex, "Failed to apply filters");
         }
         finally
         {
@@ -236,7 +236,7 @@ public class TransactionViewModel
     /// <summary>
     /// Gets or sets the expense ID.
     /// </summary>
-    public int ExpenseId { get; set; }
+    public Guid ExpenseId { get; set; }
 
     /// <summary>
     /// Gets or sets the description.
@@ -261,17 +261,17 @@ public class TransactionViewModel
     /// <summary>
     /// Gets or sets the group ID.
     /// </summary>
-    public int GroupId { get; set; }
+    public Guid GroupId { get; set; }
 
     /// <summary>
     /// Gets or sets the user ID who paid.
     /// </summary>
-    public int PaidByUserId { get; set; }
+    public Guid PaidByUserId { get; set; }
 
     /// <summary>
     /// Gets or sets the current user ID.
     /// </summary>
-    public int CurrentUserId { get; set; }
+    public Guid CurrentUserId { get; set; }
 
     /// <summary>
     /// Gets or sets the current user's share.

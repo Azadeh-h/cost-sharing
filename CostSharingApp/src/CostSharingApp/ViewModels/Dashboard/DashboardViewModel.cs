@@ -68,14 +68,14 @@ public partial class DashboardViewModel : ObservableObject
         {
             this.IsBusy = true;
 
-            var currentUser = await this.authService.GetCurrentUserAsync();
+            var currentUser = this.authService.GetCurrentUser();
             if (currentUser == null)
             {
                 return;
             }
 
             // Load all groups for the user
-            var groups = await this.groupService.GetUserGroupsAsync(currentUser.Id);
+            var groups = await this.groupService.GetUserGroupsAsync();
 
             this.GroupBalances.Clear();
             decimal totalOwed = 0;
@@ -85,12 +85,13 @@ public partial class DashboardViewModel : ObservableObject
             foreach (var group in groups)
             {
                 var balance = await this.CalculateGroupBalanceAsync(group.Id, currentUser.Id);
+                var members = await this.groupService.GetGroupMembersAsync(group.Id);
                 
                 var groupBalance = new GroupBalanceViewModel
                 {
                     GroupId = group.Id,
                     GroupName = group.Name,
-                    MemberCount = group.Members?.Count ?? 0,
+                    MemberCount = members?.Count ?? 0,
                     Balance = balance
                 };
 

@@ -2,20 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.costsharingapp.mobile">
 	<application 
 		android:allowBackup="true" 
-		android:icon="@mipmap/appicon" 
-		android:roundIcon="@mipmap/appicon_round" 
 		android:supportsRtl="true"
 		android:label="Cost Sharing"
 		android:theme="@style/Maui.SplashTheme">
-		<activity android:name="microsoft.maui.essentials.PermissionsActivity"></activity>
-		
-		<!-- Deep linking for invitations -->
-		<intent-filter>
-			<action android:name="android.intent.action.VIEW" />
-			<category android:name="android.intent.category.DEFAULT" />
-			<category android:name="android.intent.category.BROWSABLE" />
-			<data android:scheme="costsharingapp" android:host="invite" />
-		</intent-filter>
 	</application>
 	
 	<!-- Permissions -->

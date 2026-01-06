@@ -8,6 +8,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CostSharing.Core.Models;
+using CostSharing.Core.Services;
 using CostSharingApp.Services;
 
 /// <summary>
