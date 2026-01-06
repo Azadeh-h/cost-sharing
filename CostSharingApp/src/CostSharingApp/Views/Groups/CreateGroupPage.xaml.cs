@@ -8,8 +8,10 @@ public partial class CreateGroupPage : ContentPage
     /// <summary>
     /// Initializes a new instance of the <see cref="CreateGroupPage"/> class.
     /// </summary>
-    public CreateGroupPage()
+    /// <param name="viewModel">The create group view model.</param>
+    public CreateGroupPage(ViewModels.Groups.CreateGroupViewModel viewModel)
     {
         this.InitializeComponent();
+        this.BindingContext = viewModel;
     }
 }

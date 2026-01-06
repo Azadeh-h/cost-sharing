@@ -8,9 +8,11 @@ public partial class GroupListPage : ContentPage
     /// <summary>
     /// Initializes a new instance of the <see cref="GroupListPage"/> class.
     /// </summary>
-    public GroupListPage()
+    /// <param name="viewModel">The group list view model.</param>
+    public GroupListPage(ViewModels.Groups.GroupListViewModel viewModel)
     {
         this.InitializeComponent();
+        this.BindingContext = viewModel;
     }
 
     /// <summary>

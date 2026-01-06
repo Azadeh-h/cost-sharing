@@ -10,9 +10,11 @@ public partial class GroupDetailsPage : ContentPage
     /// <summary>
     /// Initializes a new instance of the <see cref="GroupDetailsPage"/> class.
     /// </summary>
-    public GroupDetailsPage()
+    /// <param name="viewModel">The group details view model.</param>
+    public GroupDetailsPage(ViewModels.Groups.GroupDetailsViewModel viewModel)
     {
         this.InitializeComponent();
+        this.BindingContext = viewModel;
     }
 
     /// <inheritdoc/>

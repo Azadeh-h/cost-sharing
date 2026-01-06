@@ -8,8 +8,10 @@ public partial class AcceptInvitationPage : ContentPage
     /// <summary>
     /// Initializes a new instance of the <see cref="AcceptInvitationPage"/> class.
     /// </summary>
-    public AcceptInvitationPage()
+    /// <param name="viewModel">The accept invitation view model.</param>
+    public AcceptInvitationPage(ViewModels.Members.AcceptInvitationViewModel viewModel)
     {
         this.InitializeComponent();
+        this.BindingContext = viewModel;
     }
 }
