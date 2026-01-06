@@ -71,6 +71,10 @@ public static class MauiProgram
 		// Phase 7: US5 - ViewModels
 		services.AddTransient<ViewModels.Debts.SimplifiedDebtsViewModel>();
 
+		// Phase 8: US6 - ViewModels
+		services.AddTransient<ViewModels.Dashboard.DashboardViewModel>();
+		services.AddTransient<ViewModels.Dashboard.TransactionHistoryViewModel>();
+
 		// Phase 4: US2 - Pages
 		services.AddTransient<Views.Members.InviteMemberPage>();
 		services.AddTransient<Views.Members.AcceptInvitationPage>();
@@ -84,6 +88,10 @@ public static class MauiProgram
 
 		// Phase 7: US5 - Pages
 		services.AddTransient<Views.Debts.SimplifiedDebtsPage>();
+
+		// Phase 8: US6 - Pages
+		services.AddTransient<Views.Dashboard.DashboardPage>();
+		services.AddTransient<Views.Dashboard.TransactionHistoryPage>();
 
 		// Phase 3: US1 - Pages
 		services.AddTransient<Views.Groups.GroupListPage>();

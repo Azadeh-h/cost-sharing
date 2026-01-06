@@ -11,6 +11,13 @@
         Routes are defined here and registered in code-behind.
     -->
 
+    <FlyoutItem Title="Dashboard" Icon="icon_dashboard.png">
+        <ShellContent
+            Title="Dashboard"
+            ContentTemplate="{DataTemplate local:Views.Dashboard.DashboardPage}"
+            Route="dashboard" />
+    </FlyoutItem>
+
     <FlyoutItem Title="Groups" Icon="icon_groups.png">
         <ShellContent
             Title="My Groups"

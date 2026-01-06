@@ -13,6 +13,8 @@ public partial class AppShell : Shell
         this.InitializeComponent();
 
         // Register routes for navigation
+        Routing.RegisterRoute("dashboard", typeof(Views.Dashboard.DashboardPage));
+        Routing.RegisterRoute("transactionhistory", typeof(Views.Dashboard.TransactionHistoryPage));
         Routing.RegisterRoute("creategroup", typeof(Views.Groups.CreateGroupPage));
         Routing.RegisterRoute("groupdetails", typeof(Views.Groups.GroupDetailsPage));
         Routing.RegisterRoute("editgroup", typeof(Views.Groups.CreateGroupPage));

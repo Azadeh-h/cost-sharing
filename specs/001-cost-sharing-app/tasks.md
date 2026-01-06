@@ -203,18 +203,18 @@ Based on plan.md, the project structure is:
 
 ### Implementation for User Story 6
 
-- [ ] T089 [P] [US6] Create DashboardPage XAML in CostSharingApp/Views/DashboardPage.xaml (show total balance, per-group balances)
-- [ ] T090 [P] [US6] Create DashboardViewModel in CostSharingApp/ViewModels/DashboardViewModel.cs
-- [ ] T091 [US6] Implement total balance calculation in DashboardViewModel (sum across all groups: owed - owing)
-- [ ] T092 [US6] Add per-group balance display in DashboardPage (show each group's balance with color coding: green for owed, red for owing)
-- [ ] T093 [P] [US6] Create TransactionHistoryPage XAML in CostSharingApp/Views/TransactionHistoryPage.xaml (list all user's expenses)
-- [ ] T094 [P] [US6] Create TransactionHistoryViewModel in CostSharingApp/ViewModels/TransactionHistoryViewModel.cs
-- [ ] T095 [US6] Implement date range filter in TransactionHistoryPage (start date, end date pickers)
-- [ ] T096 [US6] Implement transaction type filter (paid by me, owe for, all)
-- [ ] T097 [US6] Add visual indicators for transaction types: badge for "You paid", different color for "You owe"
-- [ ] T098 [US6] Implement navigation from DashboardPage to GroupDetailsPage (tap on group balance)
-- [ ] T099 [US6] Implement navigation from DashboardPage to TransactionHistoryPage
-- [ ] T100 [US6] Set DashboardPage as app startup page in AppShell.xaml
+- [x] T089 [P] [US6] Create DashboardPage XAML in CostSharingApp/Views/DashboardPage.xaml (show total balance, per-group balances)
+- [x] T090 [P] [US6] Create DashboardViewModel in CostSharingApp/ViewModels/DashboardViewModel.cs
+- [x] T091 [US6] Implement total balance calculation in DashboardViewModel (sum across all groups: owed - owing)
+- [x] T092 [US6] Add per-group balance display in DashboardPage (show each group's balance with color coding: green for owed, red for owing)
+- [x] T093 [P] [US6] Create TransactionHistoryPage XAML in CostSharingApp/Views/TransactionHistoryPage.xaml (list all user's expenses)
+- [x] T094 [P] [US6] Create TransactionHistoryViewModel in CostSharingApp/ViewModels/TransactionHistoryViewModel.cs
+- [x] T095 [US6] Implement date range filter in TransactionHistoryPage (start date, end date pickers)
+- [x] T096 [US6] Implement transaction type filter (paid by me, owe for, all)
+- [x] T097 [US6] Add visual indicators for transaction types: badge for "You paid", different color for "You owe"
+- [x] T098 [US6] Implement navigation from DashboardPage to GroupDetailsPage (tap on group balance)
+- [x] T099 [US6] Implement navigation from DashboardPage to TransactionHistoryPage
+- [x] T100 [US6] Set DashboardPage as app startup page in AppShell.xaml
 
 **Checkpoint**: At this point, users have complete visibility into their financial position across all groups
 
