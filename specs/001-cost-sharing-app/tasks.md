@@ -224,25 +224,25 @@ Based on plan.md, the project structure is:
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T101 [P] Add offline mode indicators in app UI (show sync status in app bar)
-- [ ] T102 [P] Implement background sync service in CostSharingApp/Services/BackgroundSyncService.cs (sync local changes to Google Drive when online)
+- [x] T101 [P] Add offline mode indicators in app UI (show sync status in app bar)
+- [x] T102 [P] Implement background sync service in CostSharingApp/Services/BackgroundSyncService.cs (sync local changes to Google Drive when online)
 - [ ] T103 [P] Add conflict resolution UI for Google Drive sync conflicts (show diff, let user choose version)
-- [ ] T104 [P] Implement currency symbol display ($) for all monetary amounts app-wide
-- [ ] T105 [P] Add input validation error messages with user-friendly text across all forms
-- [ ] T106 [P] Implement loading spinners for async operations (group load, expense add, sync)
-- [ ] T107 [P] Add empty state messages for all list views ("No groups yet", "No expenses", "No debts")
-- [ ] T108 [P] Implement pull-to-refresh on all list pages (GroupListPage, ExpenseListView, etc.)
-- [ ] T109 [P] Create app icon and splash screen in CostSharingApp/Resources/AppIcon/
-- [ ] T110 [P] Setup Android app signing in CostSharingApp/Platforms/Android/AndroidManifest.xml
-- [ ] T111 [P] Setup iOS provisioning profile configuration
-- [ ] T112 [P] Create Windows MSIX packaging configuration in CostSharingApp/Platforms/Windows/
-- [ ] T113 [P] Add XML documentation comments to all public APIs in CostSharing.Core
-- [ ] T114 [P] Update README.md with build instructions for each platform
+- [x] T104 [P] Implement currency symbol display ($) for all monetary amounts app-wide
+- [x] T105 [P] Add input validation error messages with user-friendly text across all forms
+- [x] T106 [P] Implement loading spinners for async operations (group load, expense add, sync)
+- [x] T107 [P] Add empty state messages for all list views ("No groups yet", "No expenses", "No debts")
+- [x] T108 [P] Implement pull-to-refresh on all list pages (GroupListPage, ExpenseListView, etc.)
+- [x] T109 [P] Create app icon and splash screen in CostSharingApp/Resources/AppIcon/
+- [x] T110 [P] Setup Android app signing in CostSharingApp/Platforms/Android/AndroidManifest.xml
+- [x] T111 [P] Setup iOS provisioning profile configuration
+- [x] T112 [P] Create Windows MSIX packaging configuration in CostSharingApp/Platforms/Windows/
+- [x] T113 [P] Add XML documentation comments to all public APIs in CostSharing.Core
+- [x] T114 [P] Update README.md with build instructions for each platform
 - [ ] T115 [P] Create GitHub Actions workflow in .github/workflows/build.yml for multi-platform builds
-- [ ] T116 Run quickstart.md validation (verify developer can set up environment)
+- [x] T116 Run quickstart.md validation (verify developer can set up environment)
 - [ ] T117 Code cleanup and refactoring across all files
-- [ ] T118 Performance optimization: implement caching for frequently accessed data
-- [ ] T119 Security review: ensure Google Drive credentials stored securely, no secrets in code
+- [x] T118 Performance optimization: implement caching for frequently accessed data
+- [x] T119 Security review: ensure Google Drive credentials stored securely, no secrets in code
 
 ---
 

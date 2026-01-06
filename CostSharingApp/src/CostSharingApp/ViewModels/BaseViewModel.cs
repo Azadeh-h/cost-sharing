@@ -9,6 +9,7 @@ namespace CostSharingApp.ViewModels;
 public abstract class BaseViewModel : INotifyPropertyChanged
 {
     private bool isBusy;
+    private bool isRefreshing;
     private string title = string.Empty;
 
     /// <summary>
@@ -23,6 +24,15 @@ public abstract class BaseViewModel : INotifyPropertyChanged
     {
         get => this.isBusy;
         set => this.SetProperty(ref this.isBusy, value);
+    }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the view is being refreshed.
+    /// </summary>
+    public bool IsRefreshing
+    {
+        get => this.isRefreshing;
+        set => this.SetProperty(ref this.isRefreshing, value);
     }
 
     /// <summary>

@@ -28,6 +28,34 @@
 	</array>
 	<key>XSAppIconAssets</key>
 	<string>Assets.xcassets/appicon.appiconset</string>
+	
+	<!-- App name and bundle identifier -->
+	<key>CFBundleName</key>
+	<string>Cost Sharing</string>
+	<key>CFBundleDisplayName</key>
+	<string>Cost Sharing</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.costsharingapp.mobile</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	
+	<!-- Network usage description -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+	</dict>
+	
+	<!-- Background modes for sync -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
+	
+	<!-- Deep linking support -->
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

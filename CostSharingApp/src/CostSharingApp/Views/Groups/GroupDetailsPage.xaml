@@ -9,8 +9,10 @@
         <vm:GroupDetailsViewModel />
     </ContentPage.BindingContext>
 
-    <ScrollView Padding="16">
-        <VerticalStackLayout Spacing="16">
+    <RefreshView IsRefreshing="{Binding IsRefreshing}"
+                 Command="{Binding RefreshCommand}">
+        <ScrollView Padding="16">
+            <VerticalStackLayout Spacing="16">
             <!-- Error message -->
             <Label Text="{Binding ErrorMessage}"
                    TextColor="Red"
@@ -311,4 +313,5 @@
                               Margin="0,16,0,0" />
         </VerticalStackLayout>
     </ScrollView>
+    </RefreshView>
 </ContentPage>

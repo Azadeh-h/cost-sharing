@@ -31,10 +31,10 @@
 		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 
 		<!-- Display name -->
-		<ApplicationTitle>CostSharingApp</ApplicationTitle>
+		<ApplicationTitle>Cost Sharing</ApplicationTitle>
 
 		<!-- App Identifier -->
-		<ApplicationId>com.companyname.costsharingapp</ApplicationId>
+		<ApplicationId>com.costsharingapp.mobile</ApplicationId>
 
 		<!-- Versions -->
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
@@ -51,12 +51,36 @@
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
 	</PropertyGroup>
 
+	<!-- Android Signing Configuration (T110) -->
+	<PropertyGroup Condition="'$(Configuration)' == 'Release' AND '$(TargetFramework)' == 'net9.0-android'">
+		<AndroidKeyStore>true</AndroidKeyStore>
+		<AndroidSigningKeyStore>costsharingapp.keystore</AndroidSigningKeyStore>
+		<AndroidSigningKeyAlias>costsharingapp</AndroidSigningKeyAlias>
+		<AndroidSigningKeyPass>$(AndroidKeyPassword)</AndroidSigningKeyPass>
+		<AndroidSigningStorePass>$(AndroidStorePassword)</AndroidSigningStorePass>
+		<AndroidPackageFormat>apk</AndroidPackageFormat>
+	</PropertyGroup>
+
+	<!-- iOS Provisioning Configuration (T111) -->
+	<PropertyGroup Condition="'$(Configuration)' == 'Release' AND '$(TargetFramework)' == 'net9.0-ios'">
+		<CodesignKey>iPhone Distribution</CodesignKey>
+		<CodesignProvision>Cost Sharing App Store</CodesignProvision>
+		<CodesignEntitlements>Platforms/iOS/Entitlements.plist</CodesignEntitlements>
+	</PropertyGroup>
+
+	<!-- Windows Packaging Configuration (T112) -->
+	<PropertyGroup Condition="'$(Configuration)' == 'Release' AND '$(TargetFramework)' == 'net9.0-windows10.0.19041.0'">
+		<WindowsPackageType>MSIX</WindowsPackageType>
+		<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+		<GenerateAppxPackageOnBuild>true</GenerateAppxPackageOnBuild>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<!-- App Icon -->
-		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
+		<MauiIcon Include="Resources\AppIcon\appicon_custom.svg" Color="#512BD4" />
 
 		<!-- Splash Screen -->
-		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
+		<MauiSplashScreen Include="Resources\Splash\splash_custom.svg" Color="#512BD4" BaseSize="128,128" />
 
 		<!-- Images -->
 		<MauiImage Include="Resources\Images\*" />

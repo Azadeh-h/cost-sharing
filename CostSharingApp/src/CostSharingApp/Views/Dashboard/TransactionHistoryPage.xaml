@@ -6,7 +6,10 @@
              x:DataType="viewmodels:TransactionHistoryViewModel"
              Title="Transaction History">
 
-    <Grid RowDefinitions="Auto,*">
+    <RefreshView IsRefreshing="{Binding IsRefreshing}"
+                 Command="{Binding LoadTransactionsCommand}"
+                 Grid.RowSpan="2">
+        <Grid RowDefinitions="Auto,*">
         
         <!-- Filters Section -->
         <Frame Grid.Row="0" 
@@ -199,5 +202,6 @@
                                   Margin="0,16,0,0" />
             </VerticalStackLayout>
         </ScrollView>
-    </Grid>
+        </Grid>
+    </RefreshView>
 </ContentPage>

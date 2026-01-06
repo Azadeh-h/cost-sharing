@@ -6,8 +6,10 @@
              x:DataType="viewmodels:DashboardViewModel"
              Title="Dashboard">
 
-    <ScrollView>
-        <VerticalStackLayout Padding="16" Spacing="16">
+    <RefreshView IsRefreshing="{Binding IsRefreshing}"
+                 Command="{Binding LoadDashboardCommand}">
+        <ScrollView>
+            <VerticalStackLayout Padding="16" Spacing="16">
 
             <!-- Total Balance Card -->
             <Frame Padding="20" CornerRadius="12" BackgroundColor="{StaticResource Primary}" HasShadow="True">
@@ -148,6 +150,7 @@
                               Color="{StaticResource Primary}"
                               HorizontalOptions="Center"
                               Margin="0,16,0,0" />
-        </VerticalStackLayout>
-    </ScrollView>
+            </VerticalStackLayout>
+        </ScrollView>
+    </RefreshView>
 </ContentPage>
