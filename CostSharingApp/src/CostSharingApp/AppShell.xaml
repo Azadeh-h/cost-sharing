@@ -11,6 +11,36 @@
         Routes are defined here and registered in code-behind.
     -->
 
+    <!-- Flyout Header with Sync Status -->
+    <Shell.FlyoutHeader>
+        <Grid BackgroundColor="{StaticResource Primary}" Padding="16" RowDefinitions="Auto,Auto">
+            <Label Grid.Row="0" 
+                   Text="Cost Sharing App" 
+                   FontSize="20" 
+                   FontAttributes="Bold"
+                   TextColor="White" />
+            <HorizontalStackLayout Grid.Row="1" Spacing="8" Margin="0,8,0,0">
+                <Label x:Name="SyncStatusIcon" 
+                       Text="🔄" 
+                       FontSize="16" 
+                       TextColor="White"
+                       VerticalOptions="Center" />
+                <Label x:Name="SyncStatusLabel" 
+                       Text="Synced" 
+                       FontSize="14" 
+                       TextColor="White"
+                       VerticalOptions="Center" />
+            </HorizontalStackLayout>
+        </Grid>
+    </Shell.FlyoutHeader>
+
+    <FlyoutItem Title="Dashboard" Icon="icon_dashboard.png">
+        <ShellContent
+            Title="Dashboard"
+            ContentTemplate="{DataTemplate local:Views.Dashboard.DashboardPage}"
+            Route="dashboard" />
+    </FlyoutItem>
+
     <FlyoutItem Title="Groups" Icon="icon_groups.png">
         <ShellContent
             Title="My Groups"

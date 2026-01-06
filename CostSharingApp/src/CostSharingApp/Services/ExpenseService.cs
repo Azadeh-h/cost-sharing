@@ -294,12 +294,12 @@ public class ExpenseService : IExpenseService
             var allSplits = await this.cacheService.GetAllAsync<ExpenseSplit>();
             var groupSplits = allSplits.Where(s => expenses.Any(e => e.Id == s.ExpenseId)).ToList();
 
-            await this.driveService.SaveDataAsync($"expenses_{groupId}.json", expenses);
-            await this.driveService.SaveDataAsync($"splits_{groupId}.json", groupSplits);
+            await this.driveService.SaveFileAsync($"expenses_{groupId}.json", expenses);
+            await this.driveService.SaveFileAsync($"splits_{groupId}.json", groupSplits);
         }
         catch (Exception ex)
         {
-            this.loggingService.LogWarning($"Failed to sync expenses to Drive for group {groupId}", ex);
+            this.loggingService.LogWarning($"Failed to sync expenses to Drive for group {groupId}: {ex.Message}");
         }
     }
 }

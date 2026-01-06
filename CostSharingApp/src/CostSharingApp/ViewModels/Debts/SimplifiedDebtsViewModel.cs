@@ -1,3 +1,5 @@
+namespace CostSharingApp.ViewModels.Debts;
+
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -5,8 +7,6 @@ using CostSharing.Core.Algorithms;
 using CostSharing.Core.Models;
 using CostSharing.Core.Services;
 using CostSharingApp.Services;
-
-namespace CostSharingApp.ViewModels.Debts;
 
 /// <summary>
 /// View model for simplified debts page showing optimized settlement plan.
@@ -124,19 +124,21 @@ public partial class SimplifiedDebtsViewModel : ObservableObject, IQueryAttribut
                 return;
             }
 
+            var members = await this.groupService.GetGroupMembersAsync(this.groupId);
+
             // Convert to view models with user names
             this.SimplifiedTransactions.Clear();
             foreach (var tx in simplifiedTx)
             {
-                var fromMember = group.Members.FirstOrDefault(m => m.UserId == tx.FromUserId);
-                var toMember = group.Members.FirstOrDefault(m => m.UserId == tx.ToUserId);
+                var fromMember = members.FirstOrDefault(m => m.UserId == tx.FromUserId);
+                var toMember = members.FirstOrDefault(m => m.UserId == tx.ToUserId);
 
                 this.SimplifiedTransactions.Add(new SimplifiedTransactionViewModel
                 {
                     FromUserId = tx.FromUserId,
-                    FromUserName = fromMember?.Name ?? "Unknown",
+                    FromUserName = fromMember?.UserId.ToString().Substring(0, 8) ?? "Unknown",
                     ToUserId = tx.ToUserId,
-                    ToUserName = toMember?.Name ?? "Unknown",
+                    ToUserName = toMember?.UserId.ToString().Substring(0, 8) ?? "Unknown",
                     Amount = tx.Amount
                 });
             }
@@ -176,7 +178,7 @@ public partial class SimplifiedDebtsViewModel : ObservableObject, IQueryAttribut
             this.IsBusy = true;
 
             // Get current user
-            var currentUser = await this.authService.GetCurrentUserAsync();
+            var currentUser = this.authService.GetCurrentUser();
             if (currentUser == null)
             {
                 await Application.Current.MainPage.DisplayAlert(

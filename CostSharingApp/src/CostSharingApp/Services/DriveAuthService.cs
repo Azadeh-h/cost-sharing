@@ -1,8 +1,9 @@
+namespace CostSharingApp.Services;
+
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Drive.v3;
 using Google.Apis.Services;
-
-namespace CostSharingApp.Services;
+using GoogleDriveService = Google.Apis.Drive.v3.DriveService;
 
 /// <summary>
 /// Handles Google Drive OAuth authentication for native MAUI apps.
@@ -10,7 +11,7 @@ namespace CostSharingApp.Services;
 public class DriveAuthService : IDriveAuthService
 {
     private const string ApplicationName = "CostSharingApp";
-    private static readonly string[] Scopes = { DriveService.Scope.DriveFile };
+    private static readonly string[] Scopes = { "https://www.googleapis.com/auth/drive.file" };
 
     private UserCredential? userCredential;
 
@@ -50,14 +51,14 @@ public class DriveAuthService : IDriveAuthService
     /// Gets authenticated Drive service instance.
     /// </summary>
     /// <returns>Configured DriveService instance or null if not authenticated.</returns>
-    public DriveService? GetDriveService()
+    public GoogleDriveService? GetDriveService()
     {
         if (this.userCredential == null)
         {
             return null;
         }
 
-        return new DriveService(new BaseClientService.Initializer
+        return new GoogleDriveService(new BaseClientService.Initializer
         {
             HttpClientInitializer = this.userCredential,
             ApplicationName = ApplicationName
@@ -99,7 +100,7 @@ public interface IDriveAuthService
     /// Gets authenticated Drive service.
     /// </summary>
     /// <returns>DriveService instance or null.</returns>
-    DriveService? GetDriveService();
+    GoogleDriveService? GetDriveService();
 
     /// <summary>
     /// Checks authentication status.

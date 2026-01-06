@@ -1,4 +1,5 @@
 using System.Windows.Input;
+using CostSharingApp.Services;
 
 namespace CostSharingApp.ViewModels.Members;
 
@@ -15,6 +16,19 @@ public class InviteMemberViewModel : BaseViewModel, IQueryAttributable
     private string inviteeEmail = string.Empty;
     private string inviteePhone = string.Empty;
     private string errorMessage = string.Empty;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="InviteMemberViewModel"/> class.
+    /// Default constructor for XAML.
+    /// </summary>
+    public InviteMemberViewModel()
+    {
+        this.invitationService = null!;
+        this.errorService = null!;
+        this.Title = "Invite Member";
+        this.SendInvitationCommand = new Command(async () => await this.SendInvitationAsync(), this.CanSendInvitation);
+        this.CancelCommand = new Command(async () => await this.CancelAsync());
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="InviteMemberViewModel"/> class.

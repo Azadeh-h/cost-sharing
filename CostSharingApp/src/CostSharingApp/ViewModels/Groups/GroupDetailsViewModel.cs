@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using CostSharing.Core.Models;
 using CostSharing.Core.Services;
 using CostSharingApp.Services;
@@ -9,7 +11,7 @@ namespace CostSharingApp.ViewModels.Groups;
 /// <summary>
 /// ViewModel for group details page.
 /// </summary>
-public class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
+public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
 {
     private readonly IGroupService groupService;
     private readonly IInvitationService invitationService;
@@ -540,7 +542,7 @@ public class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     [RelayCommand]
     private async Task ViewSimplifiedDebtsAsync()
     {
-        await Shell.Current.GoToAsync($"simplifieddebts?groupId={this.groupId}");
+        await Shell.Current.GoToAsync($"simplifieddebts?groupId={this.group?.Id}");
     }
 
     /// <summary>

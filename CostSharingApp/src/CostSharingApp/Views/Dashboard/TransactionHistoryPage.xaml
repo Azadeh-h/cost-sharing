@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="CostSharingApp.Views.Dashboard.TransactionHistoryPage"
+             xmlns:viewmodels="clr-namespace:CostSharingApp.ViewModels.Dashboard"
+             x:DataType="viewmodels:TransactionHistoryViewModel"
+             Title="Transaction History">
+
+    <RefreshView IsRefreshing="{Binding IsRefreshing}"
+                 Command="{Binding LoadTransactionsCommand}"
+                 Grid.RowSpan="2">
+        <Grid RowDefinitions="Auto,*">
+        
+        <!-- Filters Section -->
+        <Frame Grid.Row="0" 
+               Padding="16" 
+               Margin="16,16,16,8"
+               CornerRadius="8"
+               BackgroundColor="{StaticResource Tertiary}">
+            <VerticalStackLayout Spacing="12">
+                
+                <!-- Date Range Filter -->
+                <Label Text="Date Range" FontSize="14" FontAttributes="Bold" />
+                <HorizontalStackLayout Spacing="12">
+                    <VerticalStackLayout HorizontalOptions="FillAndExpand">
+                        <Label Text="From" FontSize="12" TextColor="{StaticResource Gray600}" />
+                        <DatePicker Date="{Binding StartDate}"
+                                   Format="MMM dd, yyyy"
+                                   BackgroundColor="White" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout HorizontalOptions="FillAndExpand">
+                        <Label Text="To" FontSize="12" TextColor="{StaticResource Gray600}" />
+                        <DatePicker Date="{Binding EndDate}"
+                                   Format="MMM dd, yyyy"
+                                   BackgroundColor="White" />
+                    </VerticalStackLayout>
+                </HorizontalStackLayout>
+
+                <!-- Transaction Type Filter -->
+                <Label Text="Transaction Type" FontSize="14" FontAttributes="Bold" Margin="0,8,0,0" />
+                <HorizontalStackLayout Spacing="8">
+                    <Button Text="All"
+                            Command="{Binding FilterByTypeCommand}"
+                            CommandParameter="All"
+                            BackgroundColor="{Binding FilterAllColor}"
+                            TextColor="White"
+                            FontSize="12"
+                            Padding="12,6"
+                            CornerRadius="4"
+                            HorizontalOptions="FillAndExpand" />
+                    <Button Text="I Paid"
+                            Command="{Binding FilterByTypeCommand}"
+                            CommandParameter="Paid"
+                            BackgroundColor="{Binding FilterPaidColor}"
+                            TextColor="White"
+                            FontSize="12"
+                            Padding="12,6"
+                            CornerRadius="4"
+                            HorizontalOptions="FillAndExpand" />
+                    <Button Text="I Owe"
+                            Command="{Binding FilterByTypeCommand}"
+                            CommandParameter="Owe"
+                            BackgroundColor="{Binding FilterOweColor}"
+                            TextColor="White"
+                            FontSize="12"
+                            Padding="12,6"
+                            CornerRadius="4"
+                            HorizontalOptions="FillAndExpand" />
+                </HorizontalStackLayout>
+
+                <Button Text="Apply Filters"
+                        Command="{Binding ApplyFiltersCommand}"
+                        BackgroundColor="{StaticResource Primary}"
+                        Margin="0,8,0,0" />
+            </VerticalStackLayout>
+        </Frame>
+
+        <!-- Transactions List -->
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="16,0,16,16" Spacing="8">
+                
+                <CollectionView ItemsSource="{Binding FilteredTransactions}">
+                    <CollectionView.EmptyView>
+                        <VerticalStackLayout Padding="20" Spacing="12">
+                            <Label Text="📝"
+                                   FontSize="48"
+                                   HorizontalOptions="Center" />
+                            <Label Text="No transactions found"
+                                   FontSize="18"
+                                   FontAttributes="Bold"
+                                   HorizontalOptions="Center" />
+                            <Label Text="Adjust your filters or add some expenses"
+                                   TextColor="{StaticResource Gray500}"
+                                   HorizontalOptions="Center" />
+                        </VerticalStackLayout>
+                    </CollectionView.EmptyView>
+
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame Margin="0,0,0,8" 
+                                   Padding="16" 
+                                   CornerRadius="8"
+                                   HasShadow="True">
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                    
+                                    <!-- Transaction Type Indicator -->
+                                    <Frame Grid.Column="0"
+                                           Padding="8"
+                                           CornerRadius="6"
+                                           BackgroundColor="{Binding TypeBackgroundColor}"
+                                           HasShadow="False"
+                                           VerticalOptions="Center">
+                                        <Label Text="{Binding TypeIcon}"
+                                               FontSize="20"
+                                               TextColor="White" />
+                                    </Frame>
+
+                                    <!-- Transaction Info -->
+                                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                        <Label Text="{Binding Description}"
+                                               FontSize="15"
+                                               FontAttributes="Bold" />
+                                        <Label Text="{Binding GroupName}"
+                                               TextColor="{StaticResource Gray600}"
+                                               FontSize="12" />
+                                        <Label Text="{Binding Date, StringFormat='{0:MMM dd, yyyy}'}"
+                                               TextColor="{StaticResource Gray500}"
+                                               FontSize="11" />
+                                        <Label Text="{Binding TypeLabel}"
+                                               TextColor="{Binding TypeTextColor}"
+                                               FontSize="11"
+                                               FontAttributes="Bold"
+                                               Margin="0,4,0,0" />
+                                    </VerticalStackLayout>
+
+                                    <!-- Amount -->
+                                    <VerticalStackLayout Grid.Column="2" 
+                                                         VerticalOptions="Center"
+                                                         HorizontalOptions="End">
+                                        <Label Text="{Binding DisplayAmount}"
+                                               FontSize="18"
+                                               FontAttributes="Bold"
+                                               TextColor="{Binding AmountTextColor}"
+                                               HorizontalTextAlignment="End" />
+                                        <Label Text="{Binding YourShare, StringFormat='Your share: ${0:F2}'}"
+                                               FontSize="11"
+                                               TextColor="{StaticResource Gray600}"
+                                               HorizontalTextAlignment="End" />
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <!-- Summary -->
+                <Frame Padding="16" 
+                       CornerRadius="8"
+                       BackgroundColor="{StaticResource Tertiary}"
+                       Margin="0,8,0,0">
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Grid.Column="0">
+                            <Label Text="Total Paid"
+                                   FontSize="12"
+                                   TextColor="{StaticResource Gray600}"
+                                   HorizontalOptions="Center" />
+                            <Label Text="{Binding TotalPaid, StringFormat='${0:F2}'}"
+                                   FontSize="16"
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource Success}"
+                                   HorizontalOptions="Center" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Total Owed"
+                                   FontSize="12"
+                                   TextColor="{StaticResource Gray600}"
+                                   HorizontalOptions="Center" />
+                            <Label Text="{Binding TotalOwed, StringFormat='${0:F2}'}"
+                                   FontSize="16"
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource Danger}"
+                                   HorizontalOptions="Center" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="2">
+                            <Label Text="Net Balance"
+                                   FontSize="12"
+                                   TextColor="{StaticResource Gray600}"
+                                   HorizontalOptions="Center" />
+                            <Label Text="{Binding NetBalance, StringFormat='${0:F2}'}"
+                                   FontSize="16"
+                                   FontAttributes="Bold"
+                                   HorizontalOptions="Center" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </Frame>
+
+                <!-- Loading Indicator -->
+                <ActivityIndicator IsRunning="{Binding IsBusy}"
+                                  IsVisible="{Binding IsBusy}"
+                                  Color="{StaticResource Primary}"
+                                  HorizontalOptions="Center"
+                                  Margin="0,16,0,0" />
+            </VerticalStackLayout>
+        </ScrollView>
+        </Grid>
+    </RefreshView>
+</ContentPage>

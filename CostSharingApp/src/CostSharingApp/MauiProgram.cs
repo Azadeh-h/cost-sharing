@@ -1,4 +1,5 @@
-﻿using CostSharingApp.Services;
+﻿using CostSharing.Core.Services;
+using CostSharingApp.Services;
 using Microsoft.Extensions.Logging;
 
 namespace CostSharingApp;
@@ -51,6 +52,9 @@ public static class MauiProgram
 		// Phase 7: US5 - Settlement Services
 		services.AddSingleton<ISettlementService, SettlementService>();
 
+		// Phase 9: Background sync
+		services.AddSingleton<BackgroundSyncService>();
+
 		// Phase 3: US1 - ViewModels
 		services.AddTransient<ViewModels.Groups.GroupListViewModel>();
 		services.AddTransient<ViewModels.Groups.CreateGroupViewModel>();
@@ -71,6 +75,10 @@ public static class MauiProgram
 		// Phase 7: US5 - ViewModels
 		services.AddTransient<ViewModels.Debts.SimplifiedDebtsViewModel>();
 
+		// Phase 8: US6 - ViewModels
+		services.AddTransient<ViewModels.Dashboard.DashboardViewModel>();
+		services.AddTransient<ViewModels.Dashboard.TransactionHistoryViewModel>();
+
 		// Phase 4: US2 - Pages
 		services.AddTransient<Views.Members.InviteMemberPage>();
 		services.AddTransient<Views.Members.AcceptInvitationPage>();
@@ -84,6 +92,10 @@ public static class MauiProgram
 
 		// Phase 7: US5 - Pages
 		services.AddTransient<Views.Debts.SimplifiedDebtsPage>();
+
+		// Phase 8: US6 - Pages
+		services.AddTransient<Views.Dashboard.DashboardPage>();
+		services.AddTransient<Views.Dashboard.TransactionHistoryPage>();
 
 		// Phase 3: US1 - Pages
 		services.AddTransient<Views.Groups.GroupListPage>();

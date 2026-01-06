@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="456" height="456" viewBox="0 0 456 456" xmlns="http://www.w3.org/2000/svg">
+    <!-- Background with gradient -->
+    <defs>
+        <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#512BD4;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#2D1B69;stop-opacity:1" />
+        </linearGradient>
+    </defs>
+    
+    <rect width="456" height="456" fill="url(#bgGradient)"/>
+    
+    <!-- Main dollar icon -->
+    <circle cx="228" cy="180" r="90" fill="#FFFFFF" opacity="0.95"/>
+    <text x="228" y="230" font-family="Arial, sans-serif" font-size="120" font-weight="bold" fill="#512BD4" text-anchor="middle">$</text>
+    
+    <!-- App title -->
+    <text x="228" y="320" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="#FFFFFF" text-anchor="middle">Cost Sharing</text>
+    
+    <!-- Group icons -->
+    <g transform="translate(138, 370)">
+        <circle cx="0" cy="0" r="18" fill="#FFFFFF" opacity="0.8"/>
+        <circle cx="40" cy="0" r="18" fill="#FFFFFF" opacity="0.8"/>
+        <circle cx="80" cy="0" r="18" fill="#FFFFFF" opacity="0.8"/>
+        <circle cx="120" cy="0" r="18" fill="#FFFFFF" opacity="0.8"/>
+        <circle cx="160" cy="0" r="18" fill="#FFFFFF" opacity="0.8"/>
+    </g>
+</svg>

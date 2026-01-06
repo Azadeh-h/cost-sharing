@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="CostSharingApp.Views.Dashboard.DashboardPage"
+             xmlns:viewmodels="clr-namespace:CostSharingApp.ViewModels.Dashboard"
+             x:DataType="viewmodels:DashboardViewModel"
+             Title="Dashboard">
+
+    <RefreshView IsRefreshing="{Binding IsRefreshing}"
+                 Command="{Binding LoadDashboardCommand}">
+        <ScrollView>
+            <VerticalStackLayout Padding="16" Spacing="16">
+
+            <!-- Total Balance Card -->
+            <Frame Padding="20" CornerRadius="12" BackgroundColor="{StaticResource Primary}" HasShadow="True">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Total Balance"
+                           TextColor="White"
+                           FontSize="16"
+                           HorizontalOptions="Center" />
+                    <Label Text="{Binding TotalBalance, StringFormat='${0:F2}'}"
+                           TextColor="White"
+                           FontSize="32"
+                           FontAttributes="Bold"
+                           HorizontalOptions="Center" />
+                    <HorizontalStackLayout Spacing="16" HorizontalOptions="Center">
+                        <VerticalStackLayout>
+                            <Label Text="You're Owed"
+                                   TextColor="White"
+                                   FontSize="12"
+                                   HorizontalOptions="Center" />
+                            <Label Text="{Binding TotalOwed, StringFormat='${0:F2}'}"
+                                   TextColor="{StaticResource Success}"
+                                   FontSize="18"
+                                   FontAttributes="Bold"
+                                   HorizontalOptions="Center" />
+                        </VerticalStackLayout>
+                        <BoxView WidthRequest="1" 
+                                 BackgroundColor="White" 
+                                 Opacity="0.3"
+                                 VerticalOptions="FillAndExpand" />
+                        <VerticalStackLayout>
+                            <Label Text="You Owe"
+                                   TextColor="White"
+                                   FontSize="12"
+                                   HorizontalOptions="Center" />
+                            <Label Text="{Binding TotalOwing, StringFormat='${0:F2}'}"
+                                   TextColor="{StaticResource Danger}"
+                                   FontSize="18"
+                                   FontAttributes="Bold"
+                                   HorizontalOptions="Center" />
+                        </VerticalStackLayout>
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Quick Actions -->
+            <HorizontalStackLayout Spacing="12">
+                <Button Text="Transaction History"
+                        Command="{Binding ViewTransactionHistoryCommand}"
+                        HorizontalOptions="FillAndExpand"
+                        BackgroundColor="{StaticResource Secondary}" />
+                <Button Text="➕ New Group"
+                        Command="{Binding CreateGroupCommand}"
+                        HorizontalOptions="End" />
+            </HorizontalStackLayout>
+
+            <!-- Groups Section -->
+            <Label Text="Your Groups"
+                   FontSize="20"
+                   FontAttributes="Bold"
+                   Margin="0,8,0,8" />
+
+            <CollectionView ItemsSource="{Binding GroupBalances}">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout Padding="20" Spacing="12">
+                        <Label Text="📊"
+                               FontSize="48"
+                               HorizontalOptions="Center" />
+                        <Label Text="No groups yet"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               HorizontalOptions="Center" />
+                        <Label Text="Create a group to start tracking expenses"
+                               TextColor="{StaticResource Gray500}"
+                               HorizontalOptions="Center" />
+                        <Button Text="Create Your First Group"
+                                Command="{Binding CreateGroupCommand}"
+                                Margin="0,12,0,0"
+                                HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame Margin="0,0,0,12" 
+                               Padding="16" 
+                               CornerRadius="8"
+                               HasShadow="True">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:DashboardViewModel}}, Path=ViewGroupCommand}"
+                                                      CommandParameter="{Binding GroupId}" />
+                            </Frame.GestureRecognizers>
+                            
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                <!-- Group Icon -->
+                                <Frame Grid.Column="0"
+                                       Padding="12"
+                                       CornerRadius="8"
+                                       BackgroundColor="{StaticResource Tertiary}"
+                                       HasShadow="False"
+                                       VerticalOptions="Center">
+                                    <Label Text="👥"
+                                           FontSize="24" />
+                                </Frame>
+
+                                <!-- Group Info -->
+                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                    <Label Text="{Binding GroupName}"
+                                           FontSize="16"
+                                           FontAttributes="Bold" />
+                                    <Label Text="{Binding MemberCount, StringFormat='{0} members'}"
+                                           TextColor="{StaticResource Gray600}"
+                                           FontSize="12" />
+                                </VerticalStackLayout>
+
+                                <!-- Balance -->
+                                <VerticalStackLayout Grid.Column="2" 
+                                                     VerticalOptions="Center"
+                                                     HorizontalOptions="End">
+                                    <Label Text="{Binding Balance, StringFormat='${0:F2}'}"
+                                           FontSize="18"
+                                           FontAttributes="Bold"
+                                           TextColor="{Binding Balance, Converter={StaticResource BalanceColorConverter}}"
+                                           HorizontalTextAlignment="End" />
+                                    <Label Text="{Binding BalanceStatus}"
+                                           FontSize="11"
+                                           HorizontalTextAlignment="End"
+                                           TextColor="{StaticResource Gray600}" />
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Loading Indicator -->
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                              IsVisible="{Binding IsBusy}"
+                              Color="{StaticResource Primary}"
+                              HorizontalOptions="Center"
+                              Margin="0,16,0,0" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </RefreshView>
+</ContentPage>

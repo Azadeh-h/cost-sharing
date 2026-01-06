@@ -5,10 +5,6 @@
              x:Class="CostSharingApp.Views.Groups.CreateGroupPage"
              Title="{Binding Title}">
 
-    <ContentPage.BindingContext>
-        <vm:CreateGroupViewModel />
-    </ContentPage.BindingContext>
-
     <ScrollView Padding="16">
         <VerticalStackLayout Spacing="16">
             <!-- Error message -->

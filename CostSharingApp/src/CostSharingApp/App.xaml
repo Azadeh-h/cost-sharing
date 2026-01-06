@@ -15,6 +15,7 @@
             <converters:EnumToBoolConverter x:Key="EnumToBoolConverter" />
             <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
             <converters:StringToBoolConverter x:Key="StringToBoolConverter" />
+            <converters:BalanceColorConverter x:Key="BalanceColorConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>
