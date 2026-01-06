@@ -17,19 +17,9 @@ public partial class App : Application
     /// <param name="authService">Auth service for auto-login.</param>
     public App(ICacheService? cacheService = null, IAuthService? authService = null)
     {
-        try
-        {
-            System.Diagnostics.Debug.WriteLine("App constructor starting...");
-            _cacheService = cacheService;
-            _authService = authService;
-            this.InitializeComponent();
-            System.Diagnostics.Debug.WriteLine("App constructor completed successfully");
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"ERROR in App constructor: {ex}");
-            throw;
-        }
+        _cacheService = cacheService;
+        _authService = authService;
+        this.InitializeComponent();
     }
 
     /// <summary>
@@ -41,9 +31,7 @@ public partial class App : Application
     {
         try
         {
-            System.Diagnostics.Debug.WriteLine("CreateWindow starting...");
             var window = new Window(new AppShell());
-            System.Diagnostics.Debug.WriteLine("Window and AppShell created successfully");
 
             // Handle deep link if present
             if (activationState is not null)
@@ -67,13 +55,10 @@ public partial class App : Application
                 }
             }
 
-            System.Diagnostics.Debug.WriteLine("CreateWindow completed successfully");
             return window;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            System.Diagnostics.Debug.WriteLine($"FATAL ERROR in CreateWindow: {ex}");
-            System.Diagnostics.Debug.WriteLine($"Stack Trace: {ex.StackTrace}");
             throw;
         }
     }
@@ -90,13 +75,10 @@ public partial class App : Application
         {
             try
             {
-                System.Diagnostics.Debug.WriteLine("Initializing cache service...");
                 await Task.Run(async () => await _cacheService.InitializeAsync());
-                System.Diagnostics.Debug.WriteLine("Cache service initialized successfully");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                System.Diagnostics.Debug.WriteLine($"ERROR initializing cache: {ex}");
                 // Don't throw - allow app to continue even if cache init fails
             }
         }
@@ -104,7 +86,6 @@ public partial class App : Application
         // Ensure user exists (no authentication needed, just a unique identifier)
         if (_authService != null && !_authService.IsAuthenticated())
         {
-            System.Diagnostics.Debug.WriteLine("No user found, creating default user...");
             try
             {
                 // Use device ID as unique identifier, or generate a GUID
@@ -118,17 +99,12 @@ public partial class App : Application
                 var loginResult = await _authService.LoginAsync(email, password);
                 if (!loginResult)
                 {
-                    await _authService.RegisterAsync("Device User", email, password);
-                    System.Diagnostics.Debug.WriteLine($"User created with ID: {deviceId}");
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine($"User loaded: {deviceId}");
+                    await _authService.RegisterAsync(email, password, "Device User");
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                System.Diagnostics.Debug.WriteLine($"Error creating user: {ex.Message}");
+                // Silent fail - user creation is not critical
             }
         }
     }

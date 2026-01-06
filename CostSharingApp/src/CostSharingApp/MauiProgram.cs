@@ -48,7 +48,19 @@ public static class MauiProgram
 		services.AddSingleton<IGroupService, GroupService>();
 
 		// Phase 4: US2 - Invitation Services
-		services.AddSingleton<INotificationService, NotificationService>();
+		services.AddSingleton<INotificationService>(sp =>
+		{
+			var loggingService = sp.GetRequiredService<ILoggingService>();
+			// For now, use empty strings - notifications can be configured later
+			return new NotificationService(
+				loggingService,
+				sendGridApiKey: string.Empty,
+				sendGridFromEmail: string.Empty,
+				sendGridFromName: "Cost Sharing App",
+				twilioAccountSid: string.Empty,
+				twilioAuthToken: string.Empty,
+				twilioPhoneNumber: string.Empty);
+		});
 		services.AddSingleton<IInvitationService, InvitationService>();
 
 		// Phase 5: US3 - Expense Services

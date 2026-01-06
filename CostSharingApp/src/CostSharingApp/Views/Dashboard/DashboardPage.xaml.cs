@@ -17,12 +17,10 @@ public partial class DashboardPage : ContentPage
     /// <param name="authService">The authentication service.</param>
     public DashboardPage(DashboardViewModel viewModel, Services.IAuthService authService)
     {
-        System.Diagnostics.Debug.WriteLine("=== DashboardPage constructor called ===");
         this.InitializeComponent();
         this.BindingContext = viewModel;
         _viewModel = viewModel;
         _authService = authService;
-        System.Diagnostics.Debug.WriteLine($"=== BindingContext set to: {viewModel?.GetType().Name} ===");
     }
 
     /// <inheritdoc/>
@@ -33,7 +31,6 @@ public partial class DashboardPage : ContentPage
         // Ensure user exists (no authentication needed, just a unique identifier)
         if (!_authService.IsAuthenticated())
         {
-            System.Diagnostics.Debug.WriteLine("No user found, creating default user...");
             try
             {
                 // Use device ID as unique identifier, or generate a GUID
@@ -47,17 +44,12 @@ public partial class DashboardPage : ContentPage
                 var loginResult = await _authService.LoginAsync(email, password);
                 if (!loginResult)
                 {
-                    await _authService.RegisterAsync("Device User", email, password);
-                    System.Diagnostics.Debug.WriteLine($"User created with ID: {deviceId}");
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine($"User loaded: {deviceId}");
+                    await _authService.RegisterAsync(email, password, "Device User");
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                System.Diagnostics.Debug.WriteLine($"Error creating user: {ex.Message}");
+                // Silent fail - user creation is not critical
             }
         }
 

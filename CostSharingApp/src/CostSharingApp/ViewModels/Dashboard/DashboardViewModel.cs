@@ -200,18 +200,7 @@ public partial class DashboardViewModel : ObservableObject
     [RelayCommand]
     private async Task CreateGroupAsync()
     {
-        System.Diagnostics.Debug.WriteLine("=== CreateGroupAsync called ===");
-        try
-        {
-            System.Diagnostics.Debug.WriteLine("=== Navigating to creategroup ===");
-            await Shell.Current.GoToAsync("creategroup");
-            System.Diagnostics.Debug.WriteLine("=== Navigation completed ===");
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"=== Navigation failed: {ex.Message} ===");
-            await Application.Current!.MainPage!.DisplayAlert("Error", $"Navigation failed: {ex.Message}", "OK");
-        }
+        await Shell.Current.GoToAsync("creategroup");
     }
 }
 

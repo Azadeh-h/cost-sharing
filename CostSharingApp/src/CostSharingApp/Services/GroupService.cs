@@ -54,7 +54,7 @@ public class GroupService : IGroupService
                 var loginResult = await this.authService.LoginAsync(email, password);
                 if (!loginResult)
                 {
-                    await this.authService.RegisterAsync("Device User", email, password);
+                    await this.authService.RegisterAsync(email, password, "Device User");
                 }
                 
                 currentUser = this.authService.GetCurrentUser();
