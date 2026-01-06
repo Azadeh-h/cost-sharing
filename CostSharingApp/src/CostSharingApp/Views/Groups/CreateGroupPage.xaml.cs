@@ -11,7 +11,21 @@ public partial class CreateGroupPage : ContentPage
     /// <param name="viewModel">The create group view model.</param>
     public CreateGroupPage(ViewModels.Groups.CreateGroupViewModel viewModel)
     {
+        System.Diagnostics.Debug.WriteLine("=== CreateGroupPage constructor called ===");
         this.InitializeComponent();
         this.BindingContext = viewModel;
+        System.Diagnostics.Debug.WriteLine("=== CreateGroupPage initialized ===");
+    }
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        System.Diagnostics.Debug.WriteLine("=== CreateGroupPage OnAppearing ===");
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        System.Diagnostics.Debug.WriteLine("=== CreateGroupPage OnDisappearing ===");
     }
 }

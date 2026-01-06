@@ -4,8 +4,15 @@ using Microsoft.Extensions.Logging;
 
 namespace CostSharingApp;
 
+/// <summary>
+/// Configures and creates the MAUI application.
+/// </summary>
 public static class MauiProgram
 {
+	/// <summary>
+	/// Creates and configures the MAUI application with required services and fonts.
+	/// </summary>
+	/// <returns>A configured <see cref="MauiApp"/> instance.</returns>
 	public static MauiApp CreateMauiApp()
 	{
 		var builder = MauiApp.CreateBuilder();
@@ -21,7 +28,7 @@ public static class MauiProgram
 		ConfigureServices(builder.Services);
 
 #if DEBUG
-		builder.Logging.AddDebug();
+	builder.Logging.AddDebug();
 #endif
 
 		return builder.Build();
@@ -102,9 +109,6 @@ public static class MauiProgram
 		services.AddTransient<Views.Groups.CreateGroupPage>();
 		services.AddTransient<Views.Groups.GroupDetailsPage>();
 
-		// Initialize cache on startup
-		var serviceProvider = services.BuildServiceProvider();
-		var cacheService = serviceProvider.GetRequiredService<ICacheService>();
-		cacheService.InitializeAsync().Wait();
+		// Note: Cache initialization moved to App.xaml.cs OnStart() to avoid blocking startup
 	}
 }

@@ -23,6 +23,9 @@ public partial class DashboardViewModel : ObservableObject
     private bool isBusy;
 
     [ObservableProperty]
+    private bool isRefreshing;
+
+    [ObservableProperty]
     private decimal totalBalance;
 
     [ObservableProperty]
@@ -67,6 +70,7 @@ public partial class DashboardViewModel : ObservableObject
         try
         {
             this.IsBusy = true;
+            this.IsRefreshing = true;
 
             var currentUser = this.authService.GetCurrentUser();
             if (currentUser == null)
@@ -121,6 +125,7 @@ public partial class DashboardViewModel : ObservableObject
         finally
         {
             this.IsBusy = false;
+            this.IsRefreshing = false;
         }
     }
 
@@ -195,7 +200,18 @@ public partial class DashboardViewModel : ObservableObject
     [RelayCommand]
     private async Task CreateGroupAsync()
     {
-        await Shell.Current.GoToAsync("creategroup");
+        System.Diagnostics.Debug.WriteLine("=== CreateGroupAsync called ===");
+        try
+        {
+            System.Diagnostics.Debug.WriteLine("=== Navigating to creategroup ===");
+            await Shell.Current.GoToAsync("creategroup");
+            System.Diagnostics.Debug.WriteLine("=== Navigation completed ===");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"=== Navigation failed: {ex.Message} ===");
+            await Application.Current!.MainPage!.DisplayAlert("Error", $"Navigation failed: {ex.Message}", "OK");
+        }
     }
 }
 

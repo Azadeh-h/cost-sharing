@@ -43,8 +43,26 @@ public class GroupService : IGroupService
             var currentUser = this.authService.GetCurrentUser();
             if (currentUser == null)
             {
-                this.loggingService.LogWarning("Cannot create group: User not authenticated");
-                return null;
+                // Auto-create a default user if none exists
+                this.loggingService.LogInfo("No user found, creating default user");
+                var deviceId = Preferences.Get("DeviceUserId", Guid.NewGuid().ToString());
+                Preferences.Set("DeviceUserId", deviceId);
+                
+                var email = $"{deviceId}@device.local";
+                var password = "default123";
+                
+                var loginResult = await this.authService.LoginAsync(email, password);
+                if (!loginResult)
+                {
+                    await this.authService.RegisterAsync("Device User", email, password);
+                }
+                
+                currentUser = this.authService.GetCurrentUser();
+                if (currentUser == null)
+                {
+                    this.loggingService.LogWarning("Failed to create/load user");
+                    return null;
+                }
             }
 
             if (string.IsNullOrWhiteSpace(name) || name.Length > 100)
