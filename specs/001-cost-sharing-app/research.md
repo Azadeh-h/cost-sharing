@@ -3,6 +3,8 @@
 **Date**: 2026-01-05  
 **Purpose**: Resolve technical unknowns and establish best practices for implementation
 
+**⚠️ IMPLEMENTATION NOTE**: This research document describes Google Drive storage architecture that was part of the original design. The actual implementation uses **local SQLite storage only** - Google Drive integration was removed during development. This document is preserved for historical reference.
+
 ## Research Areas
 
 ### 1. Google Drive File-Based Storage for Collaborative SPA

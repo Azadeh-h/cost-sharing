@@ -90,9 +90,6 @@ public static class MauiProgram
 		// Phase 7: US5 - Settlement Services
 		services.AddSingleton<ISettlementService, SettlementService>();
 
-		// Phase 9: Background sync
-		services.AddSingleton<BackgroundSyncService>();
-
 		// Phase 3: US1 - ViewModels
 		services.AddTransient<ViewModels.Groups.GroupListViewModel>();
 		services.AddTransient<ViewModels.Groups.CreateGroupViewModel>();

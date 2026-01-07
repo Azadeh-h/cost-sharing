@@ -3,6 +3,8 @@
 **Branch**: `001-cost-sharing-app` | **Date**: 2026-01-05 | **Spec**: [spec.md](spec.md)
 **Input**: Feature specification from `/specs/001-cost-sharing-app/spec.md`
 
+**⚠️ IMPLEMENTATION NOTE**: This document reflects the original architecture design with Google Drive synchronization. The actual implementation uses **local SQLite storage only** - Google Drive integration was removed during development. This document is preserved for historical reference.
+
 **Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
 
 ## Summary

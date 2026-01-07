@@ -1,6 +1,6 @@
 # Cost Sharing App
 
-A cross-platform mobile application for tracking shared expenses and settling debts among groups, built with .NET MAUI and Google Drive for data synchronization.
+A cross-platform mobile application for tracking shared expenses and settling debts among groups, built with .NET MAUI.
 
 ## Features
 
@@ -10,14 +10,13 @@ A cross-platform mobile application for tracking shared expenses and settling de
 ✅ **Settlement Recording** - Track payments and update balances automatically  
 ✅ **Personal Dashboard** - View total balance across all groups  
 ✅ **Transaction History** - Filter and view all expenses with date/type filters  
-✅ **Offline Support** - Local caching with Google Drive sync  
+✅ **Offline Support** - Local SQLite storage for all data  
 
 ## Architecture
 
 - **.NET MAUI** - Cross-platform UI framework
 - **MVVM Pattern** - Separation of concerns with ViewModels
-- **Google Drive API** - Cloud storage and synchronization
-- **SQLite** - Local caching via Preferences API
+- **SQLite** - Local data storage
 - **Dependency Injection** - Service-based architecture
 
 ## Project Structure
@@ -33,7 +32,7 @@ CostSharingApp/
 │   └── CostSharingApp/             # MAUI application
 │       ├── Views/                  # XAML pages
 │       ├── ViewModels/             # ViewModels
-│       ├── Services/               # App services (Auth, Drive, Cache, etc.)
+│       ├── Services/               # App services (Auth, Expense, Group, etc.)
 │       ├── Converters/             # Value converters
 │       └── Resources/              # Images, styles, colors
 ├── tests/
@@ -46,7 +45,6 @@ CostSharingApp/
 ### All Platforms
 - [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
 - Visual Studio 2022 (Windows) or Visual Studio Code (Mac/Linux)
-- Google Drive API credentials (for data sync)
 
 ### iOS Development
 - **macOS** with Xcode 26.0 or later
@@ -80,15 +78,7 @@ cd cost-sharing/CostSharingApp
 dotnet restore
 ```
 
-### 3. Configure Google Drive API
-
-1. Create a project in [Google Cloud Console](https://console.cloud.google.com/)
-2. Enable Google Drive API
-3. Create OAuth 2.0 credentials (Desktop app)
-4. Download credentials JSON file
-5. Place in `CostSharingApp/Resources/Raw/` as `google_credentials.json`
-
-### 4. Build & Run
+### 3. Build & Run
 
 #### Run Tests
 
@@ -189,12 +179,7 @@ dotnet build -t:InstallAndroidDependencies
 
 Set `ANDROID_HOME` environment variable to SDK location.
 
-### Google Drive Authentication Failed
 
-1. Verify credentials file is in `Resources/Raw/google_credentials.json`
-2. Check Google Cloud Console for enabled APIs
-3. Ensure OAuth consent screen is configured
-4. Clear app data and re-authenticate
 
 ## Testing
 
@@ -311,4 +296,3 @@ The MSIX package will be in `bin/Release/net9.0-windows10.0.19041.0/publish/`.
 
 - Min-Cash-Flow Algorithm for debt simplification
 - .NET MAUI team for the cross-platform framework
-- Google Drive API for cloud synchronization
