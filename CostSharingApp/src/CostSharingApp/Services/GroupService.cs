@@ -208,24 +208,35 @@ public class GroupService : IGroupService
     {
         try
         {
+            System.Diagnostics.Debug.WriteLine($"[GroupService] DeleteGroupAsync called for groupId: {groupId}");
+            
             var currentUser = this.authService.GetCurrentUser();
+            System.Diagnostics.Debug.WriteLine($"[GroupService] Current user: {currentUser?.Id}, Name: {currentUser?.Name}");
+            
             if (currentUser == null)
             {
+                System.Diagnostics.Debug.WriteLine("[GroupService] No current user found");
                 return false;
             }
 
             var group = await this.GetGroupAsync(groupId);
             if (group == null)
             {
+                System.Diagnostics.Debug.WriteLine("[GroupService] Group not found");
                 return false;
             }
 
             // Check if user is admin
             var members = await this.GetGroupMembersAsync(groupId);
+            System.Diagnostics.Debug.WriteLine($"[GroupService] Found {members.Count} members");
+            
             var userMembership = members.FirstOrDefault(m => m.UserId == currentUser.Id);
+            System.Diagnostics.Debug.WriteLine($"[GroupService] User membership: {userMembership?.Role}");
+            
             if (userMembership == null || userMembership.Role != GroupRole.Admin)
             {
                 this.loggingService.LogWarning($"User {currentUser.Id} not authorized to delete group {groupId}");
+                System.Diagnostics.Debug.WriteLine($"[GroupService] User not authorized. Membership null: {userMembership == null}, Role: {userMembership?.Role}");
                 return false;
             }
 
@@ -236,11 +247,13 @@ public class GroupService : IGroupService
                 await this.cacheService.DeleteAsync(member);
             }
 
+            System.Diagnostics.Debug.WriteLine($"[GroupService] Group deleted successfully: {groupId}");
             this.loggingService.LogInfo($"Group deleted: {groupId}");
             return true;
         }
         catch (Exception ex)
         {
+            System.Diagnostics.Debug.WriteLine($"[GroupService] Exception during delete: {ex.Message}");
             this.loggingService.LogError("Group deletion failed", ex);
             return false;
         }

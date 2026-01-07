@@ -1,3 +1,5 @@
+using SQLite;
+
 namespace CostSharing.Core.Models;
 
 /// <summary>
@@ -24,6 +26,7 @@ public class Expense
     /// <summary>
     /// Gets or sets the unique identifier.
     /// </summary>
+    [PrimaryKey]
     public Guid Id { get; set; }
 
     /// <summary>
