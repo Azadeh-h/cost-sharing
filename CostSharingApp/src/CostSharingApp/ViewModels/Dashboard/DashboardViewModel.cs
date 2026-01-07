@@ -73,13 +73,17 @@ public partial class DashboardViewModel : ObservableObject
             this.IsRefreshing = true;
 
             var currentUser = this.authService.GetCurrentUser();
+            System.Diagnostics.Debug.WriteLine($"[Dashboard] Current user: {currentUser?.Id}, Name: {currentUser?.Name}");
+            
             if (currentUser == null)
             {
+                System.Diagnostics.Debug.WriteLine("[Dashboard] No current user, returning");
                 return;
             }
 
             // Load all groups for the user
             var groups = await this.groupService.GetUserGroupsAsync();
+            System.Diagnostics.Debug.WriteLine($"[Dashboard] Loaded {groups.Count} groups");
 
             this.GroupBalances.Clear();
             decimal totalOwed = 0;
@@ -88,8 +92,12 @@ public partial class DashboardViewModel : ObservableObject
             // Calculate balance for each group
             foreach (var group in groups)
             {
+                System.Diagnostics.Debug.WriteLine($"[Dashboard] Processing group: {group.Name} (ID: {group.Id})");
+                
                 var balance = await this.CalculateGroupBalanceAsync(group.Id, currentUser.Id);
                 var members = await this.groupService.GetGroupMembersAsync(group.Id);
+                
+                System.Diagnostics.Debug.WriteLine($"[Dashboard] Group {group.Name}: Balance={balance}, Members={members?.Count ?? 0}");
                 
                 var groupBalance = new GroupBalanceViewModel
                 {
@@ -99,7 +107,12 @@ public partial class DashboardViewModel : ObservableObject
                     Balance = balance
                 };
 
-                this.GroupBalances.Add(groupBalance);
+                // Ensure UI update happens on main thread
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    this.GroupBalances.Add(groupBalance);
+                    System.Diagnostics.Debug.WriteLine($"[Dashboard] Added to UI: {groupBalance.GroupName}");
+                });
 
                 if (balance > 0)
                 {
@@ -114,6 +127,9 @@ public partial class DashboardViewModel : ObservableObject
             this.TotalOwed = totalOwed;
             this.TotalOwing = totalOwing;
             this.TotalBalance = totalOwed - totalOwing;
+            
+            System.Diagnostics.Debug.WriteLine($"[Dashboard] Final totals - Owed: {totalOwed}, Owing: {totalOwing}, Balance: {this.TotalBalance}");
+            System.Diagnostics.Debug.WriteLine($"[Dashboard] GroupBalances count: {this.GroupBalances.Count}");
         }
         catch (Exception ex)
         {
@@ -135,8 +151,12 @@ public partial class DashboardViewModel : ObservableObject
     /// </summary>
     private async Task<decimal> CalculateGroupBalanceAsync(Guid groupId, Guid userId)
     {
+        System.Diagnostics.Debug.WriteLine($"[Dashboard] CalculateGroupBalanceAsync - GroupId: {groupId}, UserId: {userId}");
+        
         // Get all expenses for the group
         var expenses = await this.expenseService.GetGroupExpensesAsync(groupId);
+        System.Diagnostics.Debug.WriteLine($"[Dashboard] Found {expenses.Count} expenses");
+        
         if (!expenses.Any())
         {
             return 0;
@@ -147,32 +167,49 @@ public partial class DashboardViewModel : ObservableObject
         foreach (var expense in expenses)
         {
             var splits = await this.expenseService.GetExpenseSplitsAsync(expense.Id);
+            System.Diagnostics.Debug.WriteLine($"[Dashboard] Expense '{expense.Description}': {splits.Count} splits, PaidBy: {expense.PaidBy}");
             allSplits.AddRange(splits);
         }
 
+        System.Diagnostics.Debug.WriteLine($"[Dashboard] Total splits: {allSplits.Count}");
+
         // Get settlements
         var settlements = await this.settlementService.GetGroupSettlementsAsync(groupId);
+        System.Diagnostics.Debug.WriteLine($"[Dashboard] Found {settlements.Count} settlements");
 
         // Calculate all debts accounting for settlements
         var debts = this.debtCalculationService.CalculateDebts(expenses, allSplits, settlements);
+        System.Diagnostics.Debug.WriteLine($"[Dashboard] Calculated {debts.Count} debts");
+
+        // Check if this is a single-member group where user paid everything
+        var members = await this.groupService.GetGroupMembersAsync(groupId);
+        if (members.Count == 1 && expenses.All(e => e.PaidBy == userId))
+        {
+            System.Diagnostics.Debug.WriteLine($"[Dashboard] Single-member group - user paid all expenses, balance is 0");
+        }
 
         // Calculate net balance for this user
         decimal balance = 0;
 
         foreach (var debt in debts)
         {
+            System.Diagnostics.Debug.WriteLine($"[Dashboard] Debt: {debt.DebtorId} owes {debt.CreditorId} ${debt.Amount}");
+            
             if (debt.CreditorId == userId)
             {
                 // User is owed money
                 balance += debt.Amount;
+                System.Diagnostics.Debug.WriteLine($"[Dashboard] User is OWED ${debt.Amount}, balance now: ${balance}");
             }
             else if (debt.DebtorId == userId)
             {
                 // User owes money
                 balance -= debt.Amount;
+                System.Diagnostics.Debug.WriteLine($"[Dashboard] User OWES ${debt.Amount}, balance now: ${balance}");
             }
         }
 
+        System.Diagnostics.Debug.WriteLine($"[Dashboard] Final balance for user {userId}: ${balance}");
         return balance;
     }
 
@@ -180,9 +217,19 @@ public partial class DashboardViewModel : ObservableObject
     /// Navigates to the group details page.
     /// </summary>
     [RelayCommand]
-    private async Task ViewGroupAsync(Guid groupId)
+    private async Task ViewGroupAsync(GroupBalanceViewModel groupBalance)
     {
-        await Shell.Current.GoToAsync($"groupdetails?groupId={groupId}");
+        System.Diagnostics.Debug.WriteLine($"[Dashboard] ViewGroupAsync called with: {groupBalance?.GroupName ?? "null"}");
+        
+        if (groupBalance != null)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Dashboard] Navigating to group: {groupBalance.GroupId}");
+            await Shell.Current.GoToAsync($"groupdetails?groupId={groupBalance.GroupId}");
+        }
+        else
+        {
+            System.Diagnostics.Debug.WriteLine("[Dashboard] groupBalance is null!");
+        }
     }
 
     /// <summary>
@@ -236,7 +283,11 @@ public class GroupBalanceViewModel
     {
         get
         {
-            if (Balance > 0)
+            if (this.MemberCount == 1)
+            {
+                return "add members to split";
+            }
+            else if (Balance > 0)
             {
                 return "you're owed";
             }

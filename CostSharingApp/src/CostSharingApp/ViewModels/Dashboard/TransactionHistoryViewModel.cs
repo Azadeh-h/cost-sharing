@@ -22,6 +22,9 @@ public partial class TransactionHistoryViewModel : ObservableObject
     private bool isBusy;
 
     [ObservableProperty]
+    private bool isRefreshing;
+
+    [ObservableProperty]
     private DateTime startDate;
 
     [ObservableProperty]

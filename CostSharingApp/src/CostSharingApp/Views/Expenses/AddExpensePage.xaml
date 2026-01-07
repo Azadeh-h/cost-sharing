@@ -4,7 +4,7 @@
              xmlns:vm="clr-namespace:CostSharingApp.ViewModels.Expenses"
              x:Class="CostSharingApp.Views.Expenses.AddExpensePage"
              x:DataType="vm:AddExpenseViewModel"
-             Title="Add Expense">
+             Title="{Binding IsEditMode, Converter={StaticResource BoolToStringConverter}, ConverterParameter='Edit Expense,Add Expense'}">
     <ScrollView>
         <VerticalStackLayout Padding="16" Spacing="16">
             <!-- Description -->
@@ -65,7 +65,7 @@
 
             <CollectionView ItemsSource="{Binding Members}">
                 <CollectionView.ItemTemplate>
-                    <DataTemplate>
+                    <DataTemplate x:DataType="vm:MemberSelectionItem">
                         <Frame Padding="8" Margin="0,0,0,4">
                             <HorizontalStackLayout Spacing="12">
                                 <CheckBox IsChecked="{Binding IsSelected}" />
@@ -84,16 +84,24 @@
                    Margin="0,8,0,0" />
 
             <!-- Action Buttons -->
-            <HorizontalStackLayout Spacing="12" Margin="0,16,0,0">
-                <Button Text="Cancel"
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12" Margin="0,16,0,0">
+                <Button Grid.Column="0"
+                        Text="Cancel"
                         Command="{Binding CancelCommand}"
                         BackgroundColor="{StaticResource Gray300}"
-                        TextColor="{StaticResource Gray900}"
-                        HorizontalOptions="FillAndExpand" />
-                <Button Text="Add Expense"
-                        Command="{Binding AddExpenseCommand}"
-                        HorizontalOptions="FillAndExpand" />
-            </HorizontalStackLayout>
+                        TextColor="{StaticResource Gray900}" />
+                <Button Grid.Column="1"
+                        Text="{Binding IsEditMode, Converter={StaticResource BoolToStringConverter}, ConverterParameter='Update Expense,Add Expense'}"
+                        Command="{Binding AddExpenseCommand}" />
+            </Grid>
+            
+            <!-- Delete Button (only in edit mode) -->
+            <Button Text="Delete Expense"
+                    Command="{Binding DeleteExpenseCommand}"
+                    IsVisible="{Binding IsEditMode}"
+                    BackgroundColor="{StaticResource Danger}"
+                    TextColor="White"
+                    Margin="0,8,0,0" />
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

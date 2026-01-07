@@ -54,6 +54,7 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
         this.EditGroupCommand = new Command(async () => await this.EditGroupAsync(), () => this.isAdmin);
         this.InviteMemberCommand = new Command(async () => await this.InviteMemberAsync(), () => this.isAdmin);
         this.AddExpenseCommand = new Command(async () => await this.AddExpenseAsync());
+        this.EditExpenseCommand = new Command<Expense>(async (expense) => await this.EditExpenseAsync(expense));
         this.RemoveMemberCommand = new Command<GroupMember>(async (member) => await this.RemoveMemberAsync(member), (_) => this.isAdmin);
         this.ResendInvitationCommand = new Command<Invitation>(async (inv) => await this.ResendInvitationAsync(inv), (_) => this.isAdmin);
         this.CancelInvitationCommand = new Command<Invitation>(async (inv) => await this.CancelInvitationAsync(inv), (_) => this.isAdmin);
@@ -144,6 +145,11 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     /// Gets the command to add an expense.
     /// </summary>
     public ICommand AddExpenseCommand { get; }
+
+    /// <summary>
+    /// Gets the command to edit an expense.
+    /// </summary>
+    public ICommand EditExpenseCommand { get; }
 
     /// <summary>
     /// Gets the command to refresh group data.
@@ -519,6 +525,21 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
         }
 
         await Shell.Current.GoToAsync($"addexpense?groupId={this.group.Id}");
+    }
+
+    /// <summary>
+    /// Navigates to edit expense page.
+    /// </summary>
+    /// <param name="expense">Expense to edit.</param>
+    /// <returns>Task for async operation.</returns>
+    private async Task EditExpenseAsync(Expense expense)
+    {
+        if (this.group == null || expense == null)
+        {
+            return;
+        }
+
+        await Shell.Current.GoToAsync($"addexpense?groupId={this.group.Id}&expenseId={expense.Id}");
     }
 
     /// <summary>

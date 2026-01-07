@@ -178,6 +178,10 @@
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:Expense">
                         <Frame Margin="0,0,0,8" Padding="12" CornerRadius="8">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GroupDetailsViewModel}}, Path=EditExpenseCommand}"
+                                                      CommandParameter="{Binding .}" />
+                            </Frame.GestureRecognizers>
                             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
                                 <Label Grid.Column="0"
                                        Text="💰"

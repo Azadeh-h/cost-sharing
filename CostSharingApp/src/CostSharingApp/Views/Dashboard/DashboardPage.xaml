@@ -92,14 +92,14 @@
                 </CollectionView.EmptyView>
 
                 <CollectionView.ItemTemplate>
-                    <DataTemplate>
+                    <DataTemplate x:DataType="viewmodels:GroupBalanceViewModel">
                         <Frame Margin="0,0,0,12" 
                                Padding="16" 
                                CornerRadius="8"
                                HasShadow="True">
                             <Frame.GestureRecognizers>
                                 <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:DashboardViewModel}}, Path=ViewGroupCommand}"
-                                                      CommandParameter="{Binding GroupId}" />
+                                                      CommandParameter="{Binding .}" />
                             </Frame.GestureRecognizers>
                             
                             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">

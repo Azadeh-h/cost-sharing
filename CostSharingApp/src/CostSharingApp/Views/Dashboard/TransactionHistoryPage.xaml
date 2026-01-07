@@ -96,7 +96,7 @@
                     </CollectionView.EmptyView>
 
                     <CollectionView.ItemTemplate>
-                        <DataTemplate>
+                        <DataTemplate x:DataType="viewmodels:TransactionViewModel">
                             <Frame Margin="0,0,0,8" 
                                    Padding="16" 
                                    CornerRadius="8"

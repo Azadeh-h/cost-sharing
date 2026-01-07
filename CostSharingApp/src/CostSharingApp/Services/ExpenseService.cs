@@ -58,12 +58,11 @@ public interface IExpenseService
 }
 
 /// <summary>
-/// Implementation of expense service with cache and Drive sync.
+/// Implementation of expense service with SQLite storage.
 /// </summary>
 public class ExpenseService : IExpenseService
 {
     private readonly ICacheService cacheService;
-    private readonly IDriveService driveService;
     private readonly ILoggingService loggingService;
     private readonly IAuthService authService;
 
@@ -71,17 +70,14 @@ public class ExpenseService : IExpenseService
     /// Initializes a new instance of the <see cref="ExpenseService"/> class.
     /// </summary>
     /// <param name="cacheService">Cache service.</param>
-    /// <param name="driveService">Drive service.</param>
     /// <param name="loggingService">Logging service.</param>
     /// <param name="authService">Auth service.</param>
     public ExpenseService(
         ICacheService cacheService,
-        IDriveService driveService,
         ILoggingService loggingService,
         IAuthService authService)
     {
         this.cacheService = cacheService;
-        this.driveService = driveService;
         this.loggingService = loggingService;
         this.authService = authService;
     }
@@ -107,21 +103,24 @@ public class ExpenseService : IExpenseService
             expense.CreatedBy = currentUser.Id;
             expense.CreatedAt = DateTime.UtcNow;
 
+            System.Diagnostics.Debug.WriteLine($"[Expense] Creating expense: {expense.Description}, Amount: ${expense.TotalAmount}, GroupId: {expense.GroupId}, PaidBy: {expense.PaidBy}");
+
             // Set expense ID on splits
             foreach (var split in splits)
             {
                 split.ExpenseId = expense.Id;
+                System.Diagnostics.Debug.WriteLine($"[Expense] Split for user {split.UserId}: ${split.Amount}");
             }
 
             // Save to cache
             await this.cacheService.SaveAsync(expense);
+            System.Diagnostics.Debug.WriteLine($"[Expense] Saved expense to cache");
+            
             foreach (var split in splits)
             {
                 await this.cacheService.SaveAsync(split);
             }
-
-            // Sync to Google Drive
-            await this.SyncExpensesToDrive(expense.GroupId);
+            System.Diagnostics.Debug.WriteLine($"[Expense] Saved {splits.Count} splits to cache");
 
             this.loggingService.LogInfo($"Created expense {expense.Id} in group {expense.GroupId}");
             return true;
@@ -143,9 +142,19 @@ public class ExpenseService : IExpenseService
         try
         {
             var allExpenses = await this.cacheService.GetAllAsync<Expense>();
-            return allExpenses.Where(e => e.GroupId == groupId)
+            System.Diagnostics.Debug.WriteLine($"[Expense] GetGroupExpenses: Found {allExpenses.Count} total expenses in database");
+            
+            var groupExpenses = allExpenses.Where(e => e.GroupId == groupId)
                 .OrderByDescending(e => e.ExpenseDate)
                 .ToList();
+            
+            System.Diagnostics.Debug.WriteLine($"[Expense] GetGroupExpenses: {groupExpenses.Count} expenses for group {groupId}");
+            foreach (var exp in groupExpenses)
+            {
+                System.Diagnostics.Debug.WriteLine($"[Expense]   - {exp.Description}: ${exp.TotalAmount}, PaidBy: {exp.PaidBy}");
+            }
+            
+            return groupExpenses;
         }
         catch (Exception ex)
         {
@@ -182,7 +191,17 @@ public class ExpenseService : IExpenseService
         try
         {
             var allSplits = await this.cacheService.GetAllAsync<ExpenseSplit>();
-            return allSplits.Where(s => s.ExpenseId == expenseId).ToList();
+            System.Diagnostics.Debug.WriteLine($"[Expense] GetExpenseSplits: Found {allSplits.Count} total splits in database");
+            
+            var expenseSplits = allSplits.Where(s => s.ExpenseId == expenseId).ToList();
+            System.Diagnostics.Debug.WriteLine($"[Expense] GetExpenseSplits: {expenseSplits.Count} splits for expense {expenseId}");
+            
+            foreach (var split in expenseSplits)
+            {
+                System.Diagnostics.Debug.WriteLine($"[Expense]   - User {split.UserId}: ${split.Amount}");
+            }
+            
+            return expenseSplits;
         }
         catch (Exception ex)
         {
@@ -202,14 +221,17 @@ public class ExpenseService : IExpenseService
         try
         {
             var currentUser = this.authService.GetCurrentUser();
-            if (currentUser == null || expense.CreatedBy != currentUser.Id)
+            if (currentUser == null)
             {
-                this.loggingService.LogWarning($"User {currentUser?.Id} not authorized to update expense {expense.Id}");
+                this.loggingService.LogWarning("No current user, cannot update expense");
                 return false;
             }
 
+            System.Diagnostics.Debug.WriteLine($"[Expense] UpdateExpenseAsync: Updating expense {expense.Id} - {expense.Description} ${expense.TotalAmount}");
+
             // Delete old splits
             var oldSplits = await this.GetExpenseSplitsAsync(expense.Id);
+            System.Diagnostics.Debug.WriteLine($"[Expense] UpdateExpenseAsync: Deleting {oldSplits.Count} old splits");
             foreach (var oldSplit in oldSplits)
             {
                 await this.cacheService.DeleteAsync(oldSplit);
@@ -217,16 +239,17 @@ public class ExpenseService : IExpenseService
 
             // Save updated expense and new splits
             await this.cacheService.SaveAsync(expense);
+            System.Diagnostics.Debug.WriteLine($"[Expense] UpdateExpenseAsync: Expense saved, adding {splits.Count} new splits");
+            
             foreach (var split in splits)
             {
                 split.ExpenseId = expense.Id;
                 await this.cacheService.SaveAsync(split);
+                System.Diagnostics.Debug.WriteLine($"[Expense] UpdateExpenseAsync: Added split for user {split.UserId}: ${split.Amount}");
             }
 
-            // Sync to Google Drive
-            await this.SyncExpensesToDrive(expense.GroupId);
-
             this.loggingService.LogInfo($"Updated expense {expense.Id}");
+            System.Diagnostics.Debug.WriteLine($"[Expense] UpdateExpenseAsync: SUCCESS - Expense {expense.Id} updated");
             return true;
         }
         catch (Exception ex)
@@ -268,9 +291,6 @@ public class ExpenseService : IExpenseService
             // Delete expense
             await this.cacheService.DeleteAsync(expense);
 
-            // Sync to Google Drive
-            await this.SyncExpensesToDrive(expense.GroupId);
-
             this.loggingService.LogInfo($"Deleted expense {expenseId}");
             return true;
         }
@@ -281,25 +301,4 @@ public class ExpenseService : IExpenseService
         }
     }
 
-    /// <summary>
-    /// Syncs expenses and splits to Google Drive.
-    /// </summary>
-    /// <param name="groupId">Group ID.</param>
-    /// <returns>Task representing the async operation.</returns>
-    private async Task SyncExpensesToDrive(Guid groupId)
-    {
-        try
-        {
-            var expenses = await this.GetGroupExpensesAsync(groupId);
-            var allSplits = await this.cacheService.GetAllAsync<ExpenseSplit>();
-            var groupSplits = allSplits.Where(s => expenses.Any(e => e.Id == s.ExpenseId)).ToList();
-
-            await this.driveService.SaveFileAsync($"expenses_{groupId}.json", expenses);
-            await this.driveService.SaveFileAsync($"splits_{groupId}.json", groupSplits);
-        }
-        catch (Exception ex)
-        {
-            this.loggingService.LogWarning($"Failed to sync expenses to Drive for group {groupId}: {ex.Message}");
-        }
-    }
 }

@@ -191,7 +191,22 @@ public class InviteMemberViewModel : BaseViewModel, IQueryAttributable
 
             if (invitation == null)
             {
-                this.ErrorMessage = "Failed to send invitation. Please try again.";
+                if (this.IsEmailMethod)
+                {
+                    this.ErrorMessage = $"Failed to send email invitation to {this.inviteeEmail}. Please check:\n" +
+                        "• Email address is correct\n" +
+                        "• You have internet connection\n" +
+                        "• Email service is configured";
+                }
+                else
+                {
+                    this.ErrorMessage = $"Failed to send SMS invitation to {this.inviteePhone}. Please check:\n" +
+                        "• Phone number is in E.164 format (+country code)\n" +
+                        "• You have internet connection\n" +
+                        "• SMS service is configured";
+                }
+                
+                await Application.Current!.MainPage!.DisplayAlert("Invitation Failed", this.ErrorMessage, "OK");
                 return;
             }
 

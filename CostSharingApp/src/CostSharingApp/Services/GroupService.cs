@@ -3,11 +3,10 @@ using CostSharing.Core.Models;
 namespace CostSharingApp.Services;
 
 /// <summary>
-/// Manages group operations including CRUD and Google Drive synchronization.
+/// Manages group operations including CRUD via SQLite.
 /// </summary>
 public class GroupService : IGroupService
 {
-    private readonly IDriveService driveService;
     private readonly ICacheService cacheService;
     private readonly IAuthService authService;
     private readonly ILoggingService loggingService;
@@ -15,17 +14,14 @@ public class GroupService : IGroupService
     /// <summary>
     /// Initializes a new instance of the <see cref="GroupService"/> class.
     /// </summary>
-    /// <param name="driveService">Drive service.</param>
     /// <param name="cacheService">Cache service.</param>
     /// <param name="authService">Auth service.</param>
     /// <param name="loggingService">Logging service.</param>
     public GroupService(
-        IDriveService driveService,
         ICacheService cacheService,
         IAuthService authService,
         ILoggingService loggingService)
     {
-        this.driveService = driveService;
         this.cacheService = cacheService;
         this.authService = authService;
         this.loggingService = loggingService;
@@ -92,13 +88,9 @@ public class GroupService : IGroupService
                 AddedBy = currentUser.Id
             };
 
-            // Save to local cache
+            // Save to SQLite database
             await this.cacheService.SaveAsync(group);
             await this.cacheService.SaveAsync(adminMember);
-
-            // Sync to Google Drive
-            await this.driveService.SaveFileAsync($"group_{group.Id}.json", group);
-            await this.driveService.SaveFileAsync($"group_{group.Id}_members.json", new List<GroupMember> { adminMember });
 
             this.loggingService.LogInfo($"Group created: {group.Name} ({group.Id})");
             return group;
@@ -185,9 +177,8 @@ public class GroupService : IGroupService
 
             group.UpdatedAt = DateTime.UtcNow;
 
-            // Save to cache and Drive
+            // Save to SQLite database
             await this.cacheService.SaveAsync(group);
-            await this.driveService.SaveFileAsync($"group_{group.Id}.json", group);
 
             this.loggingService.LogInfo($"Group updated: {group.Id}");
             return true;

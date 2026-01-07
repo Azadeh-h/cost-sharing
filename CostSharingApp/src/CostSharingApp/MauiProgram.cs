@@ -1,6 +1,8 @@
 ﻿using CostSharing.Core.Services;
 using CostSharingApp.Services;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System.Reflection;
 
 namespace CostSharingApp;
 
@@ -24,8 +26,19 @@ public static class MauiProgram
 				fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
 			});
 
+		// Load configuration from appsettings.json
+		var assembly = Assembly.GetExecutingAssembly();
+		using var stream = assembly.GetManifestResourceStream("CostSharingApp.appsettings.json");
+		if (stream != null)
+		{
+			var config = new ConfigurationBuilder()
+				.AddJsonStream(stream)
+				.Build();
+			builder.Configuration.AddConfiguration(config);
+		}
+
 		// Register services for dependency injection
-		ConfigureServices(builder.Services);
+		ConfigureServices(builder.Services, builder.Configuration);
 
 #if DEBUG
 	builder.Logging.AddDebug();
@@ -34,13 +47,11 @@ public static class MauiProgram
 		return builder.Build();
 	}
 
-	private static void ConfigureServices(IServiceCollection services)
+	private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
 	{
 		// Phase 2: Foundational Services
 		services.AddSingleton<ILoggingService, LoggingService>();
 		services.AddSingleton<ICacheService, CacheService>();
-		services.AddSingleton<IDriveAuthService, DriveAuthService>();
-		services.AddSingleton<IDriveService, DriveService>();
 		services.AddSingleton<IErrorService, ErrorService>();
 		services.AddSingleton<IAuthService, AuthService>();
 
@@ -51,15 +62,23 @@ public static class MauiProgram
 		services.AddSingleton<INotificationService>(sp =>
 		{
 			var loggingService = sp.GetRequiredService<ILoggingService>();
-			// For now, use empty strings - notifications can be configured later
+			
+			// Load configuration from appsettings.json
+			var sendGridApiKey = configuration["SendGrid:ApiKey"] ?? string.Empty;
+			var sendGridFromEmail = configuration["SendGrid:FromEmail"] ?? string.Empty;
+			var sendGridFromName = configuration["SendGrid:FromName"] ?? "Cost Sharing App";
+			var twilioAccountSid = configuration["Twilio:AccountSid"] ?? string.Empty;
+			var twilioAuthToken = configuration["Twilio:AuthToken"] ?? string.Empty;
+			var twilioPhoneNumber = configuration["Twilio:PhoneNumber"] ?? string.Empty;
+			
 			return new NotificationService(
 				loggingService,
-				sendGridApiKey: string.Empty,
-				sendGridFromEmail: string.Empty,
-				sendGridFromName: "Cost Sharing App",
-				twilioAccountSid: string.Empty,
-				twilioAuthToken: string.Empty,
-				twilioPhoneNumber: string.Empty);
+				sendGridApiKey,
+				sendGridFromEmail,
+				sendGridFromName,
+				twilioAccountSid,
+				twilioAuthToken,
+				twilioPhoneNumber);
 		});
 		services.AddSingleton<IInvitationService, InvitationService>();
 
