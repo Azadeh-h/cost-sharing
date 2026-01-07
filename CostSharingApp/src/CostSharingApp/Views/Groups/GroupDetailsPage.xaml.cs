@@ -10,9 +10,11 @@ public partial class GroupDetailsPage : ContentPage
     /// <summary>
     /// Initializes a new instance of the <see cref="GroupDetailsPage"/> class.
     /// </summary>
-    public GroupDetailsPage()
+    /// <param name="viewModel">The group details view model.</param>
+    public GroupDetailsPage(ViewModels.Groups.GroupDetailsViewModel viewModel)
     {
         this.InitializeComponent();
+        this.BindingContext = viewModel;
     }
 
     /// <inheritdoc/>
@@ -20,10 +22,11 @@ public partial class GroupDetailsPage : ContentPage
     {
         base.OnAppearing();
 
-        // Refresh data when returning to page (after adding expense or recording settlement)
-        if (this.BindingContext is GroupDetailsViewModel viewModel)
+        // Force refresh data when page appears to ensure we have the latest group
+        if (this.BindingContext is GroupDetailsViewModel viewModel && viewModel.RefreshCommand != null)
         {
-            viewModel.RefreshCommand?.Execute(null);
+            // Don't use the cached group - force reload from query parameters
+            viewModel.RefreshCommand.Execute(null);
         }
     }
 }

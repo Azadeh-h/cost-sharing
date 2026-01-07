@@ -1,0 +1,50 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build-android",
+            "type": "shell",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/CostSharingApp/CostSharingApp.csproj",
+                "-f",
+                "net9.0-android",
+                "-c",
+                "Debug",
+                "-p:AndroidSdkDirectory=/opt/homebrew/share/android-commandlinetools"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "install-android",
+            "type": "shell",
+            "command": "export PATH=$PATH:/opt/homebrew/share/android-commandlinetools/platform-tools && adb install -r ${workspaceFolder}/src/CostSharingApp/bin/Debug/net9.0-android/com.costsharingapp.mobile-Signed.apk",
+            "dependsOn": "build-android",
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "start-android-app",
+            "type": "shell",
+            "command": "export PATH=$PATH:/opt/homebrew/share/android-commandlinetools/platform-tools && adb shell am start -n com.costsharingapp.mobile/crc64e205aeaee53652b8.MainActivity",
+            "dependsOn": "install-android",
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        }
+    ]
+}

@@ -23,6 +23,9 @@ public partial class DashboardViewModel : ObservableObject
     private bool isBusy;
 
     [ObservableProperty]
+    private bool isRefreshing;
+
+    [ObservableProperty]
     private decimal totalBalance;
 
     [ObservableProperty]
@@ -67,6 +70,7 @@ public partial class DashboardViewModel : ObservableObject
         try
         {
             this.IsBusy = true;
+            this.IsRefreshing = true;
 
             var currentUser = this.authService.GetCurrentUser();
             if (currentUser == null)
@@ -121,6 +125,7 @@ public partial class DashboardViewModel : ObservableObject
         finally
         {
             this.IsBusy = false;
+            this.IsRefreshing = false;
         }
     }
 

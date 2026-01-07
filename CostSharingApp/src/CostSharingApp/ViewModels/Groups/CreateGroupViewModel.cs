@@ -5,14 +5,17 @@ using CostSharing.Core.Models;
 namespace CostSharingApp.ViewModels.Groups;
 
 /// <summary>
-/// ViewModel for creating a new group.
+/// ViewModel for creating or editing a group.
 /// </summary>
-public class CreateGroupViewModel : BaseViewModel
+public class CreateGroupViewModel : BaseViewModel, IQueryAttributable
 {
     private readonly IGroupService groupService;
     private readonly IErrorService errorService;
     private string groupName = string.Empty;
     private string errorMessage = string.Empty;
+    private string buttonText = "Create";
+    private Guid? groupId;
+    private bool isEditMode;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CreateGroupViewModel"/> class.
@@ -25,8 +28,26 @@ public class CreateGroupViewModel : BaseViewModel
         this.errorService = errorService;
         this.Title = "Create Group";
 
-        this.CreateCommand = new Command(async () => await this.CreateGroupAsync(), this.CanCreate);
+        this.CreateCommand = new Command(async () => await this.SaveGroupAsync(), this.CanCreate);
         this.CancelCommand = new Command(async () => await this.CancelAsync());
+    }
+
+    /// <summary>
+    /// Applies query attributes for navigation parameters.
+    /// </summary>
+    public void ApplyQueryAttributes(IDictionary<string, object> query)
+    {
+        if (query.TryGetValue("groupId", out var groupIdObj) && groupIdObj is string groupIdString)
+        {
+            if (Guid.TryParse(groupIdString, out var parsedGroupId))
+            {
+                this.groupId = parsedGroupId;
+                this.isEditMode = true;
+                this.Title = "Edit Group";
+                this.ButtonText = "Save";
+                _ = LoadGroupAsync(parsedGroupId);
+            }
+        }
     }
 
     /// <summary>
@@ -54,6 +75,15 @@ public class CreateGroupViewModel : BaseViewModel
     }
 
     /// <summary>
+    /// Gets the button text (Create or Save).
+    /// </summary>
+    public string ButtonText
+    {
+        get => this.buttonText;
+        private set => this.SetProperty(ref this.buttonText, value);
+    }
+
+    /// <summary>
     /// Gets the command to create the group.
     /// </summary>
     public ICommand CreateCommand { get; }
@@ -73,10 +103,34 @@ public class CreateGroupViewModel : BaseViewModel
     }
 
     /// <summary>
-    /// Creates the new group.
+    /// Loads an existing group for editing.
+    /// </summary>
+    private async Task LoadGroupAsync(Guid groupId)
+    {
+        try
+        {
+            this.IsBusy = true;
+            var group = await this.groupService.GetGroupAsync(groupId);
+            if (group != null)
+            {
+                this.GroupName = group.Name;
+            }
+        }
+        catch (Exception ex)
+        {
+            this.ErrorMessage = this.errorService.HandleException(ex, "loading group");
+        }
+        finally
+        {
+            this.IsBusy = false;
+        }
+    }
+
+    /// <summary>
+    /// Creates or updates the group.
     /// </summary>
     /// <returns>Task for async operation.</returns>
-    private async Task CreateGroupAsync()
+    private async Task SaveGroupAsync()
     {
         if (this.IsBusy)
         {
@@ -88,20 +142,41 @@ public class CreateGroupViewModel : BaseViewModel
             this.IsBusy = true;
             this.ErrorMessage = string.Empty;
 
-            var group = await this.groupService.CreateGroupAsync(this.groupName);
-
-            if (group == null)
+            if (this.isEditMode && this.groupId.HasValue)
             {
-                this.ErrorMessage = "Failed to create group. Please try again.";
-                return;
+                // Update existing group
+                var existingGroup = await this.groupService.GetGroupAsync(this.groupId.Value);
+                if (existingGroup != null)
+                {
+                    existingGroup.Name = this.groupName;
+                    existingGroup.UpdatedAt = DateTime.UtcNow;
+                    var success = await this.groupService.UpdateGroupAsync(existingGroup);
+                    
+                    if (!success)
+                    {
+                        this.ErrorMessage = "Failed to update group. Please try again.";
+                        return;
+                    }
+                }
+            }
+            else
+            {
+                // Create new group
+                var group = await this.groupService.CreateGroupAsync(this.groupName);
+
+                if (group == null)
+                {
+                    this.ErrorMessage = "Failed to create group. Please try again.";
+                    return;
+                }
             }
 
-            // Navigate back to group list
+            // Navigate back
             await Shell.Current.GoToAsync("..");
         }
         catch (Exception ex)
         {
-            this.ErrorMessage = this.errorService.HandleException(ex, "creating group");
+            this.ErrorMessage = this.errorService.HandleException(ex, this.isEditMode ? "updating group" : "creating group");
         }
         finally
         {

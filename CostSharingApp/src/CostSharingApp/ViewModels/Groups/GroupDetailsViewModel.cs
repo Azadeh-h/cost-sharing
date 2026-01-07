@@ -28,6 +28,7 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     private ObservableCollection<Settlement> settlements = new();
     private string errorMessage = string.Empty;
     private bool isAdmin;
+    private Guid? currentGroupId;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GroupDetailsViewModel"/> class.
@@ -192,11 +193,20 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     /// <param name="query">Query parameters.</param>
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
-        if (query.TryGetValue("groupId", out var groupIdObj) && groupIdObj is string groupIdString)
+        if (query.TryGetValue("groupId", out var groupIdObj))
         {
-            if (Guid.TryParse(groupIdString, out var groupId))
+            Guid groupId;
+            
+            // Handle both string and Guid types
+            if (groupIdObj is string groupIdString && Guid.TryParse(groupIdString, out groupId))
             {
+                this.currentGroupId = groupId;
                 _ = this.LoadGroupAsync(groupId);
+            }
+            else if (groupIdObj is Guid guidValue)
+            {
+                this.currentGroupId = guidValue;
+                _ = this.LoadGroupAsync(guidValue);
             }
         }
     }
@@ -218,12 +228,24 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
             this.IsBusy = true;
             this.ErrorMessage = string.Empty;
 
+            // Clear all previous data first
+            this.Group = null;
+            this.Members.Clear();
+            this.PendingInvitations.Clear();
+            this.Expenses.Clear();
+            this.Debts.Clear();
+            this.Settlements.Clear();
+
+            // Load the new group
             this.Group = await this.groupService.GetGroupAsync(groupId);
             if (this.Group == null)
             {
                 this.ErrorMessage = "Group not found.";
                 return;
             }
+            
+            // Force UI update
+            this.OnPropertyChanged(nameof(Group));
 
             var members = await this.groupService.GetGroupMembersAsync(groupId);
             this.Members.Clear();
@@ -279,7 +301,7 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     /// <returns>Task for async operation.</returns>
     private async Task DeleteGroupAsync()
     {
-        if (this.group == null)
+        if (this.group == null || !this.currentGroupId.HasValue)
         {
             return;
         }
@@ -298,8 +320,10 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
         try
         {
             this.IsBusy = true;
-            var success = await this.groupService.DeleteGroupAsync(this.group.Id);
+            System.Diagnostics.Debug.WriteLine($"[GroupDetailsViewModel] Attempting to delete group: {this.currentGroupId.Value}");
+            var success = await this.groupService.DeleteGroupAsync(this.currentGroupId.Value);
 
+            System.Diagnostics.Debug.WriteLine($"[GroupDetailsViewModel] Delete result: {success}");
             if (success)
             {
                 await Shell.Current.GoToAsync("..");
@@ -461,12 +485,12 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     }
     private async Task EditGroupAsync()
     {
-        if (this.group == null)
+        if (this.group == null || !this.currentGroupId.HasValue)
         {
             return;
         }
 
-        await Shell.Current.GoToAsync($"editgroup?groupId={this.group.Id}");
+        await Shell.Current.GoToAsync($"editgroup?groupId={this.currentGroupId.Value}");
     }
 
     /// <summary>
@@ -552,6 +576,13 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     /// <returns>Task for async operation.</returns>
     private async Task RefreshAsync()
     {
+        // If we have a stored group ID, reload from scratch
+        if (this.currentGroupId.HasValue)
+        {
+            await this.LoadGroupAsync(this.currentGroupId.Value);
+            return;
+        }
+
         if (this.group == null || this.IsBusy)
         {
             return;

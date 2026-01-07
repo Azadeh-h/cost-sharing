@@ -52,7 +52,7 @@
                         TextColor="{StaticResource Gray900}" />
 
                 <Button Grid.Column="1"
-                        Text="Create"
+                        Text="{Binding ButtonText}"
                         Command="{Binding CreateCommand}"
                         IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />
             </Grid>

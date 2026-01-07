@@ -20,9 +20,7 @@
                      IsRefreshing="{Binding IsBusy}"
                      Command="{Binding LoadGroupsCommand}">
             <CollectionView ItemsSource="{Binding Groups}"
-                            SelectionMode="Single"
-                            SelectionChangedCommand="{Binding SelectGroupCommand}"
-                            SelectionChangedCommandParameter="{Binding SelectedItem, Source={RelativeSource Self}}">
+                            SelectionMode="None">
                 <CollectionView.EmptyView>
                     <StackLayout Padding="20" VerticalOptions="Center">
                         <Label Text="No groups yet"
@@ -39,6 +37,10 @@
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:Group">
                         <Frame Margin="0,0,0,8" Padding="12" CornerRadius="8" HasShadow="True">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GroupListViewModel}}, Path=SelectGroupCommand}"
+                                                      CommandParameter="{Binding .}" />
+                            </Frame.GestureRecognizers>
                             <Grid ColumnDefinitions="*,Auto">
                                 <StackLayout Grid.Column="0">
                                     <Label Text="{Binding Name}"
