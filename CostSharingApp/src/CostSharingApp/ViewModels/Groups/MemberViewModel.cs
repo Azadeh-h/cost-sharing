@@ -1,7 +1,7 @@
-namespace CostSharingApp.ViewModels.Groups;
 
 using CostSharing.Core.Models;
 
+namespace CostSharingApp.ViewModels.Groups;
 /// <summary>
 /// View model for displaying group member information with user details.
 /// </summary>

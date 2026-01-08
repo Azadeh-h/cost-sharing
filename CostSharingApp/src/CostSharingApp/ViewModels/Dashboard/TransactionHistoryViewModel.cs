@@ -1,4 +1,3 @@
-namespace CostSharingApp.ViewModels.Dashboard;
 
 using System.Collections.ObjectModel;
 using System.Windows.Input;
@@ -6,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CostSharingApp.Services;
 
+namespace CostSharingApp.ViewModels.Dashboard;
 /// <summary>
 /// View model for the transaction history page.
 /// </summary>

@@ -102,8 +102,9 @@ Desktop.ini
 **/AppPackages/
 
 ## Secrets and environment
-appsettings.Development.json
-appsettings.Local.json
+appsettings.json
+appsettings.*.json
+!appsettings.template.json
 *.env
 .env*
 secrets.json

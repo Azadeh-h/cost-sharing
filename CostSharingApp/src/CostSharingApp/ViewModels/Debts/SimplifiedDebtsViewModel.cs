@@ -1,4 +1,3 @@
-namespace CostSharingApp.ViewModels.Debts;
 
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -8,6 +7,7 @@ using CostSharing.Core.Models;
 using CostSharing.Core.Services;
 using CostSharingApp.Services;
 
+namespace CostSharingApp.ViewModels.Debts;
 /// <summary>
 /// View model for simplified debts page showing optimized settlement plan.
 /// </summary>

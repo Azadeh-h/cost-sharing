@@ -48,6 +48,13 @@
             Route="groups" />
     </FlyoutItem>
 
+    <FlyoutItem Title="Google" Icon="icon_google.png">
+        <ShellContent
+            Title="Google Integration"
+            ContentTemplate="{DataTemplate local:Views.GoogleSignInPage}"
+            Route="googlesignin" />
+    </FlyoutItem>
+
     <FlyoutItem Title="Settings" Icon="icon_settings.png">
         <ShellContent
             Title="Settings"

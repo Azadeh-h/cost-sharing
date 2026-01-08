@@ -1,10 +1,10 @@
-namespace CostSharingApp.ViewModels.Groups;
 
 using System.Collections.ObjectModel;
 using CostSharingApp.Services;
 using System.Windows.Input;
 using CostSharing.Core.Models;
 
+namespace CostSharingApp.ViewModels.Groups;
 /// <summary>
 /// ViewModel for the group list page showing all user's groups.
 /// </summary>

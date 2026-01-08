@@ -2,10 +2,10 @@
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace CostSharingApp.Services;
 
 using CostSharing.Core.Models;
 
+namespace CostSharingApp.Services;
 /// <summary>
 /// Service for managing expenses.
 /// </summary>

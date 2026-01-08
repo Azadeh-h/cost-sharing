@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:CostSharingApp.ViewModels"
+             x:Class="CostSharingApp.Views.SyncStatusView"
+             x:DataType="viewmodels:SyncStatusViewModel">
+    
+    <Frame BorderColor="{DynamicResource Gray300}"
+           BackgroundColor="{DynamicResource Gray100}"
+           Padding="10"
+           Margin="5"
+           CornerRadius="8">
+        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+            
+            <!-- Cloud Icon with Status Color -->
+            <Label Grid.Column="0"
+                   Text="☁️"
+                   FontSize="24"
+                   VerticalOptions="Center"/>
+            
+            <!-- Sync Status and Last Sync Time -->
+            <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                <Label Text="{Binding SyncStatusText}"
+                       FontSize="14"
+                       FontAttributes="Bold"
+                       TextColor="{Binding SyncStatusColor}"/>
+                <Label Text="{Binding LastSyncTime, StringFormat='Last sync: {0}'}"
+                       FontSize="11"
+                       TextColor="{DynamicResource Gray600}"
+                       IsVisible="{Binding IsSignedIn}"/>
+            </VerticalStackLayout>
+            
+            <!-- Sync Button or Activity Indicator -->
+            <Grid Grid.Column="2" VerticalOptions="Center">
+                <Button Text="Sync"
+                        Command="{Binding SyncNowCommand}"
+                        FontSize="12"
+                        Padding="10,5"
+                        IsVisible="{Binding IsSyncing, Converter={StaticResource InvertedBoolConverter}}"/>
+                
+                <ActivityIndicator IsRunning="{Binding IsSyncing}"
+                                 IsVisible="{Binding IsSyncing}"
+                                 Color="{DynamicResource Primary}"
+                                 WidthRequest="24"
+                                 HeightRequest="24"/>
+            </Grid>
+            
+        </Grid>
+    </Frame>
+    
+</ContentView>

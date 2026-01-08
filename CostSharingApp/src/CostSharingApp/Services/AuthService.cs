@@ -1,10 +1,9 @@
-namespace CostSharingApp.Services;
 
 using System.Security.Cryptography;
 using System.Text;
 using CostSharing.Core.Models;
 
-
+namespace CostSharingApp.Services;
 /// <summary>
 /// Provides authentication services including email/password and magic link.
 /// </summary>

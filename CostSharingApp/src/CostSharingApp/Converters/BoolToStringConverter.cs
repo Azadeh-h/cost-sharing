@@ -1,7 +1,7 @@
-namespace CostSharingApp.Converters;
 
 using System.Globalization;
 
+namespace CostSharingApp.Converters;
 /// <summary>
 /// Converts a boolean value to a string based on provided parameters.
 /// ConverterParameter format: "TrueValue,FalseValue"

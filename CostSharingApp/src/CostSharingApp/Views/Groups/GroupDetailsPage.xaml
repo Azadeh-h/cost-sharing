@@ -163,6 +163,25 @@
                     IsVisible="{Binding IsAdmin}"
                     Margin="0,8,0,0" />
 
+            <!-- Google Integration Section -->
+            <StackLayout Spacing="8" Margin="0,8,0,0">
+                <Label Text="Google Integration" FontSize="18" FontAttributes="Bold" />
+                
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                    <Button Grid.Column="0"
+                            Text="🔄 Sync with Drive"
+                            Command="{Binding SyncGroupCommand}"
+                            BackgroundColor="{StaticResource Primary}"
+                            TextColor="White" />
+                    <Button Grid.Column="1"
+                            Text="📧 Send Gmail Invite"
+                            Command="{Binding SendGmailInvitationCommand}"
+                            BackgroundColor="{StaticResource Secondary}"
+                            TextColor="{StaticResource SecondaryDarkText}"
+                            IsVisible="{Binding IsAdmin}" />
+                </Grid>
+            </StackLayout>
+
             <!-- Expenses section -->
             <Label Text="Expenses" FontSize="18" FontAttributes="Bold" Margin="0,24,0,8" />
             <Button Text="+ Add Expense"

@@ -1,4 +1,3 @@
-namespace CostSharingApp.ViewModels.Groups;
 
 using System.Collections.ObjectModel;
 using System.Windows.Input;
@@ -6,7 +5,9 @@ using CommunityToolkit.Mvvm.Input;
 using CostSharing.Core.Models;
 using CostSharing.Core.Services;
 using CostSharingApp.Services;
+using CostSharingApp.Models;
 
+namespace CostSharingApp.ViewModels.Groups;
 /// <summary>
 /// ViewModel for group details page.
 /// </summary>
@@ -19,6 +20,9 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     private readonly IExpenseService expenseService;
     private readonly IDebtCalculationService debtCalculationService;
     private readonly ISettlementService settlementService;
+    private readonly IGoogleSyncService? googleSyncService;
+    private readonly IGoogleInvitationService? googleInvitationService;
+    private readonly IGoogleAuthService? googleAuthService;
     private Group? group;
     private ObservableCollection<MemberViewModel> members = new();
     private ObservableCollection<Invitation> pendingInvitations = new();
@@ -39,7 +43,10 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
         IErrorService errorService,
         IExpenseService expenseService,
         IDebtCalculationService debtCalculationService,
-        ISettlementService settlementService)
+        ISettlementService settlementService,
+        IGoogleSyncService? googleSyncService = null,
+        IGoogleInvitationService? googleInvitationService = null,
+        IGoogleAuthService? googleAuthService = null)
     {
         this.groupService = groupService;
         this.invitationService = invitationService;
@@ -48,6 +55,9 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
         this.expenseService = expenseService;
         this.debtCalculationService = debtCalculationService;
         this.settlementService = settlementService;
+        this.googleSyncService = googleSyncService;
+        this.googleInvitationService = googleInvitationService;
+        this.googleAuthService = googleAuthService;
 
         this.DeleteGroupCommand = new Command(async () => await this.DeleteGroupAsync(), () => this.isAdmin);
         this.EditGroupCommand = new Command(async () => await this.EditGroupAsync(), () => this.isAdmin);
@@ -58,6 +68,8 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
         this.ResendInvitationCommand = new Command<Invitation>(async (inv) => await this.ResendInvitationAsync(inv), (_) => this.isAdmin);
         this.CancelInvitationCommand = new Command<Invitation>(async (inv) => await this.CancelInvitationAsync(inv), (_) => this.isAdmin);
         this.RefreshCommand = new Command(async () => await this.RefreshAsync());
+        this.SyncGroupCommand = new Command(async () => await this.SyncGroupAsync(), () => this.googleAuthService?.IsAuthenticated == true);
+        this.SendGmailInvitationCommand = new Command(async () => await this.SendGmailInvitationAsync(), () => this.isAdmin && this.googleAuthService?.IsAuthenticated == true);
     }
 
     /// <summary>
@@ -190,6 +202,16 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     /// Gets the command to invite a member.
     /// </summary>
     public ICommand InviteMemberCommand { get; }
+
+    /// <summary>
+    /// Gets the command to sync this group with Google Drive.
+    /// </summary>
+    public ICommand SyncGroupCommand { get; }
+
+    /// <summary>
+    /// Gets the command to send a Gmail invitation.
+    /// </summary>
+    public ICommand SendGmailInvitationCommand { get; }
 
     /// <summary>
     /// Applies query attributes from navigation.
@@ -657,6 +679,106 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
         catch (Exception ex)
         {
             this.ErrorMessage = this.errorService.HandleException(ex, "refreshing group data");
+        }
+    }
+
+    /// <summary>
+    /// Syncs this group with Google Drive.
+    /// </summary>
+    /// <returns>Task for async operation.</returns>
+    private async Task SyncGroupAsync()
+    {
+        if (this.group == null || this.googleSyncService == null)
+        {
+            return;
+        }
+
+        try
+        {
+            this.IsBusy = true;
+            var status = await this.googleSyncService.SyncGroupAsync(this.group.Id.ToString());
+
+            if (status == CostSharingApp.Models.SyncStatus.Conflict)
+            {
+                // Navigate to conflict resolution page
+                await Shell.Current.GoToAsync("conflictresolution", new Dictionary<string, object>
+                {
+                    ["groupId"] = this.group.Id.ToString(),
+                    ["groupName"] = this.group.Name,
+                });
+            }
+            else if (status == CostSharingApp.Models.SyncStatus.Synced)
+            {
+                await Application.Current!.MainPage!.DisplayAlert(
+                    "Sync Complete",
+                    "Group synced successfully with Google Drive.",
+                    "OK");
+                
+                // Refresh local data
+                await this.RefreshAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            this.ErrorMessage = this.errorService.HandleException(ex, "syncing group");
+        }
+        finally
+        {
+            this.IsBusy = false;
+        }
+    }
+
+    /// <summary>
+    /// Sends a Gmail invitation for this group.
+    /// </summary>
+    /// <returns>Task for async operation.</returns>
+    private async Task SendGmailInvitationAsync()
+    {
+        if (this.group == null || this.googleInvitationService == null)
+        {
+            return;
+        }
+
+        // Prompt for email address
+        var email = await Application.Current!.MainPage!.DisplayPromptAsync(
+            "Send Gmail Invitation",
+            "Enter the email address to invite:",
+            placeholder: "email@example.com",
+            keyboard: Keyboard.Email);
+
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return;
+        }
+
+        try
+        {
+            this.IsBusy = true;
+            
+            // Get or create Drive file for this group
+            var driveFileId = await this.googleSyncService!.GetGroupDriveFileIdAsync(this.group.Id.ToString());
+            
+            if (string.IsNullOrEmpty(driveFileId))
+            {
+                // Need to upload group first
+                await this.googleSyncService.SyncGroupAsync(this.group.Id.ToString());
+                driveFileId = await this.googleSyncService.GetGroupDriveFileIdAsync(this.group.Id.ToString());
+            }
+
+            await this.googleInvitationService.SendInvitationAsync(this.group.Id.ToString(), email, driveFileId);
+
+            await Application.Current!.MainPage!.DisplayAlert(
+                "Invitation Sent",
+                $"Gmail invitation sent to {email}.",
+                "OK");
+        }
+        catch (Exception ex)
+        {
+            this.ErrorMessage = this.errorService.HandleException(ex, "sending Gmail invitation");
+        }
+        finally
+        {
+            this.IsBusy = false;
         }
     }
 }
