@@ -1,9 +1,9 @@
-using System;
-using System.Globalization;
-using Microsoft.Maui.Controls;
-
 namespace CostSharingApp.Converters
 {
+    using System;
+    using System.Globalization;
+    using Microsoft.Maui.Controls;
+
     public class StringIsNotNullOrEmptyConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

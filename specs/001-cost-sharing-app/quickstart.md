@@ -3,6 +3,8 @@
 **Date**: 2026-01-05  
 **Purpose**: Get developers up and running quickly with the cost-sharing application
 
+**⚠️ IMPLEMENTATION NOTE**: This quickstart guide describes the original architecture with Google Drive API integration. The actual implementation is a **.NET MAUI mobile app with local SQLite storage only** - no Google Drive, backend API, or web frontend. See the main [README.md](/README.md) for current setup instructions.
+
 ## Prerequisites
 
 - **.NET SDK**: 8.0 or later ([Download](https://dotnet.microsoft.com/download))

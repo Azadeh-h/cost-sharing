@@ -60,7 +60,7 @@
                 </CollectionView.EmptyView>
 
                 <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="models:GroupMember">
+                    <DataTemplate x:DataType="vm:MemberViewModel">
                         <SwipeView>
                             <SwipeView.RightItems>
                                 <SwipeItems>
@@ -78,9 +78,12 @@
                                            VerticalOptions="Center"
                                            Margin="0,0,12,0" />
                                     <StackLayout Grid.Column="1" VerticalOptions="Center">
-                                        <Label Text="{Binding UserId, StringFormat='User ID: {0}'}"
+                                        <Label Text="{Binding UserName}"
                                                FontSize="14"
                                                FontAttributes="Bold" />
+                                        <Label Text="{Binding Email}"
+                                               TextColor="{StaticResource Gray600}"
+                                               FontSize="12" />
                                         <Label Text="{Binding JoinedAt, StringFormat='Joined: {0:MMM dd, yyyy}'}"
                                                TextColor="{StaticResource Gray500}"
                                                FontSize="12" />
@@ -178,6 +181,10 @@
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:Expense">
                         <Frame Margin="0,0,0,8" Padding="12" CornerRadius="8">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GroupDetailsViewModel}}, Path=EditExpenseCommand}"
+                                                      CommandParameter="{Binding .}" />
+                            </Frame.GestureRecognizers>
                             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
                                 <Label Grid.Column="0"
                                        Text="💰"

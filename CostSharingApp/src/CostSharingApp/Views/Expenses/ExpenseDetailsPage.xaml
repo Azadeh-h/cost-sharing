@@ -67,7 +67,7 @@
                             <Frame Margin="0,0,0,8" Padding="12" CornerRadius="8">
                                 <Grid ColumnDefinitions="*,Auto,Auto">
                                     <Label Grid.Column="0"
-                                           Text="{Binding UserId, StringFormat='User: {0}'}"
+                                           Text="{Binding UserId}"
                                            VerticalOptions="Center" />
                                     <Label Grid.Column="1"
                                            Text="{Binding Percentage, StringFormat='{0:F2}%'}"

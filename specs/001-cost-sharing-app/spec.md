@@ -5,6 +5,8 @@
 **Status**: Draft  
 **Input**: User description: "Build a SPA that can be used for cost sharing between different people. In which I can create a group, add people to the group using their email address or their phone number. Then a link would be sent to them to accept the invitation and get added to the group. I need to be able to add a cost of something (description and the price) and be able to either split it evenly between the members of the team or split it with a particular share from 0 to 100. then it should be able to simplify the group debts meaning automatically combines debts to reduce the total number of repayments between group members."
 
+**⚠️ IMPLEMENTATION NOTE**: This specification document describes the original architecture with Google Drive storage and synchronization. The actual implementation uses **local SQLite storage only** - Google Drive integration was removed during development. This document is preserved for historical/reference purposes.
+
 ## Clarifications
 
 ### Session 2026-01-05

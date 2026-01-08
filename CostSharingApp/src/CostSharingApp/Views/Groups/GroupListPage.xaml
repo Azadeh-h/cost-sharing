@@ -36,11 +36,11 @@
 
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:Group">
-                        <Frame Margin="0,0,0,8" Padding="12" CornerRadius="8" HasShadow="True">
-                            <Frame.GestureRecognizers>
+                        <Border Margin="0,0,0,8" Padding="12" StrokeShape="RoundRectangle 8" Shadow="{Shadow Brush=Black, Offset='0,2', Radius=4, Opacity=0.3}">
+                            <Border.GestureRecognizers>
                                 <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GroupListViewModel}}, Path=SelectGroupCommand}"
                                                       CommandParameter="{Binding .}" />
-                            </Frame.GestureRecognizers>
+                            </Border.GestureRecognizers>
                             <Grid ColumnDefinitions="*,Auto">
                                 <StackLayout Grid.Column="0">
                                     <Label Text="{Binding Name}"
@@ -59,7 +59,7 @@
                                        HeightRequest="24"
                                        VerticalOptions="Center" />
                             </Grid>
-                        </Frame>
+                        </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>

@@ -1,15 +1,13 @@
-using System.Text.Json;
-using CostSharing.Core.Models;
-
 namespace CostSharingApp.Services;
 
+using CostSharing.Core.Models;
+
 /// <summary>
-/// Service for managing settlement transactions with Google Drive persistence.
+/// Service for managing settlement transactions with SQLite storage.
 /// </summary>
 public class SettlementService : ISettlementService
 {
     private readonly ICacheService cacheService;
-    private readonly IDriveService driveService;
     private readonly ILoggingService loggingService;
     private const string SettlementsCacheKey = "settlements";
     private const string SettlementsFolderName = "settlements";
@@ -18,15 +16,12 @@ public class SettlementService : ISettlementService
     /// Initializes a new instance of the <see cref="SettlementService"/> class.
     /// </summary>
     /// <param name="cacheService">Cache service for local storage.</param>
-    /// <param name="driveService">Drive service for cloud sync.</param>
     /// <param name="loggingService">Logging service.</param>
     public SettlementService(
         ICacheService cacheService,
-        IDriveService driveService,
         ILoggingService loggingService)
     {
         this.cacheService = cacheService;
-        this.driveService = driveService;
         this.loggingService = loggingService;
     }
 
@@ -45,10 +40,6 @@ public class SettlementService : ISettlementService
 
             // Save to cache
             await this.cacheService.SaveAsync(settlement);
-
-            // Sync to Google Drive
-            var fileName = $"settlement_{settlement.Id}.json";
-            await this.driveService.SaveFileAsync(fileName, settlement);
 
             this.loggingService.LogInfo($"Settlement recorded: {settlement.Id}");
         }
@@ -102,10 +93,6 @@ public class SettlementService : ISettlementService
             // Save to cache
             await this.cacheService.SaveAsync(settlement);
 
-            // Update in Google Drive
-            var fileName = $"settlement_{settlement.Id}.json";
-            await this.driveService.SaveFileAsync(fileName, settlement);
-
             this.loggingService.LogInfo($"Settlement confirmed: {settlementId}");
         }
         catch (Exception ex)
@@ -134,10 +121,6 @@ public class SettlementService : ISettlementService
             // Save to cache
             await this.cacheService.SaveAsync(settlement);
 
-            // Update in Google Drive
-            var fileName = $"settlement_{settlement.Id}.json";
-            await this.driveService.SaveFileAsync(fileName, settlement);
-
             this.loggingService.LogInfo($"Settlement cancelled: {settlementId}");
         }
         catch (Exception ex)
@@ -164,9 +147,6 @@ public class SettlementService : ISettlementService
 
             // Save to cache
             await this.cacheService.DeleteAsync(settlement);
-
-            // Note: Google Drive deletion not implemented in current IDriveService
-            // await this.driveService.DeleteFileAsync(fileName);
 
             this.loggingService.LogInfo($"Settlement deleted: {settlementId}");
         }

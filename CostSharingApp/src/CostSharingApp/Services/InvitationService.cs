@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using CostSharing.Core.Models;
 
+
 namespace CostSharingApp.Services;
 
 /// <summary>
@@ -77,10 +78,7 @@ public class InvitationService : IInvitationService
                 Token = this.GenerateInvitationToken()
             };
 
-            // Save invitation
-            await this.cacheService.SaveAsync(invitation);
-
-            // Send email
+            // Send email BEFORE saving invitation
             var invitationLink = $"{BaseInvitationUrl}{invitation.Token}";
             var emailSent = await this.SendInvitationEmail(
                 inviteeEmail,
@@ -91,8 +89,13 @@ public class InvitationService : IInvitationService
 
             if (!emailSent)
             {
-                this.loggingService.LogWarning($"Failed to send invitation email to {inviteeEmail}");
+                this.loggingService.LogError($"Failed to send invitation email to {inviteeEmail}");
+                return null; // Don't save invitation if email failed
             }
+
+            // Only save invitation if email was sent successfully
+            await this.cacheService.SaveAsync(invitation);
+            this.loggingService.LogInfo($"Invitation sent successfully to {inviteeEmail}");
 
             return invitation;
         }
@@ -146,10 +149,7 @@ public class InvitationService : IInvitationService
                 Token = this.GenerateInvitationToken()
             };
 
-            // Save invitation
-            await this.cacheService.SaveAsync(invitation);
-
-            // Send SMS
+            // Send SMS BEFORE saving invitation
             var invitationLink = $"{BaseInvitationUrl}{invitation.Token}";
             var smsSent = await this.SendInvitationSms(
                 inviteePhone,
@@ -159,8 +159,13 @@ public class InvitationService : IInvitationService
 
             if (!smsSent)
             {
-                this.loggingService.LogWarning($"Failed to send invitation SMS to {inviteePhone}");
+                this.loggingService.LogError($"Failed to send invitation SMS to {inviteePhone}");
+                return null; // Don't save invitation if SMS failed
             }
+
+            // Only save invitation if SMS was sent successfully
+            await this.cacheService.SaveAsync(invitation);
+            this.loggingService.LogInfo($"Invitation sent successfully to {inviteePhone}");
 
             return invitation;
         }

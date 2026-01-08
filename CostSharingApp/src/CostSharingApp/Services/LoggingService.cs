@@ -1,6 +1,6 @@
-using System.Diagnostics;
-
 namespace CostSharingApp.Services;
+
+using System.Diagnostics;
 
 /// <summary>
 /// Provides structured logging for application diagnostics.

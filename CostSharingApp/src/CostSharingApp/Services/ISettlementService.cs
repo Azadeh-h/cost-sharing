@@ -1,5 +1,6 @@
 using CostSharing.Core.Models;
 
+
 namespace CostSharingApp.Services;
 
 /// <summary>

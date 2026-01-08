@@ -5,6 +5,8 @@
 **Architecture**: .NET MAUI cross-platform native application (Windows/macOS/Android/iOS)  
 **Generated**: 2026-01-05
 
+**⚠️ IMPLEMENTATION NOTE**: This task list was generated from the original specification that included Google Drive integration (T004, T035, T036, T042, T101, T102). The actual implementation uses **local SQLite storage only** - Google Drive tasks were either removed or not implemented. This document is preserved for historical reference.
+
 **Tests**: Tests are OPTIONAL and not included in this task list (not requested in feature specification)
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.

@@ -7,7 +7,6 @@ namespace CostSharingApp.ViewModels.Expenses;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using CostSharing.Core.Models;
 
 /// <summary>
 /// View model for custom percentage split.
@@ -195,6 +194,9 @@ public partial class MemberSplitItem : ObservableObject
 {
     [ObservableProperty]
     private Guid userId;
+
+    [ObservableProperty]
+    private string userName = string.Empty;
 
     [ObservableProperty]
     private decimal percentage;

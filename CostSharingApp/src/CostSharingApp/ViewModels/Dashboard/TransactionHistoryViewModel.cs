@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using CostSharing.Core.Models;
 using CostSharingApp.Services;
 
 /// <summary>
@@ -20,6 +19,9 @@ public partial class TransactionHistoryViewModel : ObservableObject
 
     [ObservableProperty]
     private bool isBusy;
+
+    [ObservableProperty]
+    private bool isRefreshing;
 
     [ObservableProperty]
     private DateTime startDate;

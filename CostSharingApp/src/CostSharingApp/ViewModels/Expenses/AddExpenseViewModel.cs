@@ -18,10 +18,19 @@ public partial class AddExpenseViewModel : BaseViewModel, IQueryAttributable
 {
     private readonly IExpenseService expenseService;
     private readonly IGroupService groupService;
+    private readonly IAuthService authService;
     private readonly ISplitCalculationService splitCalculationService;
 
     [ObservableProperty]
     private Guid groupId;
+
+    [ObservableProperty]
+    private Guid? expenseId;
+
+    [ObservableProperty]
+    private bool isEditMode = false;
+
+    private Guid? originalCreatedBy; // Store original CreatedBy
 
     [ObservableProperty]
     private string description = string.Empty;
@@ -55,14 +64,17 @@ public partial class AddExpenseViewModel : BaseViewModel, IQueryAttributable
     /// <param name="expenseService">Expense service.</param>
     /// <param name="groupService">Group service.</param>
     /// <param name="splitCalculationService">Split calculation service.</param>
+    /// <param name="authService">Auth service.</param>
     public AddExpenseViewModel(
         IExpenseService expenseService,
         IGroupService groupService,
-        ISplitCalculationService splitCalculationService)
+        ISplitCalculationService splitCalculationService,
+        IAuthService authService)
     {
         this.expenseService = expenseService;
         this.groupService = groupService;
         this.splitCalculationService = splitCalculationService;
+        this.authService = authService;
     }
 
     /// <summary>
@@ -75,6 +87,14 @@ public partial class AddExpenseViewModel : BaseViewModel, IQueryAttributable
         {
             this.GroupId = Guid.Parse(groupIdStr);
             _ = this.LoadMembersAsync();
+        }
+
+        // Check if editing existing expense
+        if (query.TryGetValue("expenseId", out var expenseIdObj) && expenseIdObj is string expenseIdStr)
+        {
+            this.ExpenseId = Guid.Parse(expenseIdStr);
+            this.IsEditMode = true;
+            _ = this.LoadExpenseAsync();
         }
 
         // Receive custom percentages from CustomSplitPage
@@ -170,6 +190,12 @@ public partial class AddExpenseViewModel : BaseViewModel, IQueryAttributable
                 ExpenseDate = this.ExpenseDate,
             };
 
+            // Preserve original CreatedBy when editing
+            if (this.IsEditMode && this.originalCreatedBy.HasValue)
+            {
+                expense.CreatedBy = this.originalCreatedBy.Value;
+            }
+
             // Calculate splits
             var participantIds = selectedMembers.Select(m => m.UserId).ToList();
             List<ExpenseSplit> splits;
@@ -190,17 +216,26 @@ public partial class AddExpenseViewModel : BaseViewModel, IQueryAttributable
                 splits = this.splitCalculationService.CalculateCustomSplit(amountValue, this.customPercentages);
             }
 
-            // Save expense
-            var success = await this.expenseService.CreateExpenseAsync(expense, splits);
+            // Save or update expense
+            bool success;
+            if (this.IsEditMode && this.ExpenseId.HasValue)
+            {
+                expense.Id = this.ExpenseId.Value;
+                success = await this.expenseService.UpdateExpenseAsync(expense, splits);
+            }
+            else
+            {
+                success = await this.expenseService.CreateExpenseAsync(expense, splits);
+            }
 
             if (success)
             {
-                await Shell.Current.DisplayAlert("Success", "Expense added successfully", "OK");
+                // Go back to previous page
                 await Shell.Current.GoToAsync("..");
             }
             else
             {
-                this.ErrorMessage = "Failed to add expense";
+                this.ErrorMessage = this.IsEditMode ? "Failed to update expense" : "Failed to add expense";
             }
         }
         catch (Exception ex)
@@ -219,7 +254,57 @@ public partial class AddExpenseViewModel : BaseViewModel, IQueryAttributable
     [RelayCommand]
     private async Task CancelAsync()
     {
+        // Go back to previous page
         await Shell.Current.GoToAsync("..");
+    }
+
+    /// <summary>
+    /// Delete expense command.
+    /// </summary>
+    [RelayCommand]
+    private async Task DeleteExpenseAsync()
+    {
+        if (!this.IsEditMode || !this.ExpenseId.HasValue)
+        {
+            return;
+        }
+
+        // Confirm deletion
+        bool confirm = await Application.Current!.MainPage!.DisplayAlert(
+            "Delete Expense",
+            "Are you sure you want to delete this expense? This action cannot be undone.",
+            "Delete",
+            "Cancel");
+
+        if (!confirm)
+        {
+            return;
+        }
+
+        this.IsBusy = true;
+
+        try
+        {
+            var success = await this.expenseService.DeleteExpenseAsync(this.ExpenseId.Value);
+
+            if (success)
+            {
+                // Go back to previous page
+                await Shell.Current.GoToAsync("..");
+            }
+            else
+            {
+                this.ErrorMessage = "Failed to delete expense. You may not have permission.";
+            }
+        }
+        catch (Exception ex)
+        {
+            this.ErrorMessage = $"Error deleting expense: {ex.Message}";
+        }
+        finally
+        {
+            this.IsBusy = false;
+        }
     }
 
     /// <summary>
@@ -235,13 +320,25 @@ public partial class AddExpenseViewModel : BaseViewModel, IQueryAttributable
             var groupMembers = await this.groupService.GetGroupMembersAsync(this.GroupId);
 
             this.Members.Clear();
+            var addedUserIds = new HashSet<Guid>();
+
             foreach (var member in groupMembers)
             {
+                // Skip if already added
+                if (addedUserIds.Contains(member.UserId))
+                {
+                    continue;
+                }
+
+                var user = await this.authService.GetUserByIdAsync(member.UserId);
                 this.Members.Add(new MemberSelectionItem
                 {
                     UserId = member.UserId,
+                    UserName = user?.Name ?? "Unknown User",
                     IsSelected = false,
                 });
+
+                addedUserIds.Add(member.UserId);
             }
 
             // Select first member as default payer
@@ -253,6 +350,70 @@ public partial class AddExpenseViewModel : BaseViewModel, IQueryAttributable
         catch (Exception ex)
         {
             this.ErrorMessage = $"Failed to load members: {ex.Message}";
+        }
+        finally
+        {
+            this.IsBusy = false;
+        }
+    }
+
+    /// <summary>
+    /// Loads existing expense for editing.
+    /// </summary>
+    /// <returns>Task representing the async operation.</returns>
+    private async Task LoadExpenseAsync()
+    {
+        if (!this.ExpenseId.HasValue)
+        {
+            return;
+        }
+
+        this.IsBusy = true;
+
+        try
+        {
+            var expense = await this.expenseService.GetExpenseAsync(this.ExpenseId.Value);
+            if (expense == null)
+            {
+                this.ErrorMessage = "Expense not found";
+                return;
+            }
+
+            this.Description = expense.Description;
+            this.Amount = expense.TotalAmount.ToString("F2");
+            this.ExpenseDate = expense.ExpenseDate;
+            this.IsEvenSplit = expense.SplitType == SplitType.Even;
+            this.IsCustomSplit = expense.SplitType == SplitType.Custom;
+
+            // Store original CreatedBy for updates
+            this.originalCreatedBy = expense.CreatedBy;
+
+            // Load members first
+            await this.LoadMembersAsync();
+
+            // Set the payer
+            this.SelectedPayer = this.Members.FirstOrDefault(m => m.UserId == expense.PaidBy);
+
+            // Load and set splits
+            var splits = await this.expenseService.GetExpenseSplitsAsync(this.ExpenseId.Value);
+            foreach (var split in splits)
+            {
+                var member = this.Members.FirstOrDefault(m => m.UserId == split.UserId);
+                if (member != null)
+                {
+                    member.IsSelected = true;
+                }
+            }
+
+            // If custom split, load percentages
+            if (this.IsCustomSplit && splits.Any())
+            {
+                this.customPercentages = splits.ToDictionary(s => s.UserId, s => (s.Amount / expense.TotalAmount) * 100);
+            }
+        }
+        catch (Exception ex)
+        {
+            this.ErrorMessage = $"Failed to load expense: {ex.Message}";
         }
         finally
         {
@@ -271,6 +432,12 @@ public partial class MemberSelectionItem : ObservableObject
     /// </summary>
     [ObservableProperty]
     private Guid userId;
+
+    /// <summary>
+    /// Gets or sets the user name for display.
+    /// </summary>
+    [ObservableProperty]
+    private string userName = string.Empty;
 
     /// <summary>
     /// Gets or sets a value indicating whether the member is selected.

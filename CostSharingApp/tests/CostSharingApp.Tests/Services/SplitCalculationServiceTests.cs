@@ -1,4 +1,3 @@
-using CostSharing.Core.Models;
 using CostSharing.Core.Services;
 
 namespace CostSharingApp.Tests.Services;

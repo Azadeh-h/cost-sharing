@@ -1,10 +1,9 @@
+namespace CostSharingApp.Services;
 using SendGrid;
 using SendGrid.Helpers.Mail;
 using Twilio;
 using Twilio.Rest.Api.V2010.Account;
 using Twilio.Types;
-
-namespace CostSharingApp.Services;
 
 /// <summary>
 /// Provides email and SMS notification services using SendGrid and Twilio.
