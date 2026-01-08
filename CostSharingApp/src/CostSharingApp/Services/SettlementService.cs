@@ -1,13 +1,7 @@
-
-<<<<<<< TODO: Unmerged change from project 'CostSharingApp (net9.0-ios)', Before:
-namespace CostSharingApp.Services;
-using System.Text.Json;
-=======
-namespace CostSharingApp.Services;
->>>>>>> After
 namespace CostSharingApp.Services;
 
 using CostSharing.Core.Models;
+
 /// <summary>
 /// Service for managing settlement transactions with SQLite storage.
 /// </summary>

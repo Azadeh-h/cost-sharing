@@ -1,4 +1,7 @@
-﻿namespace CostSharingApp;
+﻿using Android.App;
+using Android.Runtime;
+
+namespace CostSharingApp;
 
 [Application]
 public class MainApplication : MauiApplication

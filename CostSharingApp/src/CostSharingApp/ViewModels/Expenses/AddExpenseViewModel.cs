@@ -64,6 +64,7 @@ public partial class AddExpenseViewModel : BaseViewModel, IQueryAttributable
     /// <param name="expenseService">Expense service.</param>
     /// <param name="groupService">Group service.</param>
     /// <param name="splitCalculationService">Split calculation service.</param>
+    /// <param name="authService">Auth service.</param>
     public AddExpenseViewModel(
         IExpenseService expenseService,
         IGroupService groupService,
@@ -319,8 +320,16 @@ public partial class AddExpenseViewModel : BaseViewModel, IQueryAttributable
             var groupMembers = await this.groupService.GetGroupMembersAsync(this.GroupId);
 
             this.Members.Clear();
+            var addedUserIds = new HashSet<Guid>();
+
             foreach (var member in groupMembers)
             {
+                // Skip if already added
+                if (addedUserIds.Contains(member.UserId))
+                {
+                    continue;
+                }
+
                 var user = await this.authService.GetUserByIdAsync(member.UserId);
                 this.Members.Add(new MemberSelectionItem
                 {
@@ -328,6 +337,8 @@ public partial class AddExpenseViewModel : BaseViewModel, IQueryAttributable
                     UserName = user?.Name ?? "Unknown User",
                     IsSelected = false,
                 });
+
+                addedUserIds.Add(member.UserId);
             }
 
             // Select first member as default payer
