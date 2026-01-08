@@ -1,6 +1,6 @@
-using System.Globalization;
-
 namespace CostSharingApp.Converters;
+
+using System.Globalization;
 
 /// <summary>
 /// Converts a boolean value to a string based on provided parameters.
@@ -9,6 +9,7 @@ namespace CostSharingApp.Converters;
 /// </summary>
 public class BoolToStringConverter : IValueConverter
 {
+    /// <inheritdoc/>
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is not bool boolValue || parameter is not string paramString)
@@ -25,6 +26,7 @@ public class BoolToStringConverter : IValueConverter
         return boolValue ? parts[0] : parts[1];
     }
 
+    /// <inheritdoc/>
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         throw new NotImplementedException();

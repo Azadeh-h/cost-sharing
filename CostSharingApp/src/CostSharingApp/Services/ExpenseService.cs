@@ -5,7 +5,6 @@
 namespace CostSharingApp.Services;
 
 using CostSharing.Core.Models;
-using CostSharing.Core.Services;
 
 /// <summary>
 /// Service for managing expenses.

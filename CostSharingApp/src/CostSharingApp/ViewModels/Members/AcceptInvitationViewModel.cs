@@ -1,6 +1,7 @@
 using System.Windows.Input;
-using CostSharingApp.Services;
 using CostSharing.Core.Models;
+using CostSharingApp.Services;
+
 
 namespace CostSharingApp.ViewModels.Members;
 

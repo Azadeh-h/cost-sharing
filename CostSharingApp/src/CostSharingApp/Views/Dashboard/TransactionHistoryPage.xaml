@@ -20,16 +20,16 @@
             <VerticalStackLayout Spacing="12">
                 
                 <!-- Date Range Filter -->
-                <Label Text="Date Range" FontSize="14" FontAttributes="Bold" />
+                <Label Text="Date Range" FontSize="14" FontAttributes="Bold" TextColor="White" />
                 <HorizontalStackLayout Spacing="12">
                     <VerticalStackLayout HorizontalOptions="FillAndExpand">
-                        <Label Text="From" FontSize="12" TextColor="{StaticResource Gray600}" />
+                        <Label Text="From" FontSize="12" TextColor="White" />
                         <DatePicker Date="{Binding StartDate}"
                                    Format="MMM dd, yyyy"
                                    BackgroundColor="White" />
                     </VerticalStackLayout>
                     <VerticalStackLayout HorizontalOptions="FillAndExpand">
-                        <Label Text="To" FontSize="12" TextColor="{StaticResource Gray600}" />
+                        <Label Text="To" FontSize="12" TextColor="White" />
                         <DatePicker Date="{Binding EndDate}"
                                    Format="MMM dd, yyyy"
                                    BackgroundColor="White" />
@@ -37,7 +37,7 @@
                 </HorizontalStackLayout>
 
                 <!-- Transaction Type Filter -->
-                <Label Text="Transaction Type" FontSize="14" FontAttributes="Bold" Margin="0,8,0,0" />
+                <Label Text="Transaction Type" FontSize="14" FontAttributes="Bold" Margin="0,8,0,0" TextColor="White" />
                 <HorizontalStackLayout Spacing="8">
                     <Button Text="All"
                             Command="{Binding FilterByTypeCommand}"
@@ -162,33 +162,34 @@
                         <VerticalStackLayout Grid.Column="0">
                             <Label Text="Total Paid"
                                    FontSize="12"
-                                   TextColor="{StaticResource Gray600}"
+                                   TextColor="White"
                                    HorizontalOptions="Center" />
                             <Label Text="{Binding TotalPaid, StringFormat='${0:F2}'}"
                                    FontSize="16"
                                    FontAttributes="Bold"
-                                   TextColor="{StaticResource Success}"
+                                   TextColor="White"
                                    HorizontalOptions="Center" />
                         </VerticalStackLayout>
                         <VerticalStackLayout Grid.Column="1">
                             <Label Text="Total Owed"
                                    FontSize="12"
-                                   TextColor="{StaticResource Gray600}"
+                                   TextColor="White"
                                    HorizontalOptions="Center" />
                             <Label Text="{Binding TotalOwed, StringFormat='${0:F2}'}"
                                    FontSize="16"
                                    FontAttributes="Bold"
-                                   TextColor="{StaticResource Danger}"
+                                   TextColor="White"
                                    HorizontalOptions="Center" />
                         </VerticalStackLayout>
                         <VerticalStackLayout Grid.Column="2">
                             <Label Text="Net Balance"
                                    FontSize="12"
-                                   TextColor="{StaticResource Gray600}"
+                                   TextColor="White"
                                    HorizontalOptions="Center" />
                             <Label Text="{Binding NetBalance, StringFormat='${0:F2}'}"
                                    FontSize="16"
                                    FontAttributes="Bold"
+                                   TextColor="White"
                                    HorizontalOptions="Center" />
                         </VerticalStackLayout>
                     </Grid>

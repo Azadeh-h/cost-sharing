@@ -31,7 +31,7 @@
             <!-- Paid By -->
             <Label Text="Paid By" FontSize="14" FontAttributes="Bold" Margin="0,8,0,0" />
             <Picker ItemsSource="{Binding Members}"
-                    ItemDisplayBinding="{Binding UserId}"
+                    ItemDisplayBinding="{Binding UserName}"
                     SelectedItem="{Binding SelectedPayer}"
                     Title="Select who paid" />
 
@@ -69,7 +69,7 @@
                         <Frame Padding="8" Margin="0,0,0,4">
                             <HorizontalStackLayout Spacing="12">
                                 <CheckBox IsChecked="{Binding IsSelected}" />
-                                <Label Text="{Binding UserId}"
+                                <Label Text="{Binding UserName}"
                                        VerticalOptions="Center" />
                             </HorizontalStackLayout>
                         </Frame>

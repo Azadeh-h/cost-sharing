@@ -18,6 +18,7 @@ public partial class AddExpenseViewModel : BaseViewModel, IQueryAttributable
 {
     private readonly IExpenseService expenseService;
     private readonly IGroupService groupService;
+    private readonly IAuthService authService;
     private readonly ISplitCalculationService splitCalculationService;
 
     [ObservableProperty]
@@ -66,11 +67,13 @@ public partial class AddExpenseViewModel : BaseViewModel, IQueryAttributable
     public AddExpenseViewModel(
         IExpenseService expenseService,
         IGroupService groupService,
-        ISplitCalculationService splitCalculationService)
+        ISplitCalculationService splitCalculationService,
+        IAuthService authService)
     {
         this.expenseService = expenseService;
         this.groupService = groupService;
         this.splitCalculationService = splitCalculationService;
+        this.authService = authService;
     }
 
     /// <summary>
@@ -185,7 +188,7 @@ public partial class AddExpenseViewModel : BaseViewModel, IQueryAttributable
                 SplitType = this.IsEvenSplit ? SplitType.Even : SplitType.Custom,
                 ExpenseDate = this.ExpenseDate,
             };
-            
+
             // Preserve original CreatedBy when editing
             if (this.IsEditMode && this.originalCreatedBy.HasValue)
             {
@@ -318,9 +321,11 @@ public partial class AddExpenseViewModel : BaseViewModel, IQueryAttributable
             this.Members.Clear();
             foreach (var member in groupMembers)
             {
+                var user = await this.authService.GetUserByIdAsync(member.UserId);
                 this.Members.Add(new MemberSelectionItem
                 {
                     UserId = member.UserId,
+                    UserName = user?.Name ?? "Unknown User",
                     IsSelected = false,
                 });
             }
@@ -368,7 +373,7 @@ public partial class AddExpenseViewModel : BaseViewModel, IQueryAttributable
             this.ExpenseDate = expense.ExpenseDate;
             this.IsEvenSplit = expense.SplitType == SplitType.Even;
             this.IsCustomSplit = expense.SplitType == SplitType.Custom;
-            
+
             // Store original CreatedBy for updates
             this.originalCreatedBy = expense.CreatedBy;
 
@@ -416,6 +421,12 @@ public partial class MemberSelectionItem : ObservableObject
     /// </summary>
     [ObservableProperty]
     private Guid userId;
+
+    /// <summary>
+    /// Gets or sets the user name for display.
+    /// </summary>
+    [ObservableProperty]
+    private string userName = string.Empty;
 
     /// <summary>
     /// Gets or sets a value indicating whether the member is selected.

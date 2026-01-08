@@ -1,12 +1,11 @@
+namespace CostSharingApp.ViewModels.Groups;
+
 using System.Collections.ObjectModel;
 using System.Windows.Input;
-using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CostSharing.Core.Models;
 using CostSharing.Core.Services;
 using CostSharingApp.Services;
-
-namespace CostSharingApp.ViewModels.Groups;
 
 /// <summary>
 /// ViewModel for group details page.
@@ -21,7 +20,7 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     private readonly IDebtCalculationService debtCalculationService;
     private readonly ISettlementService settlementService;
     private Group? group;
-    private ObservableCollection<GroupMember> members = new();
+    private ObservableCollection<MemberViewModel> members = new();
     private ObservableCollection<Invitation> pendingInvitations = new();
     private ObservableCollection<Expense> expenses = new();
     private ObservableCollection<Debt> debts = new();
@@ -55,7 +54,7 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
         this.InviteMemberCommand = new Command(async () => await this.InviteMemberAsync(), () => this.isAdmin);
         this.AddExpenseCommand = new Command(async () => await this.AddExpenseAsync());
         this.EditExpenseCommand = new Command<Expense>(async (expense) => await this.EditExpenseAsync(expense));
-        this.RemoveMemberCommand = new Command<GroupMember>(async (member) => await this.RemoveMemberAsync(member), (_) => this.isAdmin);
+        this.RemoveMemberCommand = new Command<MemberViewModel>(async (member) => await this.RemoveMemberAsync(member), (_) => this.isAdmin);
         this.ResendInvitationCommand = new Command<Invitation>(async (inv) => await this.ResendInvitationAsync(inv), (_) => this.isAdmin);
         this.CancelInvitationCommand = new Command<Invitation>(async (inv) => await this.CancelInvitationAsync(inv), (_) => this.isAdmin);
         this.RefreshCommand = new Command(async () => await this.RefreshAsync());
@@ -86,9 +85,9 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     }
 
     /// <summary>
-    /// Gets the collection of members.
+    /// Gets the collection of group members with user details.
     /// </summary>
-    public ObservableCollection<GroupMember> Members
+    public ObservableCollection<MemberViewModel> Members
     {
         get => this.members;
         set => this.SetProperty(ref this.members, value);
@@ -125,7 +124,6 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     /// </summary>
     public ICommand DeleteGroupCommand { get; }
 
-
     /// <summary>
     /// Gets the command to remove a member.
     /// </summary>
@@ -157,7 +155,7 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     public ICommand RefreshCommand { get; }
 
     /// <summary>
-    /// Gets the collection of expenses.
+    /// Gets or sets the collection of expenses.
     /// </summary>
     public ObservableCollection<Expense> Expenses
     {
@@ -175,7 +173,7 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     }
 
     /// <summary>
-    /// Gets the collection of settlements.
+    /// Gets or sets the collection of settlements.
     /// </summary>
     public ObservableCollection<Settlement> Settlements
     {
@@ -202,7 +200,7 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
         if (query.TryGetValue("groupId", out var groupIdObj))
         {
             Guid groupId;
-            
+
             // Handle both string and Guid types
             if (groupIdObj is string groupIdString && Guid.TryParse(groupIdString, out groupId))
             {
@@ -249,15 +247,41 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
                 this.ErrorMessage = "Group not found.";
                 return;
             }
-            
+
             // Force UI update
             this.OnPropertyChanged(nameof(Group));
 
+            // Clean up duplicate unused users (e.g., multiple "Sarah Chen" where one isn't in any group)
+            await this.authService.RemoveDuplicateUnusedUsersAsync();
+
             var members = await this.groupService.GetGroupMembersAsync(groupId);
             this.Members.Clear();
+
+            // Get all users to lookup names
+            var allUsers = new Dictionary<Guid, User>();
             foreach (var member in members)
             {
-                this.Members.Add(member);
+                var user = await this.authService.GetUserByIdAsync(member.UserId);
+                if (user != null)
+                {
+                    allUsers[user.Id] = user;
+                }
+            }
+
+            // Create MemberViewModels with user names
+            foreach (var member in members)
+            {
+                var memberVm = new MemberViewModel
+                {
+                    Id = member.Id,
+                    UserId = member.UserId,
+                    UserName = allUsers.ContainsKey(member.UserId) ? allUsers[member.UserId].Name : "Unknown User",
+                    Email = allUsers.ContainsKey(member.UserId) ? allUsers[member.UserId].Email : string.Empty,
+                    Role = member.Role,
+                    JoinedAt = member.JoinedAt,
+                    AddedBy = member.AddedBy,
+                };
+                this.Members.Add(memberVm);
             }
 
             // Load pending invitations
@@ -357,7 +381,7 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     /// <summary>
     /// Removes a member from the group.
     /// </summary>
-    private async Task RemoveMemberAsync(GroupMember? member)
+    private async Task RemoveMemberAsync(MemberViewModel? member)
     {
         if (member == null || this.group == null)
         {

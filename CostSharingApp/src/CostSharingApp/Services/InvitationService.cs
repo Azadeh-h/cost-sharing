@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using CostSharing.Core.Models;
 
+
 namespace CostSharingApp.Services;
 
 /// <summary>

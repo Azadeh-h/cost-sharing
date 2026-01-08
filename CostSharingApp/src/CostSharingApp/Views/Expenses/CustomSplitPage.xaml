@@ -67,7 +67,7 @@
                             <Grid ColumnDefinitions="*,120,80" ColumnSpacing="12">
                                 <!-- Member Name -->
                                 <StackLayout Grid.Column="0" VerticalOptions="Center">
-                                    <Label Text="{Binding UserId, StringFormat='User: {0}'}"
+                                    <Label Text="{Binding UserName}"
                                            FontSize="14"
                                            FontAttributes="Bold" />
                                     <Label Text="{Binding CalculatedAmount, StringFormat='= ${0:F2}'}"

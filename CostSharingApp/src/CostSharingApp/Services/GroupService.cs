@@ -1,5 +1,6 @@
 using CostSharing.Core.Models;
 
+
 namespace CostSharingApp.Services;
 
 /// <summary>
@@ -77,20 +78,25 @@ public class GroupService : IGroupService
                 Currency = "AUD"
             };
 
-            // Add creator as admin member
-            var adminMember = new GroupMember
-            {
-                Id = Guid.NewGuid(),
-                GroupId = group.Id,
-                UserId = currentUser.Id,
-                Role = GroupRole.Admin,
-                JoinedAt = DateTime.UtcNow,
-                AddedBy = currentUser.Id
-            };
-
-            // Save to SQLite database
+            // Save group first
             await this.cacheService.SaveAsync(group);
-            await this.cacheService.SaveAsync(adminMember);
+
+            // Check if user is already a member (shouldn't happen for new group, but safety check)
+            var existingMembers = await this.GetGroupMembersAsync(group.Id);
+            if (!existingMembers.Any(m => m.UserId == currentUser.Id))
+            {
+                // Add creator as admin member
+                var adminMember = new GroupMember
+                {
+                    Id = Guid.NewGuid(),
+                    GroupId = group.Id,
+                    UserId = currentUser.Id,
+                    Role = GroupRole.Admin,
+                    JoinedAt = DateTime.UtcNow,
+                    AddedBy = currentUser.Id
+                };
+                await this.cacheService.SaveAsync(adminMember);
+            }
 
             this.loggingService.LogInfo($"Group created: {group.Name} ({group.Id})");
             return group;

@@ -1,7 +1,9 @@
+namespace CostSharingApp.Services;
+
 using System.Security.Cryptography;
 using System.Text;
+using CostSharing.Core.Models;
 
-namespace CostSharingApp.Services;
 
 /// <summary>
 /// Provides authentication services including email/password and magic link.
@@ -162,6 +164,68 @@ public class AuthService : IAuthService
     }
 
     /// <summary>
+    /// Gets a user by their ID.
+    /// </summary>
+    /// <param name="userId">User ID to lookup.</param>
+    /// <returns>User or null if not found.</returns>
+    public async Task<CostSharing.Core.Models.User?> GetUserByIdAsync(Guid userId)
+    {
+        try
+        {
+            return await this.cacheService.GetAsync<CostSharing.Core.Models.User>(userId);
+        }
+        catch (Exception ex)
+        {
+            this.loggingService.LogError($"Failed to get user {userId}", ex);
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Removes duplicate users with the same name who are not members of any group.
+    /// </summary>
+    /// <returns>Number of duplicate users removed.</returns>
+    public async Task<int> RemoveDuplicateUnusedUsersAsync()
+    {
+        try
+        {
+            var allUsers = await this.cacheService.GetAllAsync<CostSharing.Core.Models.User>();
+            var allMembers = await this.cacheService.GetAllAsync<GroupMember>();
+
+            // Get user IDs that are members of groups
+            var usersInGroups = new HashSet<Guid>(allMembers.Select(m => m.UserId));
+
+            // Find duplicate names
+            var duplicateNameGroups = allUsers
+                .GroupBy(u => u.Name)
+                .Where(g => g.Count() > 1);
+
+            int removedCount = 0;
+            foreach (var duplicateGroup in duplicateNameGroups)
+            {
+                // Among duplicates, keep only those who are in groups
+                var usersToRemove = duplicateGroup
+                    .Where(u => !usersInGroups.Contains(u.Id))
+                    .ToList();
+
+                foreach (var user in usersToRemove)
+                {
+                    await this.cacheService.DeleteAsync(user);
+                    this.loggingService.LogInfo($"Removed duplicate unused user: {user.Name} ({user.Email})");
+                    removedCount++;
+                }
+            }
+
+            return removedCount;
+        }
+        catch (Exception ex)
+        {
+            this.loggingService.LogError("Failed to remove duplicate unused users", ex);
+            return 0;
+        }
+    }
+
+    /// <summary>
     /// Hashes password using SHA256.
     /// </summary>
     /// <param name="password">Plain password.</param>
@@ -231,4 +295,17 @@ public interface IAuthService
     /// </summary>
     /// <returns>True if authenticated.</returns>
     bool IsAuthenticated();
+
+    /// <summary>
+    /// Gets a user by ID.
+    /// </summary>
+    /// <param name="userId">User ID.</param>
+    /// <returns>User or null.</returns>
+    Task<CostSharing.Core.Models.User?> GetUserByIdAsync(Guid userId);
+
+    /// <summary>
+    /// Removes duplicate users with the same name who are not members of any group.
+    /// </summary>
+    /// <returns>Number of duplicate users removed.</returns>
+    Task<int> RemoveDuplicateUnusedUsersAsync();
 }

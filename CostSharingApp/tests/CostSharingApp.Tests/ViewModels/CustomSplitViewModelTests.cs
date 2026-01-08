@@ -1,6 +1,4 @@
-using CostSharing.Core.Models;
 using CostSharing.Core.Services;
-using Xunit;
 
 namespace CostSharingApp.Tests.Services;
 
