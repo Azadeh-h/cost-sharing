@@ -71,5 +71,5 @@ public interface IGoogleSyncService
     /// </summary>
     /// <param name="groupId">Group ID as string.</param>
     /// <returns>Sync status.</returns>
-    Task<CostSharingApp.Models.SyncStatus> SyncGroupAsync(string groupId);
+    Task<SyncStatus> SyncGroupAsync(string groupId);
 }

@@ -31,6 +31,12 @@ public interface IGoogleAuthService
     Task SignOutAsync();
 
     /// <summary>
+    /// Gets the current user's email address.
+    /// </summary>
+    /// <returns>The current user's email, or null if not authenticated.</returns>
+    Task<string?> GetCurrentUserEmail();
+
+    /// <summary>
     /// Initializes the service by loading existing credentials.
     /// </summary>
     /// <returns>A task representing the async operation.</returns>

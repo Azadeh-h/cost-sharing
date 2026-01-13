@@ -1,15 +1,42 @@
 
 using global::Android.App;
 using global::Android.Content;
+using global::AndroidX.Browser.CustomTabs;
 using Microsoft.Maui.Authentication;
 using System.Text;
 
 namespace CostSharingApp.Platforms.Android;
 /// <summary>
-/// Platform-specific Google OAuth implementation for Android.
+/// Platform-specific Google OAuth implementation for Android using Chrome Custom Tabs.
 /// </summary>
 public class GoogleAuthPlatform
 {
+    private static TaskCompletionSource<string>? authCompletionSource;
+    
+    /// <summary>
+    /// Handles the OAuth callback with authorization code.
+    /// </summary>
+    public static void HandleCallback(string url)
+    {
+        if (authCompletionSource != null && !authCompletionSource.Task.IsCompleted)
+        {
+            var uri = new Uri(url);
+            var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+            var code = query["code"];
+            
+            if (!string.IsNullOrEmpty(code))
+            {
+                global::Android.Util.Log.Debug("GoogleAuth", $"Authorization code received: {code.Substring(0, 10)}...");
+                authCompletionSource.TrySetResult(code);
+            }
+            else
+            {
+                var error = query["error"] ?? "No authorization code received";
+                global::Android.Util.Log.Error("GoogleAuth", $"OAuth error: {error}");
+                authCompletionSource.TrySetException(new Exception(error));
+            }
+        }
+    }
     
     /// <summary>
     /// Performs OAuth authentication using WebAuthenticator.
@@ -21,31 +48,65 @@ public class GoogleAuthPlatform
     {
         try
         {
+            System.Diagnostics.Debug.WriteLine($"[GoogleAuth] Starting authentication with clientId: {clientId}");
+            
             var scopeString = string.Join(" ", scopes);
             var state = GenerateState();
             var codeVerifier = GenerateCodeVerifier();
             var codeChallenge = GenerateCodeChallenge(codeVerifier);
-            var redirectUri = $"com.googleusercontent.apps.{clientId.Split('-')[0]}:/oauth2redirect";
+            
+            // Use ngrok HTTPS URL - we'll handle the callback manually
+            var redirectUri = "https://annually-canelike-galilea.ngrok-free.dev/oauth2redirect";
+            
+            System.Diagnostics.Debug.WriteLine($"[GoogleAuth] Redirect URI: {redirectUri}");
+            System.Diagnostics.Debug.WriteLine($"[GoogleAuth] Scopes: {scopeString}");
             
             // Build OAuth URL
             var authUrl = BuildAuthorizationUrl(clientId, redirectUri, scopeString, state, codeChallenge);
             
-            // Use MAUI WebAuthenticator
-            var authResult = await WebAuthenticator.Default.AuthenticateAsync(
-                new Uri(authUrl),
-                new Uri(redirectUri));
+            global::Android.Util.Log.Debug("GoogleAuth", $"Auth URL: {authUrl}");
             
-            // Verify state
-            if (authResult.Properties.TryGetValue("state", out var returnedState) && returnedState != state)
+            // Create completion source for async callback handling
+            authCompletionSource = new TaskCompletionSource<string>();
+            
+            // Launch browser with OAuth URL
+            var context = global::Android.App.Application.Context;
+            
+            try
             {
-                throw new InvalidOperationException("Invalid state parameter");
+                // Try Chrome Custom Tab first
+                var customTabsIntent = new CustomTabsIntent.Builder()
+                    .SetShowTitle(true)
+                    .Build();
+                customTabsIntent.Intent.SetFlags(ActivityFlags.NewTask);
+                customTabsIntent.LaunchUrl(context, global::Android.Net.Uri.Parse(authUrl));
+                
+                global::Android.Util.Log.Debug("GoogleAuth", "Launched Chrome Custom Tab");
+            }
+            catch
+            {
+                // Fallback to regular browser intent
+                var intent = new Intent(Intent.ActionView);
+                intent.SetData(global::Android.Net.Uri.Parse(authUrl));
+                intent.SetFlags(ActivityFlags.NewTask);
+                context.StartActivity(intent);
+                
+                global::Android.Util.Log.Debug("GoogleAuth", "Launched fallback browser");
             }
             
-            // Get authorization code
-            if (!authResult.Properties.TryGetValue("code", out var authCode))
+            // Wait for callback with timeout
+            var authCodeTask = authCompletionSource.Task;
+            var timeoutTask = Task.Delay(TimeSpan.FromMinutes(5));
+            var completedTask = await Task.WhenAny(authCodeTask, timeoutTask);
+            
+            if (completedTask == timeoutTask)
             {
-                throw new InvalidOperationException("No authorization code received");
+                throw new TimeoutException("Authentication timed out");
             }
+            
+            var authCode = await authCodeTask;
+            
+            System.Diagnostics.Debug.WriteLine($"[GoogleAuth] Authorization code received");
             
             // Exchange code for tokens
             var tokens = await ExchangeCodeForTokensAsync(clientId, redirectUri, authCode, codeVerifier);
@@ -65,10 +126,13 @@ public class GoogleAuthPlatform
         }
         catch (TaskCanceledException)
         {
+            System.Diagnostics.Debug.WriteLine($"[GoogleAuth] Authentication cancelled by user");
             return new GoogleAuthResult { Success = false, Error = "Authentication cancelled" };
         }
         catch (Exception ex)
         {
+            System.Diagnostics.Debug.WriteLine($"[GoogleAuth] Authentication failed: {ex.GetType().Name}: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[GoogleAuth] Stack trace: {ex.StackTrace}");
             return new GoogleAuthResult { Success = false, Error = ex.Message };
         }
     }

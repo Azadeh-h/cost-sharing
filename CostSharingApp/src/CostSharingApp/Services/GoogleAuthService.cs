@@ -1,3 +1,4 @@
+namespace CostSharingApp.Services;
 
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Auth.OAuth2.Flows;
@@ -6,7 +7,6 @@ using Google.Apis.Drive.v3;
 using Google.Apis.Gmail.v1;
 using Google.Apis.Services;
 
-namespace CostSharingApp.Services;
 /// <summary>
 /// Service for handling Google authentication and API client creation.
 /// </summary>
@@ -17,8 +17,8 @@ public class GoogleAuthService : IGoogleAuthService
     {
         DriveService.Scope.DriveFile, // Access files created by app
         GmailService.Scope.GmailSend, // Send emails
-        "email",
-        "profile",
+        "https://www.googleapis.com/auth/userinfo.email",
+        "https://www.googleapis.com/auth/userinfo.profile",
     };
 
     private UserCredential? userCredential;
@@ -51,11 +51,13 @@ public class GoogleAuthService : IGoogleAuthService
         try
         {
 #if ANDROID
-            var clientId = this.configuration["Google:AndroidClientId"] ?? throw new InvalidOperationException("Google:AndroidClientId not configured");
-            var result = await CostSharingApp.Platforms.Android.GoogleAuthPlatform.AuthenticateAsync(clientId, this.scopes);
+            var clientId = this.configuration["Google:WebClientId"] ?? throw new InvalidOperationException("Google:WebClientId not configured");
+            var result = await global::CostSharingApp.Platforms.Android.GoogleAuthPlatform.AuthenticateAsync(clientId, this.scopes);
 #elif IOS || MACCATALYST
             var clientId = this.configuration["Google:iOSClientId"] ?? throw new InvalidOperationException("Google:iOSClientId not configured");
+#pragma warning disable CS0103 // The name does not exist in the current context (iOS types not available in Android build)
             var result = await CostSharingApp.Platforms.iOS.GoogleAuthPlatform.AuthenticateAsync(clientId, this.scopes);
+#pragma warning restore CS0103
 #else
             throw new PlatformNotSupportedException("Google authentication is only supported on Android and iOS");
 #endif
@@ -187,7 +189,7 @@ public class GoogleAuthService : IGoogleAuthService
         };
 
         // Create flow for token management
-        var clientId = this.configuration["Google:AndroidClientId"] ?? "YOUR_CLIENT_ID.apps.googleusercontent.com";
+        var clientId = this.configuration["Google:WebClientId"] ?? "YOUR_CLIENT_ID.apps.googleusercontent.com";
         var flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
         {
             ClientSecrets = new ClientSecrets
@@ -199,5 +201,14 @@ public class GoogleAuthService : IGoogleAuthService
 
         // Create credential
         this.userCredential = new UserCredential(flow, "user", token);
+    }
+
+    /// <summary>
+    /// Gets the current user's email address.
+    /// </summary>
+    /// <returns>The current user's email, or null if not authenticated.</returns>
+    public async Task<string?> GetCurrentUserEmail()
+    {
+        return await Task.FromResult(this.CurrentUserEmail);
     }
 }

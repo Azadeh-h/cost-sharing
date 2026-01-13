@@ -95,7 +95,7 @@ public class GoogleSignInViewModel : INotifyPropertyChanged
         
         if (this.IsSignedIn)
         {
-            this.UserEmail = this.googleAuthService.GetCurrentUserEmail();
+            this.UserEmail = await this.googleAuthService.GetCurrentUserEmail();
             this.StatusMessage = "Connected to Google";
         }
         else
@@ -116,7 +116,7 @@ public class GoogleSignInViewModel : INotifyPropertyChanged
             if (success)
             {
                 this.IsSignedIn = true;
-                this.UserEmail = this.googleAuthService.GetCurrentUserEmail();
+                this.UserEmail = await this.googleAuthService.GetCurrentUserEmail();
                 this.StatusMessage = "Successfully signed in to Google";
             }
             else

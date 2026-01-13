@@ -6,17 +6,6 @@
 		android:label="Cost Sharing"
 		android:theme="@style/Maui.SplashTheme">
 		
-		<!-- Activity for handling OAuth callback -->
-		<activity android:name="microsoft.maui.authentication.WebAuthenticatorCallbackActivity" android:exported="true">
-			<intent-filter>
-				<action android:name="android.intent.action.VIEW" />
-				<category android:name="android.intent.category.DEFAULT" />
-				<category android:name="android.intent.category.BROWSABLE" />
-				<!-- TODO: Replace YOUR_CLIENT_ID with actual value from Google Cloud Console -->
-				<data android:scheme="com.googleusercontent.apps.609247949564-c2h9s8bmg4100i7d7l2cfq0q4ofavcup" android:host="oauth2redirect" />
-			</intent-filter>
-		</activity>
-		
 		<!-- Deep link handler for group invitations -->
 		<activity android:name=".MainActivity" android:exported="true">
 			<intent-filter>

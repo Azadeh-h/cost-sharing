@@ -698,7 +698,7 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
             this.IsBusy = true;
             var status = await this.googleSyncService.SyncGroupAsync(this.group.Id.ToString());
 
-            if (status == CostSharingApp.Models.SyncStatus.Conflict)
+            if (status == CostSharingApp.Models.GoogleSync.SyncStatus.Conflict)
             {
                 // Navigate to conflict resolution page
                 await Shell.Current.GoToAsync("conflictresolution", new Dictionary<string, object>
@@ -707,7 +707,7 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
                     ["groupName"] = this.group.Name,
                 });
             }
-            else if (status == CostSharingApp.Models.SyncStatus.Synced)
+            else if (status == CostSharingApp.Models.GoogleSync.SyncStatus.Synced)
             {
                 await Application.Current!.MainPage!.DisplayAlert(
                     "Sync Complete",
@@ -765,7 +765,7 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
                 driveFileId = await this.googleSyncService.GetGroupDriveFileIdAsync(this.group.Id.ToString());
             }
 
-            await this.googleInvitationService.SendInvitationAsync(this.group.Id.ToString(), email, driveFileId);
+            await this.googleInvitationService.SendInvitationAsync(this.group.Id, email, driveFileId);
 
             await Application.Current!.MainPage!.DisplayAlert(
                 "Invitation Sent",

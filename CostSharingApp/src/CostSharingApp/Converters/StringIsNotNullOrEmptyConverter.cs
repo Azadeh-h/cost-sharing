@@ -1,13 +1,3 @@
-
-<<<<<<< TODO: Unmerged change from project 'CostSharingApp (net9.0-ios)', Before:
-namespace CostSharingApp.Converters
-=======
-using System;
-using System.Globalization;
-using Microsoft.Maui.Controls;
-
-namespace CostSharingApp.Converters
->>>>>>> After
 using System;
 using System.Globalization;
 using Microsoft.Maui.Controls;

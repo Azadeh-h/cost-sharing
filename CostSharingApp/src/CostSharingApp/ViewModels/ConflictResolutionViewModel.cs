@@ -102,7 +102,7 @@ public class ConflictResolutionViewModel : INotifyPropertyChanged
         try
         {
             // Resolve conflict by keeping local version
-            await this.googleSyncService.ResolveConflictAsync(this.groupId, keepLocal: true);
+            await this.googleSyncService.ResolveConflictAsync(Guid.Parse(this.groupId), keepLocal: true);
             
             await Application.Current.MainPage.DisplayAlert(
                 "Conflict Resolved", 
@@ -122,7 +122,7 @@ public class ConflictResolutionViewModel : INotifyPropertyChanged
         try
         {
             // Resolve conflict by keeping remote version
-            await this.googleSyncService.ResolveConflictAsync(this.groupId, keepLocal: false);
+            await this.googleSyncService.ResolveConflictAsync(Guid.Parse(this.groupId), keepLocal: false);
             
             await Application.Current.MainPage.DisplayAlert(
                 "Conflict Resolved", 
