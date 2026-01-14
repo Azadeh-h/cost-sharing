@@ -90,12 +90,6 @@ public static class MauiProgram
         // Phase 7: US5 - Settlement Services
         services.AddSingleton<ISettlementService, SettlementService>();
 
-        // Google Services
-        services.AddSingleton<IGoogleAuthService, GoogleAuthService>();
-        services.AddSingleton<IGoogleDriveService, GoogleDriveService>();
-        services.AddSingleton<IGoogleSyncService, GoogleSyncService>();
-        services.AddSingleton<IGoogleInvitationService, GoogleInvitationService>();
-
         // Phase 3: US1 - ViewModels
         services.AddTransient<ViewModels.Groups.GroupListViewModel>();
         services.AddTransient<ViewModels.Groups.CreateGroupViewModel>();
@@ -120,11 +114,6 @@ public static class MauiProgram
         services.AddTransient<ViewModels.Dashboard.DashboardViewModel>();
         services.AddTransient<ViewModels.Dashboard.TransactionHistoryViewModel>();
 
-        // Google Integration ViewModels
-        services.AddTransient<ViewModels.GoogleSignInViewModel>();
-        services.AddTransient<ViewModels.SyncStatusViewModel>();
-        services.AddTransient<ViewModels.ConflictResolutionViewModel>();
-
         // Phase 4: US2 - Pages
         services.AddTransient<Views.Members.InviteMemberPage>();
         services.AddTransient<Views.Members.AcceptInvitationPage>();
@@ -147,11 +136,6 @@ public static class MauiProgram
         services.AddTransient<Views.Groups.GroupListPage>();
         services.AddTransient<Views.Groups.CreateGroupPage>();
         services.AddTransient<Views.Groups.GroupDetailsPage>();
-
-        // Google Integration Pages
-        services.AddTransient<Views.GoogleSignInPage>();
-        services.AddTransient<Views.SyncStatusView>();
-        services.AddTransient<Views.ConflictResolutionPage>();
 
         // Note: Cache initialization moved to App.xaml.cs OnStart() to avoid blocking startup
     }

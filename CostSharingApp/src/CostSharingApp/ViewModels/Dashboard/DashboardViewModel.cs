@@ -85,6 +85,12 @@ public partial class DashboardViewModel : ObservableObject
             // Load all groups for the user
             var groups = await this.groupService.GetUserGroupsAsync();
             System.Diagnostics.Debug.WriteLine($"[Dashboard] Loaded {groups.Count} groups");
+            
+            // Debug: Print all group details
+            foreach (var g in groups)
+            {
+                System.Diagnostics.Debug.WriteLine($"[Dashboard] Raw Group Data - ID: {g.Id}, Name: '{g.Name}', Currency: {g.Currency}");
+            }
 
             this.GroupBalances.Clear();
             decimal totalOwed = 0;
@@ -100,19 +106,24 @@ public partial class DashboardViewModel : ObservableObject
                 
                 System.Diagnostics.Debug.WriteLine($"[Dashboard] Group {group.Name}: Balance={balance}, Members={members?.Count ?? 0}");
                 
+                // Add defensive check for group name
+                var groupName = string.IsNullOrWhiteSpace(group.Name) ? "[Unnamed Group]" : group.Name;
+                
                 var groupBalance = new GroupBalanceViewModel
                 {
                     GroupId = group.Id,
-                    GroupName = group.Name,
+                    GroupName = groupName,
                     MemberCount = members?.Count ?? 0,
                     Balance = balance
                 };
+
+                System.Diagnostics.Debug.WriteLine($"[Dashboard] Creating GroupBalanceViewModel: Name='{groupBalance.GroupName}', ID={groupBalance.GroupId}");
 
                 // Ensure UI update happens on main thread
                 await MainThread.InvokeOnMainThreadAsync(() =>
                 {
                     this.GroupBalances.Add(groupBalance);
-                    System.Diagnostics.Debug.WriteLine($"[Dashboard] Added to UI: {groupBalance.GroupName}");
+                    System.Diagnostics.Debug.WriteLine($"[Dashboard] Added to UI: '{groupBalance.GroupName}' (Count now: {this.GroupBalances.Count})");
                 });
 
                 if (balance > 0)

@@ -31,6 +31,22 @@
                 </VerticalStackLayout>
             </Frame>
 
+            <!-- Balance Summary -->
+            <Frame BorderColor="{StaticResource Secondary}" Padding="16" CornerRadius="8" BackgroundColor="{StaticResource Secondary}">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Your Balance"
+                           FontSize="14"
+                           TextColor="{StaticResource Gray600}" />
+                    <Label Text="{Binding UserBalance, StringFormat='${0:F2}'}"
+                           FontSize="28"
+                           FontAttributes="Bold"
+                           TextColor="{Binding UserBalanceColor}" />
+                    <Label Text="{Binding UserBalanceDescription}"
+                           FontSize="12"
+                           TextColor="{StaticResource Gray600}" />
+                </VerticalStackLayout>
+            </Frame>
+
             <!-- Admin actions -->
             <StackLayout Spacing="8" IsVisible="{Binding IsAdmin}">
                 <Label Text="Admin Actions" FontSize="18" FontAttributes="Bold" />
@@ -167,12 +183,59 @@
             <StackLayout Spacing="8" Margin="0,8,0,0">
                 <Label Text="Google Integration" FontSize="18" FontAttributes="Bold" />
                 
+                <!-- Drive Sync Toggle -->
+                <Border StrokeShape="RoundRectangle 8"
+                        Stroke="{StaticResource Gray300}"
+                        StrokeThickness="1"
+                        Padding="12"
+                        IsVisible="{Binding IsAdmin}">
+                    <Grid ColumnDefinitions="*,Auto,Auto" RowDefinitions="Auto,Auto" RowSpacing="4">
+                        <Label Grid.Row="0" Grid.Column="0"
+                               Text="Drive Sync"
+                               FontSize="16"
+                               FontAttributes="Bold"
+                               VerticalOptions="Center" />
+                        <Switch Grid.Row="0" Grid.Column="1"
+                                IsToggled="{Binding IsSyncEnabled}"
+                                OnColor="{StaticResource Primary}"
+                                ThumbColor="White"
+                                VerticalOptions="Center"
+                                Margin="0,0,8,0" />
+                        <Button Grid.Row="0" Grid.Column="2"
+                                Text="⚙️"
+                                FontSize="16"
+                                Padding="8,4"
+                                Command="{Binding OpenSyncSettingsCommand}"
+                                BackgroundColor="Transparent"
+                                TextColor="{StaticResource Primary}" />
+                        
+                        <!-- Sync Status Indicator -->
+                        <HorizontalStackLayout Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Spacing="8"
+                                             IsVisible="{Binding IsSyncEnabled}">
+                            <Label Text="●"
+                                   FontSize="12"
+                                   TextColor="{Binding SyncStatusColor}"
+                                   VerticalOptions="Center" />
+                            <Label Text="{Binding SyncStatusText}"
+                                   FontSize="12"
+                                   TextColor="{StaticResource Gray600}"
+                                   VerticalOptions="Center" />
+                            <Label Text="{Binding LastSyncTime, StringFormat='Last synced: {0}'}"
+                                   FontSize="12"
+                                   TextColor="{StaticResource Gray500}"
+                                   VerticalOptions="Center"
+                                   IsVisible="{Binding LastSyncTime, Converter={StaticResource StringIsNotNullOrEmptyConverter}}" />
+                        </HorizontalStackLayout>
+                    </Grid>
+                </Border>
+                
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
                     <Button Grid.Column="0"
-                            Text="🔄 Sync with Drive"
+                            Text="🔄 Sync Now"
                             Command="{Binding SyncGroupCommand}"
                             BackgroundColor="{StaticResource Primary}"
-                            TextColor="White" />
+                            TextColor="White"
+                            IsVisible="{Binding IsSyncEnabled}" />
                     <Button Grid.Column="1"
                             Text="📧 Send Gmail Invite"
                             Command="{Binding SendGmailInvitationCommand}"
@@ -218,8 +281,8 @@
                                            FontSize="12" />
                                 </StackLayout>
                                 <Label Grid.Column="2"
-                                       Text="{Binding TotalAmount, StringFormat='${0:F2}'}"
-                                       FontSize="16"
+                                       Text="{Binding TotalAmount, StringFormat='${0:F2}'}" 
+                                       FontSize="16"                                       
                                        FontAttributes="Bold"
                                        VerticalOptions="Center" />
                             </Grid>
@@ -253,18 +316,20 @@
                 </CollectionView.EmptyView>
 
                 <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="models:Debt">
+                    <DataTemplate x:DataType="vm:DebtViewModel">
                         <Frame Margin="0,0,0,8" Padding="12" CornerRadius="8" BackgroundColor="{StaticResource Secondary}">
                             <HorizontalStackLayout Spacing="8">
-                                <Label Text="{Binding DebtorId, StringFormat='User {0}'}"
+                                <Label Text="{Binding DebtorName}"
                                        FontSize="14"
+                                       FontAttributes="Bold"
                                        VerticalOptions="Center" />
                                 <Label Text="owes"
                                        TextColor="{StaticResource Gray600}"
                                        FontSize="12"
                                        VerticalOptions="Center" />
-                                <Label Text="{Binding CreditorId, StringFormat='User {0}'}"
+                                <Label Text="{Binding CreditorName}"
                                        FontSize="14"
+                                       FontAttributes="Bold"
                                        VerticalOptions="Center" />
                                 <Label Text="{Binding Amount, StringFormat='${0:F2}'}"
                                        FontSize="16"

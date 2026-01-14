@@ -86,7 +86,6 @@ public partial class AddExpenseViewModel : BaseViewModel, IQueryAttributable
         if (query.TryGetValue("groupId", out var groupIdObj) && groupIdObj is string groupIdStr)
         {
             this.GroupId = Guid.Parse(groupIdStr);
-            _ = this.LoadMembersAsync();
         }
 
         // Check if editing existing expense
@@ -94,7 +93,12 @@ public partial class AddExpenseViewModel : BaseViewModel, IQueryAttributable
         {
             this.ExpenseId = Guid.Parse(expenseIdStr);
             this.IsEditMode = true;
-            _ = this.LoadExpenseAsync();
+            _ = this.LoadExpenseAsync(); // LoadExpenseAsync will call LoadMembersAsync
+        }
+        else
+        {
+            // Only load members directly if NOT in edit mode
+            _ = this.LoadMembersAsync();
         }
 
         // Receive custom percentages from CustomSplitPage

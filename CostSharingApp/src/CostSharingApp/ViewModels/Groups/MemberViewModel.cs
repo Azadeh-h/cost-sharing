@@ -41,4 +41,9 @@ public class MemberViewModel
     /// Gets or sets who added this member.
     /// </summary>
     public Guid AddedBy { get; set; }
+
+    /// <summary>
+    /// Gets or sets the name of who added this member.
+    /// </summary>
+    public string AddedByName { get; set; } = string.Empty;
 }

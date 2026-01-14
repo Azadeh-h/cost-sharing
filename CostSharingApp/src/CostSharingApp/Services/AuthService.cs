@@ -171,12 +171,38 @@ public class AuthService : IAuthService
     {
         try
         {
-            return await this.cacheService.GetAsync<CostSharing.Core.Models.User>(userId);
+            var user = await this.cacheService.GetAsync<CostSharing.Core.Models.User>(userId);
+            
+            // Fallback to GetAllAsync if not found by ID (in case of caching issues)
+            if (user == null)
+            {
+                var allUsers = await this.cacheService.GetAllAsync<CostSharing.Core.Models.User>();
+                user = allUsers.FirstOrDefault(u => u.Id == userId);
+            }
+            
+            return user;
         }
         catch (Exception ex)
         {
             this.loggingService.LogError($"Failed to get user {userId}", ex);
             return null;
+        }
+    }
+
+    /// <summary>
+    /// Gets all users in the system.
+    /// </summary>
+    /// <returns>List of all users.</returns>
+    public async Task<List<CostSharing.Core.Models.User>> GetAllUsersAsync()
+    {
+        try
+        {
+            return await this.cacheService.GetAllAsync<CostSharing.Core.Models.User>();
+        }
+        catch (Exception ex)
+        {
+            this.loggingService.LogError("Failed to get all users", ex);
+            return new List<CostSharing.Core.Models.User>();
         }
     }
 
@@ -301,6 +327,12 @@ public interface IAuthService
     /// <param name="userId">User ID.</param>
     /// <returns>User or null.</returns>
     Task<CostSharing.Core.Models.User?> GetUserByIdAsync(Guid userId);
+
+    /// <summary>
+    /// Gets all users in the system.
+    /// </summary>
+    /// <returns>List of all users.</returns>
+    Task<List<CostSharing.Core.Models.User>> GetAllUsersAsync();
 
     /// <summary>
     /// Removes duplicate users with the same name who are not members of any group.

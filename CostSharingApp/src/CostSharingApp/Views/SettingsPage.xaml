@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:CostSharingApp.ViewModels"
+             x:Class="CostSharingApp.Views.SettingsPage"
+             x:DataType="vm:SettingsViewModel"
+             Title="Settings">
+    
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="20">
+            
+            <!-- App Information -->
+            <Border StrokeShape="RoundRectangle 10"
+                    Stroke="{StaticResource Gray300}"
+                    StrokeThickness="1"
+                    Padding="15">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="App Information"
+                           FontSize="20"
+                           FontAttributes="Bold" />
+                    
+                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="10" RowSpacing="8">
+                        <Label Grid.Row="0" Grid.Column="0"
+                               Text="Version:"
+                               FontSize="14"
+                               TextColor="{StaticResource Gray600}" />
+                        <Label Grid.Row="0" Grid.Column="1"
+                               Text="{Binding AppVersion}"
+                               FontSize="14"
+                               FontAttributes="Bold" />
+                        
+                        <Label Grid.Row="1" Grid.Column="0"
+                               Text="Build:"
+                               FontSize="14"
+                               TextColor="{StaticResource Gray600}" />
+                        <Label Grid.Row="1" Grid.Column="1"
+                               Text="{Binding BuildNumber}"
+                               FontSize="14" />
+                        
+                        <Label Grid.Row="2" Grid.Column="0"
+                               Text="Platform:"
+                               FontSize="14"
+                               TextColor="{StaticResource Gray600}" />
+                        <Label Grid.Row="2" Grid.Column="1"
+                               Text="{Binding Platform}"
+                               FontSize="14" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+            
+            <!-- Account Settings -->
+            <Border StrokeShape="RoundRectangle 10"
+                    Stroke="{StaticResource Gray300}"
+                    StrokeThickness="1"
+                    Padding="15">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Account"
+                           FontSize="20"
+                           FontAttributes="Bold" />
+                    
+                    <Label Text="{Binding UserName}"
+                           FontSize="16" />
+                    <Label Text="{Binding UserEmail}"
+                           FontSize="14"
+                           TextColor="{StaticResource Gray600}" />
+                    
+                    <Button Text="Edit Profile"
+                            Command="{Binding EditProfileCommand}"
+                            BackgroundColor="{StaticResource Primary}"
+                            TextColor="White"
+                            CornerRadius="8"
+                            Margin="0,10,0,0" />
+                    
+                    <Button Text="Log Out"
+                            Command="{Binding LogOutCommand}"
+                            BackgroundColor="{StaticResource Gray300}"
+                            TextColor="{StaticResource Gray900}"
+                            CornerRadius="8" />
+                </VerticalStackLayout>
+            </Border>
+            
+            <!-- Google Integration -->
+            <Border StrokeShape="RoundRectangle 10"
+                    Stroke="{StaticResource Gray300}"
+                    StrokeThickness="1"
+                    Padding="15">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Google Integration"
+                           FontSize="20"
+                           FontAttributes="Bold" />
+                    
+                    <HorizontalStackLayout Spacing="10">
+                        <Label Text="Drive Authorization:"
+                               FontSize="14"
+                               TextColor="{StaticResource Gray600}"
+                               VerticalOptions="Center" />
+                        <Label Text="{Binding DriveAuthStatus}"
+                               FontSize="14"
+                               FontAttributes="Bold"
+                               TextColor="{Binding DriveAuthStatusColor}"
+                               VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    
+                    <Button Text="Authorize Google Drive"
+                            Command="{Binding AuthorizeDriveCommand}"
+                            IsVisible="{Binding ShowAuthorizeButton}"
+                            BackgroundColor="{StaticResource Primary}"
+                            TextColor="White"
+                            CornerRadius="8" />
+                    
+                    <Button Text="Revoke Authorization"
+                            Command="{Binding RevokeDriveCommand}"
+                            IsVisible="{Binding ShowRevokeButton}"
+                            BackgroundColor="{StaticResource Danger}"
+                            TextColor="White"
+                            CornerRadius="8" />
+                </VerticalStackLayout>
+            </Border>
+            
+            <!-- Preferences -->
+            <Border StrokeShape="RoundRectangle 10"
+                    Stroke="{StaticResource Gray300}"
+                    StrokeThickness="1"
+                    Padding="15">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Preferences"
+                           FontSize="20"
+                           FontAttributes="Bold" />
+                    
+                    <HorizontalStackLayout Spacing="10">
+                        <Label Text="Notifications"
+                               FontSize="14"
+                               VerticalOptions="Center"
+                               HorizontalOptions="StartAndExpand" />
+                        <Switch IsToggled="{Binding NotificationsEnabled}"
+                                OnColor="{StaticResource Primary}"
+                                ThumbColor="White" />
+                    </HorizontalStackLayout>
+                    
+                    <HorizontalStackLayout Spacing="10">
+                        <Label Text="Auto-sync"
+                               FontSize="14"
+                               VerticalOptions="Center"
+                               HorizontalOptions="StartAndExpand" />
+                        <Switch IsToggled="{Binding AutoSyncEnabled}"
+                                OnColor="{StaticResource Primary}"
+                                ThumbColor="White" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+            
+            <!-- Help & Support -->
+            <Border StrokeShape="RoundRectangle 10"
+                    Stroke="{StaticResource Gray300}"
+                    StrokeThickness="1"
+                    Padding="15">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Help &amp; Support"
+                           FontSize="20"
+                           FontAttributes="Bold" />
+                    
+                    <Button Text="📖 User Guide"
+                            Command="{Binding OpenUserGuideCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="{StaticResource Primary}"
+                            BorderColor="{StaticResource Primary}"
+                            BorderWidth="1"
+                            CornerRadius="8" />
+                    
+                    <Button Text="❓ FAQ"
+                            Command="{Binding OpenFaqCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="{StaticResource Primary}"
+                            BorderColor="{StaticResource Primary}"
+                            BorderWidth="1"
+                            CornerRadius="8" />
+                    
+                    <Button Text="🐛 Report Issue"
+                            Command="{Binding ReportIssueCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="{StaticResource Primary}"
+                            BorderColor="{StaticResource Primary}"
+                            BorderWidth="1"
+                            CornerRadius="8" />
+                    
+                    <Button Text="✉️ Contact Support"
+                            Command="{Binding ContactSupportCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="{StaticResource Primary}"
+                            BorderColor="{StaticResource Primary}"
+                            BorderWidth="1"
+                            CornerRadius="8" />
+                </VerticalStackLayout>
+            </Border>
+            
+            <!-- About -->
+            <Border StrokeShape="RoundRectangle 10"
+                    Stroke="{StaticResource Gray300}"
+                    StrokeThickness="1"
+                    Padding="15">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="About"
+                           FontSize="20"
+                           FontAttributes="Bold" />
+                    
+                    <Label FontSize="14" TextColor="{StaticResource Gray600}">
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="Cost Sharing App helps friends and groups track shared expenses and settle debts fairly." />
+                                <Span Text="&#x0a;&#x0a;" />
+                                <Span Text="Built with ❤️ using .NET MAUI" />
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+                    
+                    <Button Text="View Licenses"
+                            Command="{Binding ViewLicensesCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="{StaticResource Primary}"
+                            BorderColor="{StaticResource Primary}"
+                            BorderWidth="1"
+                            CornerRadius="8" />
+                    
+                    <Button Text="Privacy Policy"
+                            Command="{Binding ViewPrivacyPolicyCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="{StaticResource Primary}"
+                            BorderColor="{StaticResource Primary}"
+                            BorderWidth="1"
+                            CornerRadius="8" />
+                </VerticalStackLayout>
+            </Border>
+            
+            <!-- Debug Info (only in Debug builds) -->
+            <Border StrokeShape="RoundRectangle 10"
+                    Stroke="{StaticResource Warning}"
+                    StrokeThickness="1"
+                    Padding="15"
+                    IsVisible="{Binding IsDebugBuild}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="⚠️ Debug Information"
+                           FontSize="20"
+                           FontAttributes="Bold"
+                           TextColor="{StaticResource Warning}" />
+                    
+                    <Label Text="{Binding DeviceInfo}"
+                           FontSize="12"
+                           TextColor="{StaticResource Gray600}" />
+                    
+                    <Button Text="Clear All Data"
+                            Command="{Binding ClearDataCommand}"
+                            BackgroundColor="{StaticResource Danger}"
+                            TextColor="White"
+                            CornerRadius="8" />
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

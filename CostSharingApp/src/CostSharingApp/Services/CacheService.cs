@@ -41,7 +41,6 @@ public class CacheService : ICacheService
         await this.database.CreateTableAsync<CostSharing.Core.Models.Debt>();
         await this.database.CreateTableAsync<CostSharing.Core.Models.Settlement>();
         await this.database.CreateTableAsync<CostSharing.Core.Models.Invitation>();
-        await this.database.CreateTableAsync<CostSharingApp.Models.GoogleSync.SyncMetadata>();
     }
 
     /// <summary>
@@ -130,7 +129,6 @@ public class CacheService : ICacheService
         await this.database!.DropTableAsync<CostSharing.Core.Models.Debt>();
         await this.database!.DropTableAsync<CostSharing.Core.Models.Settlement>();
         await this.database!.DropTableAsync<CostSharing.Core.Models.Invitation>();
-        await this.database!.DropTableAsync<CostSharingApp.Models.GoogleSync.SyncMetadata>();
 
         await this.InitializeAsync();
     }

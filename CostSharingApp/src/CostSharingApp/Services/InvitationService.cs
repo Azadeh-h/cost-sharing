@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 using CostSharing.Core.Models;
-
+using CostSharing.Core.Services;
 
 namespace CostSharingApp.Services;
 
@@ -17,6 +17,7 @@ public class InvitationService : IInvitationService
     private readonly IAuthService authService;
     private readonly INotificationService notificationService;
     private readonly ILoggingService loggingService;
+    private readonly IDriveSyncService? driveSyncService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="InvitationService"/> class.
@@ -26,13 +27,15 @@ public class InvitationService : IInvitationService
         IGroupService groupService,
         IAuthService authService,
         INotificationService notificationService,
-        ILoggingService loggingService)
+        ILoggingService loggingService,
+        IDriveSyncService? driveSyncService = null)
     {
         this.cacheService = cacheService;
         this.groupService = groupService;
         this.authService = authService;
         this.notificationService = notificationService;
         this.loggingService = loggingService;
+        this.driveSyncService = driveSyncService;
     }
 
     /// <summary>
@@ -85,7 +88,8 @@ public class InvitationService : IInvitationService
                 currentUser.Name,
                 group.Name,
                 invitationLink,
-                DateTime.UtcNow.AddDays(InvitationExpirationDays));
+                DateTime.UtcNow.AddDays(InvitationExpirationDays),
+                !string.IsNullOrEmpty(group.DriveFolderId));
 
             if (!emailSent)
             {
@@ -96,6 +100,24 @@ public class InvitationService : IInvitationService
             // Only save invitation if email was sent successfully
             await this.cacheService.SaveAsync(invitation);
             this.loggingService.LogInfo($"Invitation sent successfully to {inviteeEmail}");
+
+            // Grant Drive folder access if sync is enabled
+            if (!string.IsNullOrEmpty(group.DriveFolderId) && this.driveSyncService != null)
+            {
+                try
+                {
+                    await this.driveSyncService.SetFolderPermissionsAsync(
+                        group.DriveFolderId,
+                        new[] { inviteeEmail },
+                        currentUser.Id);
+                    this.loggingService.LogInfo($"Granted Drive folder access to {inviteeEmail}");
+                }
+                catch (Exception ex)
+                {
+                    this.loggingService.LogWarning($"Failed to grant Drive access to {inviteeEmail}: {ex.Message}");
+                    // Don't fail the invitation if Drive permission fails
+                }
+            }
 
             return invitation;
         }
@@ -342,7 +364,8 @@ public class InvitationService : IInvitationService
                     inviter.Name,
                     group.Name,
                     invitationLink,
-                    DateTime.UtcNow.AddDays(InvitationExpirationDays));
+                    DateTime.UtcNow.AddDays(InvitationExpirationDays),
+                    !string.IsNullOrEmpty(group.DriveFolderId));
             }
             else
             {
@@ -388,9 +411,14 @@ public class InvitationService : IInvitationService
         string inviterName,
         string groupName,
         string invitationLink,
-        DateTime expirationDate)
+        DateTime expirationDate,
+        bool hasDriveSync = false)
     {
         var subject = $"{inviterName} invited you to join '{groupName}' on Cost Sharing App";
+
+        var driveSyncNote = hasDriveSync
+            ? "<p><strong>📁 Google Drive Sync Enabled:</strong> This group uses Google Drive to automatically sync expenses across all members' devices. You'll be granted access to the shared folder.</p>"
+            : "";
 
         var htmlContent = $@"
 <!DOCTYPE html>
@@ -401,6 +429,7 @@ public class InvitationService : IInvitationService
         .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
         .button {{ background-color: #512BD4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; margin: 20px 0; }}
         .footer {{ font-size: 12px; color: #666; margin-top: 30px; }}
+        .drive-note {{ background-color: #e8f5e9; border-left: 4px solid #4caf50; padding: 10px; margin: 15px 0; }}
     </style>
 </head>
 <body>
@@ -408,6 +437,7 @@ public class InvitationService : IInvitationService
         <h2>You're Invited!</h2>
         <p>Hi there,</p>
         <p><strong>{inviterName}</strong> has invited you to join the group <strong>'{groupName}'</strong> on Cost Sharing App.</p>
+        {(hasDriveSync ? $@"<div class=""drive-note"">{driveSyncNote}</div>" : "")}
         <p>Click the button below to accept the invitation:</p>
         <a href=""{invitationLink}"" class=""button"">Accept Invitation</a>
         <p>Or copy and paste this link into your browser:</p>
@@ -424,7 +454,7 @@ public class InvitationService : IInvitationService
 You're Invited!
 
 {inviterName} has invited you to join the group '{groupName}' on Cost Sharing App.
-
+{(hasDriveSync ? "\n⚠️ Note: This group uses Google Drive to automatically sync expenses. You'll be granted access to the shared folder.\n" : "")}
 Click this link to accept the invitation:
 {invitationLink}
 

@@ -41,7 +41,7 @@
                                 <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GroupListViewModel}}, Path=SelectGroupCommand}"
                                                       CommandParameter="{Binding .}" />
                             </Border.GestureRecognizers>
-                            <Grid ColumnDefinitions="*,Auto">
+                            <Grid ColumnDefinitions="*,Auto,Auto">
                                 <StackLayout Grid.Column="0">
                                     <Label Text="{Binding Name}"
                                            FontSize="18"
@@ -49,11 +49,30 @@
                                     <Label Text="{Binding Currency}"
                                            TextColor="{StaticResource Gray600}"
                                            FontSize="14" />
-                                    <Label Text="{Binding UpdatedAt, StringFormat='Updated: {0:MMM dd, yyyy}'}"
-                                           TextColor="{StaticResource Gray500}"
-                                           FontSize="12" />
+                                    <HorizontalStackLayout Spacing="8">
+                                        <Label Text="{Binding UpdatedAt, StringFormat='Updated: {0:MMM dd, yyyy}'}"
+                                               TextColor="{StaticResource Gray500}"
+                                               FontSize="12"
+                                               VerticalOptions="Center" />
+                                        <!-- Sync Status Badge -->
+                                        <Border Padding="6,2"
+                                                BackgroundColor="{StaticResource Primary}"
+                                                StrokeShape="RoundRectangle 8"
+                                                IsVisible="{Binding DriveFolderId, Converter={StaticResource StringIsNotNullOrEmptyConverter}}">
+                                            <HorizontalStackLayout Spacing="4">
+                                                <Label Text="☁"
+                                                       FontSize="10"
+                                                       TextColor="White"
+                                                       VerticalOptions="Center" />
+                                                <Label Text="Synced"
+                                                       FontSize="10"
+                                                       TextColor="White"
+                                                       VerticalOptions="Center" />
+                                            </HorizontalStackLayout>
+                                        </Border>
+                                    </HorizontalStackLayout>
                                 </StackLayout>
-                                <Image Grid.Column="1"
+                                <Image Grid.Column="2"
                                        Source="chevron_right.png"
                                        WidthRequest="24"
                                        HeightRequest="24"

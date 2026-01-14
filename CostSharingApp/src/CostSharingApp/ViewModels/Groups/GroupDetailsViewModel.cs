@@ -5,7 +5,6 @@ using CommunityToolkit.Mvvm.Input;
 using CostSharing.Core.Models;
 using CostSharing.Core.Services;
 using CostSharingApp.Services;
-using CostSharingApp.Models;
 
 namespace CostSharingApp.ViewModels.Groups;
 /// <summary>
@@ -20,18 +19,18 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     private readonly IExpenseService expenseService;
     private readonly IDebtCalculationService debtCalculationService;
     private readonly ISettlementService settlementService;
-    private readonly IGoogleSyncService? googleSyncService;
-    private readonly IGoogleInvitationService? googleInvitationService;
-    private readonly IGoogleAuthService? googleAuthService;
     private Group? group;
     private ObservableCollection<MemberViewModel> members = new();
     private ObservableCollection<Invitation> pendingInvitations = new();
     private ObservableCollection<Expense> expenses = new();
-    private ObservableCollection<Debt> debts = new();
+    private ObservableCollection<DebtViewModel> debts = new();
     private ObservableCollection<Settlement> settlements = new();
     private string errorMessage = string.Empty;
     private bool isAdmin;
     private Guid? currentGroupId;
+    private decimal userBalance;
+    private Color userBalanceColor = Colors.Gray;
+    private string userBalanceDescription = string.Empty;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GroupDetailsViewModel"/> class.
@@ -43,10 +42,7 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
         IErrorService errorService,
         IExpenseService expenseService,
         IDebtCalculationService debtCalculationService,
-        ISettlementService settlementService,
-        IGoogleSyncService? googleSyncService = null,
-        IGoogleInvitationService? googleInvitationService = null,
-        IGoogleAuthService? googleAuthService = null)
+        ISettlementService settlementService)
     {
         this.groupService = groupService;
         this.invitationService = invitationService;
@@ -55,9 +51,8 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
         this.expenseService = expenseService;
         this.debtCalculationService = debtCalculationService;
         this.settlementService = settlementService;
-        this.googleSyncService = googleSyncService;
-        this.googleInvitationService = googleInvitationService;
-        this.googleAuthService = googleAuthService;
+        // this.driveSyncService = driveSyncService;
+        // this.driveAuthService = driveAuthService;
 
         this.DeleteGroupCommand = new Command(async () => await this.DeleteGroupAsync(), () => this.isAdmin);
         this.EditGroupCommand = new Command(async () => await this.EditGroupAsync(), () => this.isAdmin);
@@ -68,8 +63,6 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
         this.ResendInvitationCommand = new Command<Invitation>(async (inv) => await this.ResendInvitationAsync(inv), (_) => this.isAdmin);
         this.CancelInvitationCommand = new Command<Invitation>(async (inv) => await this.CancelInvitationAsync(inv), (_) => this.isAdmin);
         this.RefreshCommand = new Command(async () => await this.RefreshAsync());
-        this.SyncGroupCommand = new Command(async () => await this.SyncGroupAsync(), () => this.googleAuthService?.IsAuthenticated == true);
-        this.SendGmailInvitationCommand = new Command(async () => await this.SendGmailInvitationAsync(), () => this.isAdmin && this.googleAuthService?.IsAuthenticated == true);
     }
 
     /// <summary>
@@ -178,10 +171,37 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     /// <summary>
     /// Gets the collection of debts.
     /// </summary>
-    public ObservableCollection<Debt> Debts
+    public ObservableCollection<DebtViewModel> Debts
     {
         get => this.debts;
         set => this.SetProperty(ref this.debts, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the user's balance in the group.
+    /// </summary>
+    public decimal UserBalance
+    {
+        get => this.userBalance;
+        set => this.SetProperty(ref this.userBalance, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the color for the user's balance display.
+    /// </summary>
+    public Color UserBalanceColor
+    {
+        get => this.userBalanceColor;
+        set => this.SetProperty(ref this.userBalanceColor, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the description for the user's balance.
+    /// </summary>
+    public string UserBalanceDescription
+    {
+        get => this.userBalanceDescription;
+        set => this.SetProperty(ref this.userBalanceDescription, value);
     }
 
     /// <summary>
@@ -207,12 +227,6 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     /// Gets the command to sync this group with Google Drive.
     /// </summary>
     public ICommand SyncGroupCommand { get; }
-
-    /// <summary>
-    /// Gets the command to send a Gmail invitation.
-    /// </summary>
-    public ICommand SendGmailInvitationCommand { get; }
-
     /// <summary>
     /// Applies query attributes from navigation.
     /// </summary>
@@ -293,6 +307,8 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
             // Create MemberViewModels with user names
             foreach (var member in members)
             {
+                var addedByUser = allUsers.ContainsKey(member.AddedBy) ? allUsers[member.AddedBy] : await this.authService.GetUserByIdAsync(member.AddedBy);
+                
                 var memberVm = new MemberViewModel
                 {
                     Id = member.Id,
@@ -302,6 +318,7 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
                     Role = member.Role,
                     JoinedAt = member.JoinedAt,
                     AddedBy = member.AddedBy,
+                    AddedByName = addedByUser?.Name ?? "Unknown Admin",
                 };
                 this.Members.Add(memberVm);
             }
@@ -614,10 +631,56 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
             var settlements = this.Settlements.ToList();
             var debts = this.debtCalculationService.CalculateDebts(expenses, allSplits, settlements);
 
+            // Get all users to map IDs to names
+            var allUsers = await this.authService.GetAllUsersAsync();
+            var userMap = allUsers.ToDictionary(u => u.Id, u => u.Name);
+
+            // Convert to DebtViewModels with user names
             this.Debts.Clear();
             foreach (var debt in debts)
             {
-                this.Debts.Add(debt);
+                var debtVm = new DebtViewModel
+                {
+                    Id = debt.Id,
+                    DebtorId = debt.DebtorId,
+                    DebtorName = userMap.ContainsKey(debt.DebtorId) ? userMap[debt.DebtorId] : "Unknown User",
+                    CreditorId = debt.CreditorId,
+                    CreditorName = userMap.ContainsKey(debt.CreditorId) ? userMap[debt.CreditorId] : "Unknown User",
+                    Amount = debt.Amount,
+                    GroupId = debt.GroupId,
+                };
+                this.Debts.Add(debtVm);
+            }
+
+            // Calculate current user's balance
+            var currentUser = this.authService.GetCurrentUser();
+            if (currentUser != null)
+            {
+                decimal balance = 0;
+                
+                // Sum up what others owe this user (positive)
+                balance += debts.Where(d => d.CreditorId == currentUser.Id).Sum(d => d.Amount);
+                
+                // Subtract what this user owes others (negative)
+                balance -= debts.Where(d => d.DebtorId == currentUser.Id).Sum(d => d.Amount);
+
+                this.UserBalance = Math.Abs(balance);
+                
+                if (balance > 0)
+                {
+                    this.UserBalanceColor = Colors.Green;
+                    this.UserBalanceDescription = "You are owed";
+                }
+                else if (balance < 0)
+                {
+                    this.UserBalanceColor = Colors.Red;
+                    this.UserBalanceDescription = "You owe";
+                }
+                else
+                {
+                    this.UserBalanceColor = Colors.Gray;
+                    this.UserBalanceDescription = "Settled up";
+                }
             }
         }
         catch (Exception ex)
@@ -679,106 +742,6 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
         catch (Exception ex)
         {
             this.ErrorMessage = this.errorService.HandleException(ex, "refreshing group data");
-        }
-    }
-
-    /// <summary>
-    /// Syncs this group with Google Drive.
-    /// </summary>
-    /// <returns>Task for async operation.</returns>
-    private async Task SyncGroupAsync()
-    {
-        if (this.group == null || this.googleSyncService == null)
-        {
-            return;
-        }
-
-        try
-        {
-            this.IsBusy = true;
-            var status = await this.googleSyncService.SyncGroupAsync(this.group.Id.ToString());
-
-            if (status == CostSharingApp.Models.GoogleSync.SyncStatus.Conflict)
-            {
-                // Navigate to conflict resolution page
-                await Shell.Current.GoToAsync("conflictresolution", new Dictionary<string, object>
-                {
-                    ["groupId"] = this.group.Id.ToString(),
-                    ["groupName"] = this.group.Name,
-                });
-            }
-            else if (status == CostSharingApp.Models.GoogleSync.SyncStatus.Synced)
-            {
-                await Application.Current!.MainPage!.DisplayAlert(
-                    "Sync Complete",
-                    "Group synced successfully with Google Drive.",
-                    "OK");
-                
-                // Refresh local data
-                await this.RefreshAsync();
-            }
-        }
-        catch (Exception ex)
-        {
-            this.ErrorMessage = this.errorService.HandleException(ex, "syncing group");
-        }
-        finally
-        {
-            this.IsBusy = false;
-        }
-    }
-
-    /// <summary>
-    /// Sends a Gmail invitation for this group.
-    /// </summary>
-    /// <returns>Task for async operation.</returns>
-    private async Task SendGmailInvitationAsync()
-    {
-        if (this.group == null || this.googleInvitationService == null)
-        {
-            return;
-        }
-
-        // Prompt for email address
-        var email = await Application.Current!.MainPage!.DisplayPromptAsync(
-            "Send Gmail Invitation",
-            "Enter the email address to invite:",
-            placeholder: "email@example.com",
-            keyboard: Keyboard.Email);
-
-        if (string.IsNullOrWhiteSpace(email))
-        {
-            return;
-        }
-
-        try
-        {
-            this.IsBusy = true;
-            
-            // Get or create Drive file for this group
-            var driveFileId = await this.googleSyncService!.GetGroupDriveFileIdAsync(this.group.Id.ToString());
-            
-            if (string.IsNullOrEmpty(driveFileId))
-            {
-                // Need to upload group first
-                await this.googleSyncService.SyncGroupAsync(this.group.Id.ToString());
-                driveFileId = await this.googleSyncService.GetGroupDriveFileIdAsync(this.group.Id.ToString());
-            }
-
-            await this.googleInvitationService.SendInvitationAsync(this.group.Id, email, driveFileId);
-
-            await Application.Current!.MainPage!.DisplayAlert(
-                "Invitation Sent",
-                $"Gmail invitation sent to {email}.",
-                "OK");
-        }
-        catch (Exception ex)
-        {
-            this.ErrorMessage = this.errorService.HandleException(ex, "sending Gmail invitation");
-        }
-        finally
-        {
-            this.IsBusy = false;
         }
     }
 }

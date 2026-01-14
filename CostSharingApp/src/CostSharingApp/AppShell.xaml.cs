@@ -24,8 +24,5 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("expensedetails", typeof(Views.Expenses.ExpenseDetailsPage));
         Routing.RegisterRoute("customsplit", typeof(Views.Expenses.CustomSplitPage));
         Routing.RegisterRoute("simplifieddebts", typeof(Views.Debts.SimplifiedDebtsPage));
-        
-        // Google integration routes
-        Routing.RegisterRoute("conflictresolution", typeof(Views.ConflictResolutionPage));
     }
 }
