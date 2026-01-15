@@ -251,6 +251,58 @@ public class AuthService : IAuthService
     }
 
     /// <summary>
+    /// Updates user profile information.
+    /// </summary>
+    /// <param name="userId">User ID.</param>
+    /// <param name="name">New name.</param>
+    /// <param name="email">New email.</param>
+    /// <param name="phone">New phone.</param>
+    /// <returns>True if successful.</returns>
+    public async Task<bool> UpdateUserAsync(Guid userId, string name, string email, string? phone = null)
+    {
+        try
+        {
+            var user = await this.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                this.loggingService.LogWarning($"Update failed: User {userId} not found");
+                return false;
+            }
+
+            // Check if new email is already used by another user
+            if (user.Email != email)
+            {
+                var existingUsers = await this.cacheService.GetAllAsync<CostSharing.Core.Models.User>();
+                if (existingUsers.Any(u => u.Email == email && u.Id != userId))
+                {
+                    this.loggingService.LogWarning($"Update failed: Email {email} already exists");
+                    return false;
+                }
+            }
+
+            user.Name = name;
+            user.Email = email;
+            user.Phone = phone;
+
+            await this.cacheService.SaveAsync(user);
+
+            // Update current user if it's the same
+            if (this.currentUser?.Id == userId)
+            {
+                this.currentUser = user;
+            }
+
+            this.loggingService.LogInfo($"User profile updated: {email}");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            this.loggingService.LogError("User update failed", ex);
+            return false;
+        }
+    }
+
+    /// <summary>
     /// Hashes password using SHA256.
     /// </summary>
     /// <param name="password">Plain password.</param>
@@ -339,4 +391,14 @@ public interface IAuthService
     /// </summary>
     /// <returns>Number of duplicate users removed.</returns>
     Task<int> RemoveDuplicateUnusedUsersAsync();
+
+    /// <summary>
+    /// Updates user profile information.
+    /// </summary>
+    /// <param name="userId">User ID.</param>
+    /// <param name="name">New name.</param>
+    /// <param name="email">New email.</param>
+    /// <param name="phone">New phone.</param>
+    /// <returns>True if successful.</returns>
+    Task<bool> UpdateUserAsync(Guid userId, string name, string email, string? phone = null);
 }

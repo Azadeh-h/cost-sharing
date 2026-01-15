@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:CostSharingApp.ViewModels.Groups"
+             x:Class="CostSharingApp.Views.Groups.SyncSettingsPage"
+             x:DataType="vm:SyncStatusViewModel"
+             Title="Sync Settings">
+
+    <ScrollView Padding="16">
+        <VerticalStackLayout Spacing="16">
+            
+            <!-- Status Section -->
+            <Frame Padding="16" CornerRadius="8" BackgroundColor="{StaticResource Secondary}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Sync Status" 
+                           FontSize="18" 
+                           FontAttributes="Bold" />
+                    
+                    <HorizontalStackLayout Spacing="8">
+                        <Label Text="●"
+                               FontSize="16"
+                               TextColor="{Binding SyncStatusColor}"
+                               VerticalOptions="Center" />
+                        <Label Text="{Binding SyncStatusText}"
+                               FontSize="14"
+                               VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    
+                    <Label Text="{Binding LastSyncTime, StringFormat='Last synced: {0}'}"
+                           FontSize="12"
+                           TextColor="{StaticResource Gray600}"
+                           IsVisible="{Binding LastSyncTime, Converter={StaticResource StringIsNotNullOrEmptyConverter}}" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Manual Sync Button -->
+            <Button Text="Sync Now"
+                    Command="{Binding SyncNowCommand}"
+                    IsEnabled="{Binding IsSyncEnabled}"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="White" />
+
+            <!-- Sync Information -->
+            <Frame Padding="16" CornerRadius="8" BorderColor="{StaticResource Gray300}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="How Sync Works" 
+                           FontSize="16" 
+                           FontAttributes="Bold" />
+                    
+                    <Label Text="• Your group data is automatically synced to Google Drive"
+                           FontSize="14" />
+                    <Label Text="• Changes are checked every 2 minutes"
+                           FontSize="14" />
+                    <Label Text="• All group members can see updates in real-time"
+                           FontSize="14" />
+                    <Label Text="• Works offline - changes sync when you're back online"
+                           FontSize="14" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Requirements -->
+            <Frame Padding="16" CornerRadius="8" BorderColor="{StaticResource Warning}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="⚠️ Requirements" 
+                           FontSize="16" 
+                           FontAttributes="Bold"
+                           TextColor="{StaticResource Warning}" />
+                    
+                    <Label Text="• You must have a Google account"
+                           FontSize="14" />
+                    <Label Text="• All group members must authorize Google Drive access"
+                           FontSize="14" />
+                    <Label Text="• Internet connection required for syncing"
+                           FontSize="14" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Activity Indicator -->
+            <ActivityIndicator IsRunning="{Binding IsSyncing}"
+                              IsVisible="{Binding IsSyncing}"
+                              Color="{StaticResource Primary}"
+                              HorizontalOptions="Center" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

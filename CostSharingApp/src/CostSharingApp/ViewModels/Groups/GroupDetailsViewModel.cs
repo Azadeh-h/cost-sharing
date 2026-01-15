@@ -13,15 +13,15 @@ namespace CostSharingApp.ViewModels.Groups;
 public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
 {
     private readonly IGroupService groupService;
-    private readonly IInvitationService invitationService;
     private readonly IAuthService authService;
     private readonly IErrorService errorService;
     private readonly IExpenseService expenseService;
     private readonly IDebtCalculationService debtCalculationService;
     private readonly ISettlementService settlementService;
+    private readonly IDriveSyncService? driveSyncService;
+    private readonly ILoggingService loggingService;
     private Group? group;
     private ObservableCollection<MemberViewModel> members = new();
-    private ObservableCollection<Invitation> pendingInvitations = new();
     private ObservableCollection<Expense> expenses = new();
     private ObservableCollection<DebtViewModel> debts = new();
     private ObservableCollection<Settlement> settlements = new();
@@ -31,28 +31,33 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     private decimal userBalance;
     private Color userBalanceColor = Colors.Gray;
     private string userBalanceDescription = string.Empty;
+    private bool isSyncEnabled;
+    private string syncStatusText = "Not synced";
+    private Color syncStatusColor = Colors.Gray;
+    private string? lastSyncTime;
+    private CancellationTokenSource? syncCancellationTokenSource;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GroupDetailsViewModel"/> class.
     /// </summary>
     public GroupDetailsViewModel(
         IGroupService groupService,
-        IInvitationService invitationService,
         IAuthService authService,
         IErrorService errorService,
         IExpenseService expenseService,
         IDebtCalculationService debtCalculationService,
-        ISettlementService settlementService)
+        ISettlementService settlementService,
+        IDriveSyncService driveSyncService,
+        ILoggingService loggingService)
     {
         this.groupService = groupService;
-        this.invitationService = invitationService;
         this.authService = authService;
         this.errorService = errorService;
         this.expenseService = expenseService;
         this.debtCalculationService = debtCalculationService;
         this.settlementService = settlementService;
-        // this.driveSyncService = driveSyncService;
-        // this.driveAuthService = driveAuthService;
+        this.driveSyncService = driveSyncService;
+        this.loggingService = loggingService;
 
         this.DeleteGroupCommand = new Command(async () => await this.DeleteGroupAsync(), () => this.isAdmin);
         this.EditGroupCommand = new Command(async () => await this.EditGroupAsync(), () => this.isAdmin);
@@ -60,9 +65,10 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
         this.AddExpenseCommand = new Command(async () => await this.AddExpenseAsync());
         this.EditExpenseCommand = new Command<Expense>(async (expense) => await this.EditExpenseAsync(expense));
         this.RemoveMemberCommand = new Command<MemberViewModel>(async (member) => await this.RemoveMemberAsync(member), (_) => this.isAdmin);
-        this.ResendInvitationCommand = new Command<Invitation>(async (inv) => await this.ResendInvitationAsync(inv), (_) => this.isAdmin);
-        this.CancelInvitationCommand = new Command<Invitation>(async (inv) => await this.CancelInvitationAsync(inv), (_) => this.isAdmin);
         this.RefreshCommand = new Command(async () => await this.RefreshAsync());
+        this.SyncGroupCommand = new Command(async () => await this.SyncNowAsync(), () => this.isSyncEnabled);
+        this.OpenSyncSettingsCommand = new Command(async () => await this.OpenSyncSettingsAsync());
+        this.SendGmailInvitationCommand = new Command(async () => await this.SendGmailInvitationAsync(), () => this.isAdmin);
     }
 
     /// <summary>
@@ -78,15 +84,6 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
                 this.Title = value?.Name ?? "Group Details";
             }
         }
-    }
-
-    /// <summary>
-    /// Gets the collection of pending invitations.
-    /// </summary>
-    public ObservableCollection<Invitation> PendingInvitations
-    {
-        get => this.pendingInvitations;
-        set => this.SetProperty(ref this.pendingInvitations, value);
     }
 
     /// <summary>
@@ -133,16 +130,6 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     /// Gets the command to remove a member.
     /// </summary>
     public ICommand RemoveMemberCommand { get; }
-
-    /// <summary>
-    /// Gets the command to resend an invitation.
-    /// </summary>
-    public ICommand ResendInvitationCommand { get; }
-
-    /// <summary>
-    /// Gets the command to cancel an invitation.
-    /// </summary>
-    public ICommand CancelInvitationCommand { get; }
 
     /// <summary>
     /// Gets the command to add an expense.
@@ -214,6 +201,48 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     }
 
     /// <summary>
+    /// Gets or sets a value indicating whether sync is enabled for this group.
+    /// </summary>
+    public bool IsSyncEnabled
+    {
+        get => this.isSyncEnabled;
+        set
+        {
+            if (this.SetProperty(ref this.isSyncEnabled, value))
+            {
+                _ = this.OnSyncEnabledChangedAsync(value);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets the sync status text.
+    /// </summary>
+    public string SyncStatusText
+    {
+        get => this.syncStatusText;
+        set => this.SetProperty(ref this.syncStatusText, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the sync status color.
+    /// </summary>
+    public Color SyncStatusColor
+    {
+        get => this.syncStatusColor;
+        set => this.SetProperty(ref this.syncStatusColor, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the last sync time display text.
+    /// </summary>
+    public string? LastSyncTime
+    {
+        get => this.lastSyncTime;
+        set => this.SetProperty(ref this.lastSyncTime, value);
+    }
+
+    /// <summary>
     /// Gets the command to edit the group.
     /// </summary>
     public ICommand EditGroupCommand { get; }
@@ -227,6 +256,17 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     /// Gets the command to sync this group with Google Drive.
     /// </summary>
     public ICommand SyncGroupCommand { get; }
+
+    /// <summary>
+    /// Gets the command to open sync settings.
+    /// </summary>
+    public ICommand OpenSyncSettingsCommand { get; }
+
+    /// <summary>
+    /// Gets the command to send Gmail invitation.
+    /// </summary>
+    public ICommand SendGmailInvitationCommand { get; }
+
     /// <summary>
     /// Applies query attributes from navigation.
     /// </summary>
@@ -271,7 +311,6 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
             // Clear all previous data first
             this.Group = null;
             this.Members.Clear();
-            this.PendingInvitations.Clear();
             this.Expenses.Clear();
             this.Debts.Clear();
             this.Settlements.Clear();
@@ -321,14 +360,6 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
                     AddedByName = addedByUser?.Name ?? "Unknown Admin",
                 };
                 this.Members.Add(memberVm);
-            }
-
-            // Load pending invitations
-            var invitations = await this.invitationService.GetPendingInvitationsAsync(groupId);
-            this.PendingInvitations.Clear();
-            foreach (var invitation in invitations)
-            {
-                this.PendingInvitations.Add(invitation);
             }
 
             // Load expenses
@@ -471,87 +502,6 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
         }
     }
 
-    /// <summary>
-    /// Resends an invitation.
-    /// </summary>
-    private async Task ResendInvitationAsync(Invitation? invitation)
-    {
-        if (invitation == null)
-        {
-            return;
-        }
-
-        try
-        {
-            this.IsBusy = true;
-            var success = await this.invitationService.ResendInvitationAsync(invitation.Id);
-
-            if (success)
-            {
-                await Application.Current!.MainPage!.DisplayAlert(
-                    "Invitation Resent",
-                    $"Invitation resent to {invitation.InviteeContact}",
-                    "OK");
-            }
-            else
-            {
-                this.ErrorMessage = "Failed to resend invitation.";
-            }
-        }
-        catch (Exception ex)
-        {
-            this.ErrorMessage = this.errorService.HandleException(ex, "resending invitation");
-        }
-        finally
-        {
-            this.IsBusy = false;
-        }
-    }
-
-    /// <summary>
-    /// Cancels an invitation.
-    /// </summary>
-    private async Task CancelInvitationAsync(Invitation? invitation)
-    {
-        if (invitation == null)
-        {
-            return;
-        }
-
-        bool confirmed = await Application.Current!.MainPage!.DisplayAlert(
-            "Cancel Invitation",
-            $"Cancel invitation to {invitation.InviteeContact}?",
-            "Cancel Invitation",
-            "Keep");
-
-        if (!confirmed)
-        {
-            return;
-        }
-
-        try
-        {
-            this.IsBusy = true;
-            var success = await this.invitationService.CancelInvitationAsync(invitation.Id);
-
-            if (success)
-            {
-                this.PendingInvitations.Remove(invitation);
-            }
-            else
-            {
-                this.ErrorMessage = "Failed to cancel invitation.";
-            }
-        }
-        catch (Exception ex)
-        {
-            this.ErrorMessage = this.errorService.HandleException(ex, "cancelling invitation");
-        }
-        finally
-        {
-            this.IsBusy = false;
-        }
-    }
     private async Task EditGroupAsync()
     {
         if (this.group == null || !this.currentGroupId.HasValue)
@@ -743,5 +693,183 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
         {
             this.ErrorMessage = this.errorService.HandleException(ex, "refreshing group data");
         }
+    }
+
+    /// <summary>
+    /// Handles sync enabled/disabled toggle.
+    /// </summary>
+    /// <param name="enabled">Whether sync is enabled.</param>
+    /// <returns>Task for async operation.</returns>
+    private async Task OnSyncEnabledChangedAsync(bool enabled)
+    {
+        if (this.group == null || this.driveSyncService == null)
+        {
+            return;
+        }
+
+        try
+        {
+            var currentUser = this.authService.GetCurrentUser();
+            if (currentUser == null)
+            {
+                this.ErrorMessage = "User not authenticated";
+                this.IsSyncEnabled = false;
+                return;
+            }
+
+            if (enabled)
+            {
+                // Check if user is authorized for Drive
+                var accessToken = await SecureStorage.GetAsync($"drive_access_token_{currentUser.Id}");
+                if (string.IsNullOrEmpty(accessToken))
+                {
+                    // Need to authorize first
+                    await Shell.Current.DisplayAlert("Authorization Required", 
+                        "Please authorize Google Drive access to enable sync.", "OK");
+                    this.IsSyncEnabled = false;
+                    return;
+                }
+
+                // Create Drive folder if not exists
+                if (string.IsNullOrEmpty(this.group.DriveFolderId))
+                {
+                    this.SyncStatusText = "Creating Drive folder...";
+                    this.SyncStatusColor = Colors.Orange;
+
+                    var folderId = await this.driveSyncService.CreateGroupFolderAsync(
+                        this.group.Id, 
+                        currentUser.Id);
+
+                    // Grant access to all members
+                    var members = await this.groupService.GetGroupMembersAsync(this.group.Id);
+                    var memberEmails = new List<string>();
+                    foreach (var member in members)
+                    {
+                        var user = await this.authService.GetUserByIdAsync(member.UserId);
+                        if (user != null && user.Id != currentUser.Id)
+                        {
+                            memberEmails.Add(user.Email);
+                        }
+                    }
+
+                    if (memberEmails.Any())
+                    {
+                        await this.driveSyncService.SetFolderPermissionsAsync(
+                            folderId, 
+                            memberEmails, 
+                            currentUser.Id);
+                    }
+                }
+
+                // Start periodic sync
+                this.syncCancellationTokenSource = new CancellationTokenSource();
+                _ = this.driveSyncService.StartPeriodicSyncAsync(
+                    this.group.Id, 
+                    currentUser.Id, 
+                    this.syncCancellationTokenSource.Token);
+
+                this.IsSyncEnabled = true;
+                ((Command)this.SyncGroupCommand).ChangeCanExecute();
+                this.SyncStatusText = "Sync enabled";
+                this.SyncStatusColor = Colors.Green;
+            }
+            else
+            {
+                // Stop sync
+                this.syncCancellationTokenSource?.Cancel();
+                this.syncCancellationTokenSource = null;
+
+                this.IsSyncEnabled = false;
+                ((Command)this.SyncGroupCommand).ChangeCanExecute();
+                this.SyncStatusText = "Sync disabled";
+                this.SyncStatusColor = Colors.Gray;
+            }
+        }
+        catch (Exception ex)
+        {
+            this.loggingService.LogError("Failed to toggle sync", ex);
+            this.ErrorMessage = "Failed to toggle sync. Please try again.";
+            this.IsSyncEnabled = false;
+        }
+    }
+
+    /// <summary>
+    /// Manually trigger sync now.
+    /// </summary>
+    /// <returns>Task for async operation.</returns>
+    private async Task SyncNowAsync()
+    {
+        if (this.group == null || this.driveSyncService == null || !this.IsSyncEnabled)
+        {
+            return;
+        }
+
+        try
+        {
+            this.SyncStatusText = "Syncing...";
+            this.SyncStatusColor = Colors.Orange;
+
+            var currentUser = this.authService.GetCurrentUser();
+            if (currentUser == null)
+            {
+                throw new InvalidOperationException("User not authenticated");
+            }
+
+            // Upload local changes
+            await this.driveSyncService.UploadGroupDataAsync(this.group.Id, currentUser.Id);
+
+            // Download remote changes
+            await this.driveSyncService.DownloadGroupDataAsync(this.group.Id, currentUser.Id);
+
+            // Refresh UI
+            await this.RefreshAsync();
+
+            this.SyncStatusText = "Synced";
+            this.SyncStatusColor = Colors.Green;
+            this.LastSyncTime = DateTime.Now.ToString("HH:mm");
+
+            this.loggingService.LogInfo($"Manual sync completed for group {this.group.Id}");
+        }
+        catch (Exception ex)
+        {
+            this.loggingService.LogError("Manual sync failed", ex);
+            this.SyncStatusText = "Sync failed";
+            this.SyncStatusColor = Colors.Red;
+            
+            // Show more specific error message
+            if (ex.Message.Contains("not authorized") || ex.Message.Contains("re-authorize"))
+            {
+                this.ErrorMessage = "Authorization expired. Please go to Settings and re-authorize Google Drive.";
+            }
+            else
+            {
+                this.ErrorMessage = $"Sync failed: {ex.Message}";
+            }
+        }
+    }
+
+    /// <summary>
+    /// Opens the sync settings page.
+    /// </summary>
+    /// <returns>Task for async operation.</returns>
+    private async Task OpenSyncSettingsAsync()
+    {
+        if (this.group == null)
+        {
+            return;
+        }
+
+        await Shell.Current.GoToAsync($"syncsettings?groupId={this.group.Id}");
+    }
+
+    /// <summary>
+    /// Sends Gmail invitation to new member.
+    /// </summary>
+    /// <returns>Task for async operation.</returns>
+    private async Task SendGmailInvitationAsync()
+    {
+        // TODO: Implement Gmail invitation with Drive folder link
+        await Shell.Current.DisplayAlert("Coming Soon", 
+            "Gmail invitations with Drive folder access will be available soon.", "OK");
     }
 }

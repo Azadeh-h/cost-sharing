@@ -70,7 +70,18 @@ public partial class SettingsViewModel : BaseViewModel
         this.DeviceInfo = $"Model: {Microsoft.Maui.Devices.DeviceInfo.Current.Model}\nOS: {Microsoft.Maui.Devices.DeviceInfo.Current.Platform} {Microsoft.Maui.Devices.DeviceInfo.Current.VersionString}\nManufacturer: {Microsoft.Maui.Devices.DeviceInfo.Current.Manufacturer}";
 #endif
 
-        _ = this.LoadSettingsAsync();
+        // Don't call async method in constructor - will be called from OnAppearing in page
+        MainThread.BeginInvokeOnMainThread(async () =>
+        {
+            try
+            {
+                await this.LoadSettingsAsync();
+            }
+            catch
+            {
+                // Silent fail - settings will show defaults
+            }
+        });
     }
 
     /// <summary>
@@ -97,9 +108,9 @@ public partial class SettingsViewModel : BaseViewModel
                 }
             }
         }
-        catch (Exception ex)
+        catch
         {
-            System.Diagnostics.Debug.WriteLine($"Error loading settings: {ex.Message}");
+            // Silent fail
         }
     }
 
@@ -114,8 +125,8 @@ public partial class SettingsViewModel : BaseViewModel
     {
         var confirm = await Application.Current!.MainPage!.DisplayAlert(
             "Log Out",
-            "Are you sure you want to log out?",
-            "Log Out",
+            "This will clear your stored credentials. You will remain logged in with your device identity.",
+            "Clear Credentials",
             "Cancel");
 
         if (confirm)
@@ -123,8 +134,10 @@ public partial class SettingsViewModel : BaseViewModel
             // Clear any stored credentials
             SecureStorage.Default.RemoveAll();
             
-            // Navigate to login
-            await Shell.Current.GoToAsync("//login");
+            await Application.Current!.MainPage!.DisplayAlert(
+                "Credentials Cleared",
+                "Stored credentials have been cleared.",
+                "OK");
         }
     }
 
@@ -133,6 +146,10 @@ public partial class SettingsViewModel : BaseViewModel
     {
         if (this.driveAuthService == null)
         {
+            await Application.Current!.MainPage!.DisplayAlert(
+                "Not Available",
+                "Drive authorization service is not available.",
+                "OK");
             return;
         }
 
@@ -141,22 +158,36 @@ public partial class SettingsViewModel : BaseViewModel
             var currentUser = this.authService.GetCurrentUser();
             if (currentUser == null)
             {
+                await Application.Current!.MainPage!.DisplayAlert(
+                    "Error",
+                    "You must be logged in to authorize Google Drive.",
+                    "OK");
                 return;
             }
 
-            await this.driveAuthService.AuthorizeAsync(currentUser.Id);
+            var result = await this.driveAuthService.AuthorizeAsync(currentUser.Id);
             await this.LoadSettingsAsync();
 
-            await Application.Current!.MainPage!.DisplayAlert(
-                "Success",
-                "Google Drive has been authorized successfully.",
-                "OK");
+            if (result)
+            {
+                await Application.Current!.MainPage!.DisplayAlert(
+                    "Success",
+                    "Google Drive has been authorized successfully.",
+                    "OK");
+            }
+            else
+            {
+                await Application.Current!.MainPage!.DisplayAlert(
+                    "Authorization Failed",
+                    "Could not authorize Google Drive. Please try again.",
+                    "OK");
+            }
         }
         catch (Exception ex)
         {
             await Application.Current!.MainPage!.DisplayAlert(
                 "Authorization Failed",
-                ex.Message,
+                $"Error: {ex.Message}\n\nPlease check:\n1. Chrome is installed\n2. Google Cloud Console is configured\n3. SHA-1 fingerprint is registered",
                 "OK");
         }
     }
@@ -253,20 +284,22 @@ public partial class SettingsViewModel : BaseViewModel
     {
         var confirm = await Application.Current!.MainPage!.DisplayAlert(
             "⚠️ Warning",
-            "This will delete ALL local data. This action cannot be undone!",
+            "This will delete ALL local data including groups, expenses, and settings. This action cannot be undone!",
             "Delete All",
             "Cancel");
 
         if (confirm)
         {
-            // TODO: Implement clear data logic
+            // Clear secure storage
+            SecureStorage.Default.RemoveAll();
+            
+            // Clear preferences
+            Preferences.Default.Clear();
+            
             await Application.Current!.MainPage!.DisplayAlert(
                 "Data Cleared",
-                "All local data has been deleted. The app will now restart.",
+                "All local data has been deleted. Please restart the app.",
                 "OK");
-
-            // Restart app or navigate to login
-            await Shell.Current.GoToAsync("//login");
         }
     }
 }

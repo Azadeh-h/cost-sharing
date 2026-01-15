@@ -1,22 +1,36 @@
 namespace CostSharingApp.Services;
 
+using CostSharing.Core.Services;
 using Google;
 using System.Net;
 
 /// <summary>
 /// Helper class for handling Google Drive API errors with exponential backoff.
 /// </summary>
-public static class DriveErrorHandler
+public class DriveErrorHandler
 {
     private const int MaxRetries = 3;
     private const int BaseDelayMs = 1000;
+    private readonly ILoggingService loggingService;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DriveErrorHandler"/> class.
+    /// </summary>
+    /// <param name="loggingService">Logging service.</param>
+    public DriveErrorHandler(ILoggingService loggingService)
+    {
+        this.loggingService = loggingService;
+    }
 
     /// <summary>
     /// Executes a Drive API operation with exponential backoff retry logic.
     /// </summary>
-    public static async Task<T> ExecuteWithRetryAsync<T>(
+    /// <typeparam name="T">Return type.</typeparam>
+    /// <param name="operation">Operation to execute.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Result of operation.</returns>
+    public async Task<T> ExecuteWithRetryAsync<T>(
         Func<Task<T>> operation,
-        ILoggingService? logger = null,
         CancellationToken cancellationToken = default)
     {
         int retryCount = 0;
@@ -27,31 +41,31 @@ public static class DriveErrorHandler
             {
                 return await operation();
             }
-            catch (GoogleApiException ex) when (IsTransientError(ex))
+            catch (GoogleApiException ex) when (this.IsTransientError(ex))
             {
                 retryCount++;
 
                 if (retryCount > MaxRetries)
                 {
-                    logger?.LogError($"Max retries ({MaxRetries}) exceeded for Drive operation", ex);
+                    this.loggingService.LogError($"Max retries ({MaxRetries}) exceeded for Drive operation", ex);
                     throw new InvalidOperationException(
                         "Google Drive sync failed after multiple retries. Please check your internet connection and try again.",
                         ex);
                 }
 
                 var delayMs = BaseDelayMs * (int)Math.Pow(2, retryCount - 1);
-                logger?.LogWarning($"Transient Drive error (attempt {retryCount}/{MaxRetries}), retrying in {delayMs}ms: {ex.Message}");
+                this.loggingService.LogWarning($"Transient Drive error (attempt {retryCount}/{MaxRetries}), retrying in {delayMs}ms: {ex.Message}");
 
                 await Task.Delay(delayMs, cancellationToken);
             }
             catch (GoogleApiException ex)
             {
-                logger?.LogError($"Drive API error: {ex.HttpStatusCode} - {ex.Message}", ex);
-                throw TranslateException(ex);
+                this.loggingService.LogError($"Drive API error: {ex.HttpStatusCode} - {ex.Message}", ex);
+                throw this.TranslateException(ex);
             }
             catch (Exception ex)
             {
-                logger?.LogError($"Unexpected error during Drive operation: {ex.Message}", ex);
+                this.loggingService.LogError($"Unexpected error during Drive operation: {ex.Message}", ex);
                 throw;
             }
         }
@@ -60,7 +74,9 @@ public static class DriveErrorHandler
     /// <summary>
     /// Determines if a Google API exception is transient and should be retried.
     /// </summary>
-    private static bool IsTransientError(GoogleApiException ex)
+    /// <param name="ex">Google API exception.</param>
+    /// <returns>True if transient.</returns>
+    private bool IsTransientError(GoogleApiException ex)
     {
         return ex.HttpStatusCode == HttpStatusCode.TooManyRequests || // 429 Rate Limit
                ex.HttpStatusCode == HttpStatusCode.InternalServerError || // 500
@@ -72,7 +88,9 @@ public static class DriveErrorHandler
     /// <summary>
     /// Translates Google API exceptions into user-friendly error messages.
     /// </summary>
-    private static Exception TranslateException(GoogleApiException ex)
+    /// <param name="ex">Google API exception.</param>
+    /// <returns>Translated exception.</returns>
+    private Exception TranslateException(GoogleApiException ex)
     {
         return ex.HttpStatusCode switch
         {

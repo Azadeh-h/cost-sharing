@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="CostSharingApp.Views.EditProfilePage"
+             Title="Edit Profile">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="20">
+            
+            <!-- Header -->
+            <Label Text="Your Profile"
+                   FontSize="24"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center" />
+            
+            <Label Text="Update your name and email to match your invitation"
+                   FontSize="14"
+                   TextColor="Gray"
+                   HorizontalOptions="Center"
+                   HorizontalTextAlignment="Center" />
+
+            <!-- Name Field -->
+            <VerticalStackLayout Spacing="5">
+                <Label Text="Name" FontAttributes="Bold" />
+                <Entry x:Name="NameEntry"
+                       Placeholder="Enter your name"
+                       Text="{Binding Name}"
+                       ReturnType="Next" />
+            </VerticalStackLayout>
+
+            <!-- Email Field -->
+            <VerticalStackLayout Spacing="5">
+                <Label Text="Email" FontAttributes="Bold" />
+                <Entry x:Name="EmailEntry"
+                       Placeholder="Enter your email"
+                       Text="{Binding Email}"
+                       Keyboard="Email"
+                       ReturnType="Done" />
+                <Label Text="Use the same email from your invitation"
+                       FontSize="12"
+                       TextColor="Gray" />
+            </VerticalStackLayout>
+
+            <!-- Error Message -->
+            <Label Text="{Binding ErrorMessage}"
+                   TextColor="Red"
+                   IsVisible="{Binding HasError}"
+                   HorizontalOptions="Center" />
+
+            <!-- Success Message -->
+            <Label Text="{Binding SuccessMessage}"
+                   TextColor="Green"
+                   IsVisible="{Binding HasSuccess}"
+                   HorizontalOptions="Center" />
+
+            <!-- Save Button -->
+            <Button Text="Save Profile"
+                    Command="{Binding SaveCommand}"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="White"
+                    Margin="0,20,0,0" />
+
+            <!-- Cancel Button -->
+            <Button Text="Cancel"
+                    Command="{Binding CancelCommand}"
+                    BackgroundColor="LightGray"
+                    TextColor="Black" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

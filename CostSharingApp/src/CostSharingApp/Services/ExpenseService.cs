@@ -102,24 +102,19 @@ public class ExpenseService : IExpenseService
             expense.CreatedBy = currentUser.Id;
             expense.CreatedAt = DateTime.UtcNow;
 
-            System.Diagnostics.Debug.WriteLine($"[Expense] Creating expense: {expense.Description}, Amount: ${expense.TotalAmount}, GroupId: {expense.GroupId}, PaidBy: {expense.PaidBy}");
-
             // Set expense ID on splits
             foreach (var split in splits)
             {
                 split.ExpenseId = expense.Id;
-                System.Diagnostics.Debug.WriteLine($"[Expense] Split for user {split.UserId}: ${split.Amount}");
             }
 
             // Save to cache
             await this.cacheService.SaveAsync(expense);
-            System.Diagnostics.Debug.WriteLine($"[Expense] Saved expense to cache");
             
             foreach (var split in splits)
             {
                 await this.cacheService.SaveAsync(split);
             }
-            System.Diagnostics.Debug.WriteLine($"[Expense] Saved {splits.Count} splits to cache");
 
             this.loggingService.LogInfo($"Created expense {expense.Id} in group {expense.GroupId}");
             return true;
@@ -141,17 +136,10 @@ public class ExpenseService : IExpenseService
         try
         {
             var allExpenses = await this.cacheService.GetAllAsync<Expense>();
-            System.Diagnostics.Debug.WriteLine($"[Expense] GetGroupExpenses: Found {allExpenses.Count} total expenses in database");
             
             var groupExpenses = allExpenses.Where(e => e.GroupId == groupId)
                 .OrderByDescending(e => e.ExpenseDate)
                 .ToList();
-            
-            System.Diagnostics.Debug.WriteLine($"[Expense] GetGroupExpenses: {groupExpenses.Count} expenses for group {groupId}");
-            foreach (var exp in groupExpenses)
-            {
-                System.Diagnostics.Debug.WriteLine($"[Expense]   - {exp.Description}: ${exp.TotalAmount}, PaidBy: {exp.PaidBy}");
-            }
             
             return groupExpenses;
         }
@@ -190,16 +178,7 @@ public class ExpenseService : IExpenseService
         try
         {
             var allSplits = await this.cacheService.GetAllAsync<ExpenseSplit>();
-            System.Diagnostics.Debug.WriteLine($"[Expense] GetExpenseSplits: Found {allSplits.Count} total splits in database");
-            
             var expenseSplits = allSplits.Where(s => s.ExpenseId == expenseId).ToList();
-            System.Diagnostics.Debug.WriteLine($"[Expense] GetExpenseSplits: {expenseSplits.Count} splits for expense {expenseId}");
-            
-            foreach (var split in expenseSplits)
-            {
-                System.Diagnostics.Debug.WriteLine($"[Expense]   - User {split.UserId}: ${split.Amount}");
-            }
-            
             return expenseSplits;
         }
         catch (Exception ex)
@@ -226,11 +205,8 @@ public class ExpenseService : IExpenseService
                 return false;
             }
 
-            System.Diagnostics.Debug.WriteLine($"[Expense] UpdateExpenseAsync: Updating expense {expense.Id} - {expense.Description} ${expense.TotalAmount}");
-
             // Delete old splits
             var oldSplits = await this.GetExpenseSplitsAsync(expense.Id);
-            System.Diagnostics.Debug.WriteLine($"[Expense] UpdateExpenseAsync: Deleting {oldSplits.Count} old splits");
             foreach (var oldSplit in oldSplits)
             {
                 await this.cacheService.DeleteAsync(oldSplit);
@@ -238,17 +214,14 @@ public class ExpenseService : IExpenseService
 
             // Save updated expense and new splits
             await this.cacheService.SaveAsync(expense);
-            System.Diagnostics.Debug.WriteLine($"[Expense] UpdateExpenseAsync: Expense saved, adding {splits.Count} new splits");
             
             foreach (var split in splits)
             {
                 split.ExpenseId = expense.Id;
                 await this.cacheService.SaveAsync(split);
-                System.Diagnostics.Debug.WriteLine($"[Expense] UpdateExpenseAsync: Added split for user {split.UserId}: ${split.Amount}");
             }
 
             this.loggingService.LogInfo($"Updated expense {expense.Id}");
-            System.Diagnostics.Debug.WriteLine($"[Expense] UpdateExpenseAsync: SUCCESS - Expense {expense.Id} updated");
             return true;
         }
         catch (Exception ex)

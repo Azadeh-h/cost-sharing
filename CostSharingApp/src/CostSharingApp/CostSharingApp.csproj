@@ -109,6 +109,7 @@
 
 		<!-- Embedded Configuration -->
 		<EmbeddedResource Include="appsettings.json" />
+		<EmbeddedResource Include="appsettings.Development.json" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -123,13 +124,11 @@
 		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.9" />
-		<PackageReference Include="SendGrid" Version="9.29.3" />
 		<PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
 		<PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		  <PrivateAssets>all</PrivateAssets>
 		</PackageReference>
-		<PackageReference Include="Twilio" Version="7.14.0" />
 		<PackageReference Include="Xamarin.AndroidX.Browser" Version="1.8.0.9" Condition="'$(TargetFramework)' == 'net9.0-android'" />
 	</ItemGroup>
 

@@ -19,10 +19,11 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("groupdetails", typeof(Views.Groups.GroupDetailsPage));
         Routing.RegisterRoute("editgroup", typeof(Views.Groups.CreateGroupPage));
         Routing.RegisterRoute("invitemember", typeof(Views.Members.InviteMemberPage));
-        Routing.RegisterRoute("acceptinvitation", typeof(Views.Members.AcceptInvitationPage));
         Routing.RegisterRoute("addexpense", typeof(Views.Expenses.AddExpensePage));
         Routing.RegisterRoute("expensedetails", typeof(Views.Expenses.ExpenseDetailsPage));
         Routing.RegisterRoute("customsplit", typeof(Views.Expenses.CustomSplitPage));
         Routing.RegisterRoute("simplifieddebts", typeof(Views.Debts.SimplifiedDebtsPage));
+        Routing.RegisterRoute("syncsettings", typeof(Views.Groups.SyncSettingsPage));
+        Routing.RegisterRoute("editprofile", typeof(Views.EditProfilePage));
     }
 }

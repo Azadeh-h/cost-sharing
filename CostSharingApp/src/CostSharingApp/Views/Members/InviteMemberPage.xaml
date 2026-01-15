@@ -14,48 +14,29 @@
                    IsVisible="{Binding ErrorMessage, Converter={StaticResource StringIsNotNullOrEmptyConverter}}" />
 
             <!-- Instructions -->
-            <Label Text="Invite someone to your group"
+            <Label Text="Add a new member"
                    FontSize="18"
                    FontAttributes="Bold" />
 
-            <Label Text="Send an invitation via email or SMS. They'll receive a link to join the group."
+            <Label Text="Enter the name and email of the person you want to add to the group."
                    TextColor="{StaticResource Gray600}"
                    FontSize="14" />
 
-            <!-- Invitation method selection -->
-            <Label Text="Invitation Method" FontAttributes="Bold" />
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-                <RadioButton Grid.Column="0"
-                            Content="Email"
-                            GroupName="InvitationMethod"
-                            IsChecked="{Binding IsEmailMethod}"
-                            CheckedChanged="OnMethodChanged" />
-                <RadioButton Grid.Column="1"
-                            Content="SMS"
-                            GroupName="InvitationMethod"
-                            IsChecked="{Binding IsSmsMethod}"
-                            CheckedChanged="OnMethodChanged" />
-            </Grid>
+            <!-- Name input -->
+            <StackLayout Spacing="8">
+                <Label Text="Name" FontAttributes="Bold" />
+                <Entry Text="{Binding MemberName}"
+                       Placeholder="e.g. John Smith"
+                       ReturnType="Next" />
+            </StackLayout>
 
             <!-- Email input -->
-            <StackLayout Spacing="8" IsVisible="{Binding IsEmailMethod}">
+            <StackLayout Spacing="8">
                 <Label Text="Email Address" FontAttributes="Bold" />
-                <Entry Text="{Binding InviteeEmail}"
+                <Entry Text="{Binding MemberEmail}"
                        Placeholder="friend@example.com"
                        Keyboard="Email"
                        ReturnType="Done" />
-            </StackLayout>
-
-            <!-- SMS input -->
-            <StackLayout Spacing="8" IsVisible="{Binding IsSmsMethod}">
-                <Label Text="Phone Number" FontAttributes="Bold" />
-                <Entry Text="{Binding InviteePhone}"
-                       Placeholder="+61412345678"
-                       Keyboard="Telephone"
-                       ReturnType="Done" />
-                <Label Text="Use international format (e.g., +61 for Australia)"
-                       TextColor="{StaticResource Gray500}"
-                       FontSize="12" />
             </StackLayout>
 
             <!-- Info box -->
@@ -65,9 +46,9 @@
                     <Label VerticalOptions="Center" TextColor="{StaticResource Gray600}">
                         <Label.FormattedText>
                             <FormattedString>
-                                <Span Text="Invitations expire after " />
-                                <Span Text="7 days" FontAttributes="Bold" />
-                                <Span Text=". You can resend if needed." />
+                                <Span Text="The member will be " />
+                                <Span Text="added immediately" FontAttributes="Bold" />
+                                <Span Text=" and can start sharing expenses." />
                             </FormattedString>
                         </Label.FormattedText>
                     </Label>
@@ -83,8 +64,8 @@
                         TextColor="{StaticResource Gray900}" />
 
                 <Button Grid.Column="1"
-                        Text="Send Invitation"
-                        Command="{Binding SendInvitationCommand}"
+                        Text="Add Member"
+                        Command="{Binding AddMemberCommand}"
                         IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />
             </Grid>
 
