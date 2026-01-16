@@ -93,7 +93,6 @@ public class DriveSyncService : IDriveSyncService
         ISettlementService settlementService,
         ICacheService cacheService,
         ILoggingService loggingService,
-        IDriveAuthService driveAuthService,
         DriveErrorHandler errorHandler)
     {
         this.authService = authService;
@@ -102,7 +101,6 @@ public class DriveSyncService : IDriveSyncService
         this.settlementService = settlementService;
         this.cacheService = cacheService;
         this.loggingService = loggingService;
-        this.driveAuthService = driveAuthService;
         this.errorHandler = errorHandler;
     }
 

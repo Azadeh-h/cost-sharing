@@ -47,7 +47,6 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
         IExpenseService expenseService,
         IDebtCalculationService debtCalculationService,
         ISettlementService settlementService,
-        IDriveSyncService driveSyncService,
         ILoggingService loggingService)
     {
         this.groupService = groupService;
@@ -56,7 +55,6 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
         this.expenseService = expenseService;
         this.debtCalculationService = debtCalculationService;
         this.settlementService = settlementService;
-        this.driveSyncService = driveSyncService;
         this.loggingService = loggingService;
 
         this.DeleteGroupCommand = new Command(async () => await this.DeleteGroupAsync(), () => this.isAdmin);

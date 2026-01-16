@@ -43,11 +43,9 @@ public partial class SyncStatusViewModel : BaseViewModel
     /// <param name="authService">Authentication service.</param>
     /// <param name="loggingService">Logging service.</param>
     public SyncStatusViewModel(
-        IDriveSyncService driveSyncService,
         IAuthService authService,
         ILoggingService loggingService)
     {
-        this.driveSyncService = driveSyncService;
         this.authService = authService;
         this.loggingService = loggingService;
     }
