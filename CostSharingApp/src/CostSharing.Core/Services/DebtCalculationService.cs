@@ -2,10 +2,10 @@
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace CostSharing.Core.Services;
 
 using CostSharing.Core.Models;
 
+namespace CostSharing.Core.Services;
 /// <summary>
 /// Service for calculating debts from expenses.
 /// </summary>

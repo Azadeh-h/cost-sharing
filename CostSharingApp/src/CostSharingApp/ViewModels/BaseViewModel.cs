@@ -1,5 +1,4 @@
 namespace CostSharingApp.ViewModels;
-using CommunityToolkit.Mvvm.ComponentModel;
 /// <summary>
 /// Base class for all ViewModels with INotifyPropertyChanged implementation.
 /// </summary>

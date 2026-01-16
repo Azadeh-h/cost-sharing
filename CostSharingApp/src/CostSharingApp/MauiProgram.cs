@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using CostSharing.Core.Interfaces;
 using CostSharing.Core.Services;
 using CostSharingApp.Services;
 using Microsoft.Extensions.Configuration;
@@ -54,33 +55,13 @@ public static class MauiProgram
         services.AddSingleton<ICacheService, CacheService>();
         services.AddSingleton<IErrorService, ErrorService>();
         services.AddSingleton<IAuthService, AuthService>();
+        services.AddSingleton<ConfigurationService>();
+        services.AddSingleton<IDriveAuthService, DriveAuthService>();
 
         // Phase 3: US1 - Group Services
         services.AddSingleton<IGroupService, GroupService>();
 
-        // Phase 4: US2 - Invitation Services
-        services.AddSingleton<INotificationService>(sp =>
-        {
-            var loggingService = sp.GetRequiredService<ILoggingService>();
-            
-            // Load configuration from appsettings.json
-            var sendGridApiKey = configuration["SendGrid:ApiKey"] ?? string.Empty;
-            var sendGridFromEmail = configuration["SendGrid:FromEmail"] ?? string.Empty;
-            var sendGridFromName = configuration["SendGrid:FromName"] ?? "Cost Sharing App";
-            var twilioAccountSid = configuration["Twilio:AccountSid"] ?? string.Empty;
-            var twilioAuthToken = configuration["Twilio:AuthToken"] ?? string.Empty;
-            var twilioPhoneNumber = configuration["Twilio:PhoneNumber"] ?? string.Empty;
-            
-            return new NotificationService(
-                loggingService,
-                sendGridApiKey,
-                sendGridFromEmail,
-                sendGridFromName,
-                twilioAccountSid,
-                twilioAuthToken,
-                twilioPhoneNumber);
-        });
-        services.AddSingleton<IInvitationService, InvitationService>();
+
 
         // Phase 5: US3 - Expense Services
         services.AddSingleton<ISplitCalculationService, SplitCalculationService>();
@@ -90,6 +71,15 @@ public static class MauiProgram
         // Phase 7: US5 - Settlement Services
         services.AddSingleton<ISettlementService, SettlementService>();
 
+        // Phase 3 (P2P Sync): Drive Sync Services
+        services.AddSingleton<DriveErrorHandler>();
+        services.AddSingleton<IDriveSyncService, DriveSyncService>();
+        services.AddSingleton<IConflictResolver, ConflictResolutionService>();
+        services.AddSingleton<IOfflineQueueService, OfflineQueueService>();
+
+        // Gmail Invitation Service
+        services.AddSingleton<IGmailInvitationService, GmailInvitationService>();
+
         // Phase 3: US1 - ViewModels
         services.AddTransient<ViewModels.Groups.GroupListViewModel>();
         services.AddTransient<ViewModels.Groups.CreateGroupViewModel>();
@@ -97,7 +87,6 @@ public static class MauiProgram
 
         // Phase 4: US2 - ViewModels
         services.AddTransient<ViewModels.Members.InviteMemberViewModel>();
-        services.AddTransient<ViewModels.Members.AcceptInvitationViewModel>();
 
         // Phase 5: US3 - ViewModels
         services.AddTransient<ViewModels.Expenses.AddExpenseViewModel>();
@@ -114,9 +103,15 @@ public static class MauiProgram
         services.AddTransient<ViewModels.Dashboard.DashboardViewModel>();
         services.AddTransient<ViewModels.Dashboard.TransactionHistoryViewModel>();
 
+        // Phase 3 (P2P Sync): Sync ViewModels
+        services.AddTransient<ViewModels.Groups.SyncStatusViewModel>();
+
+        // General ViewModels
+        services.AddTransient<ViewModels.SettingsViewModel>();
+        services.AddTransient<ViewModels.EditProfileViewModel>();
+
         // Phase 4: US2 - Pages
         services.AddTransient<Views.Members.InviteMemberPage>();
-        services.AddTransient<Views.Members.AcceptInvitationPage>();
 
         // Phase 5: US3 - Pages
         services.AddTransient<Views.Expenses.AddExpensePage>();
@@ -136,6 +131,13 @@ public static class MauiProgram
         services.AddTransient<Views.Groups.GroupListPage>();
         services.AddTransient<Views.Groups.CreateGroupPage>();
         services.AddTransient<Views.Groups.GroupDetailsPage>();
+
+        // Phase 3 (P2P Sync): Sync Pages
+        services.AddTransient<Views.Groups.SyncSettingsPage>();
+
+        // General Pages
+        services.AddTransient<Views.SettingsPage>();
+        services.AddTransient<Views.EditProfilePage>();
 
         // Note: Cache initialization moved to App.xaml.cs OnStart() to avoid blocking startup
     }

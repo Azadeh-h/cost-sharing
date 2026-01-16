@@ -205,35 +205,25 @@ public class GroupService : IGroupService
     {
         try
         {
-            System.Diagnostics.Debug.WriteLine($"[GroupService] DeleteGroupAsync called for groupId: {groupId}");
-            
             var currentUser = this.authService.GetCurrentUser();
-            System.Diagnostics.Debug.WriteLine($"[GroupService] Current user: {currentUser?.Id}, Name: {currentUser?.Name}");
-            
             if (currentUser == null)
             {
-                System.Diagnostics.Debug.WriteLine("[GroupService] No current user found");
                 return false;
             }
 
             var group = await this.GetGroupAsync(groupId);
             if (group == null)
             {
-                System.Diagnostics.Debug.WriteLine("[GroupService] Group not found");
                 return false;
             }
 
             // Check if user is admin
             var members = await this.GetGroupMembersAsync(groupId);
-            System.Diagnostics.Debug.WriteLine($"[GroupService] Found {members.Count} members");
-            
             var userMembership = members.FirstOrDefault(m => m.UserId == currentUser.Id);
-            System.Diagnostics.Debug.WriteLine($"[GroupService] User membership: {userMembership?.Role}");
             
             if (userMembership == null || userMembership.Role != GroupRole.Admin)
             {
                 this.loggingService.LogWarning($"User {currentUser.Id} not authorized to delete group {groupId}");
-                System.Diagnostics.Debug.WriteLine($"[GroupService] User not authorized. Membership null: {userMembership == null}, Role: {userMembership?.Role}");
                 return false;
             }
 
@@ -244,13 +234,11 @@ public class GroupService : IGroupService
                 await this.cacheService.DeleteAsync(member);
             }
 
-            System.Diagnostics.Debug.WriteLine($"[GroupService] Group deleted successfully: {groupId}");
             this.loggingService.LogInfo($"Group deleted: {groupId}");
             return true;
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"[GroupService] Exception during delete: {ex.Message}");
             this.loggingService.LogError("Group deletion failed", ex);
             return false;
         }
@@ -319,6 +307,85 @@ public class GroupService : IGroupService
             return false;
         }
     }
+
+    /// <summary>
+    /// Adds a member to a group by email. Creates user if not exists.
+    /// </summary>
+    /// <param name="groupId">Group ID.</param>
+    /// <param name="email">Email of member to add.</param>
+    /// <param name="name">Name of member to add.</param>
+    /// <returns>True if successful, error message if failed.</returns>
+    public async Task<(bool Success, string? ErrorMessage)> AddMemberByEmailAsync(Guid groupId, string email, string name)
+    {
+        try
+        {
+            var currentUser = this.authService.GetCurrentUser();
+            if (currentUser == null)
+            {
+                return (false, "You must be logged in to add members");
+            }
+
+            // Check if user is a member of the group
+            var members = await this.GetGroupMembersAsync(groupId);
+            var currentUserMembership = members.FirstOrDefault(m => m.UserId == currentUser.Id);
+            if (currentUserMembership == null)
+            {
+                return (false, "You are not a member of this group");
+            }
+
+            // Find or create user by email
+            var allUsers = await this.authService.GetAllUsersAsync();
+            var existingUser = allUsers.FirstOrDefault(u => 
+                u.Email.Equals(email.Trim(), StringComparison.OrdinalIgnoreCase));
+
+            User userToAdd;
+            if (existingUser != null)
+            {
+                userToAdd = existingUser;
+            }
+            else
+            {
+                // Create a new user for this email
+                userToAdd = new User
+                {
+                    Id = Guid.NewGuid(),
+                    Email = email.Trim().ToLowerInvariant(),
+                    Name = name.Trim(),
+                    PasswordHash = string.Empty, // No password needed for invited users
+                    CreatedAt = DateTime.UtcNow,
+                    IsEmailVerified = false,
+                };
+                await this.cacheService.SaveAsync(userToAdd);
+                this.loggingService.LogInfo($"Created user for invited member: {email}");
+            }
+
+            // Check if already a member
+            if (members.Any(m => m.UserId == userToAdd.Id))
+            {
+                return (false, $"{name} is already a member of this group");
+            }
+
+            // Add as member
+            var newMember = new GroupMember
+            {
+                Id = Guid.NewGuid(),
+                GroupId = groupId,
+                UserId = userToAdd.Id,
+                Role = GroupRole.Member,
+                JoinedAt = DateTime.UtcNow,
+                AddedBy = currentUser.Id,
+            };
+            await this.cacheService.SaveAsync(newMember);
+
+            this.loggingService.LogInfo($"User {userToAdd.Email} added to group {groupId}");
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            this.loggingService.LogError("Failed to add member", ex);
+            return (false, $"Failed to add member: {ex.Message}");
+        }
+    }
 }
 
 /// <summary>
@@ -374,4 +441,13 @@ public interface IGroupService
     /// <param name="userId">User ID to remove.</param>
     /// <returns>True if successful.</returns>
     Task<bool> RemoveMemberAsync(Guid groupId, Guid userId);
+
+    /// <summary>
+    /// Adds a member to a group by email.
+    /// </summary>
+    /// <param name="groupId">Group ID.</param>
+    /// <param name="email">Email of member to add.</param>
+    /// <param name="name">Name of member to add.</param>
+    /// <returns>Success flag and optional error message.</returns>
+    Task<(bool Success, string? ErrorMessage)> AddMemberByEmailAsync(Guid groupId, string email, string name);
 }

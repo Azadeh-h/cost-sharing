@@ -2,7 +2,6 @@
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace CostSharingApp.ViewModels.Expenses;
 
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -11,6 +10,7 @@ using CostSharing.Core.Models;
 using CostSharing.Core.Services;
 using CostSharingApp.Services;
 
+namespace CostSharingApp.ViewModels.Expenses;
 /// <summary>
 /// View model for adding expenses.
 /// </summary>
@@ -86,6 +86,18 @@ public partial class AddExpenseViewModel : BaseViewModel, IQueryAttributable
         if (query.TryGetValue("groupId", out var groupIdObj) && groupIdObj is string groupIdStr)
         {
             this.GroupId = Guid.Parse(groupIdStr);
+        }
+
+        // Check if editing existing expense
+        if (query.TryGetValue("expenseId", out var expenseIdObj) && expenseIdObj is string expenseIdStr)
+        {
+            this.ExpenseId = Guid.Parse(expenseIdStr);
+            this.IsEditMode = true;
+            _ = this.LoadExpenseAsync(); // LoadExpenseAsync will call LoadMembersAsync
+        }
+        else
+        {
+            // Only load members directly if NOT in edit mode
             _ = this.LoadMembersAsync();
         }
 

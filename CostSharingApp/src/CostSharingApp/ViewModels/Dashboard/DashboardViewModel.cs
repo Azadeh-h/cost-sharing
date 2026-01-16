@@ -98,12 +98,13 @@ public partial class DashboardViewModel : ObservableObject
                 var balance = await this.CalculateGroupBalanceAsync(group.Id, currentUser.Id);
                 var members = await this.groupService.GetGroupMembersAsync(group.Id);
                 
-                System.Diagnostics.Debug.WriteLine($"[Dashboard] Group {group.Name}: Balance={balance}, Members={members?.Count ?? 0}");
+                // Add defensive check for group name
+                var groupName = string.IsNullOrWhiteSpace(group.Name) ? "[Unnamed Group]" : group.Name;
                 
                 var groupBalance = new GroupBalanceViewModel
                 {
                     GroupId = group.Id,
-                    GroupName = group.Name,
+                    GroupName = groupName,
                     MemberCount = members?.Count ?? 0,
                     Balance = balance
                 };
@@ -112,7 +113,6 @@ public partial class DashboardViewModel : ObservableObject
                 await MainThread.InvokeOnMainThreadAsync(() =>
                 {
                     this.GroupBalances.Add(groupBalance);
-                    System.Diagnostics.Debug.WriteLine($"[Dashboard] Added to UI: {groupBalance.GroupName}");
                 });
 
                 if (balance > 0)
@@ -156,7 +156,6 @@ public partial class DashboardViewModel : ObservableObject
         
         // Get all expenses for the group
         var expenses = await this.expenseService.GetGroupExpensesAsync(groupId);
-        System.Diagnostics.Debug.WriteLine($"[Dashboard] Found {expenses.Count} expenses");
         
         if (!expenses.Any())
         {
@@ -220,16 +219,9 @@ public partial class DashboardViewModel : ObservableObject
     [RelayCommand]
     private async Task ViewGroupAsync(GroupBalanceViewModel groupBalance)
     {
-        System.Diagnostics.Debug.WriteLine($"[Dashboard] ViewGroupAsync called with: {groupBalance?.GroupName ?? "null"}");
-        
         if (groupBalance != null)
         {
-            System.Diagnostics.Debug.WriteLine($"[Dashboard] Navigating to group: {groupBalance.GroupId}");
             await Shell.Current.GoToAsync($"groupdetails?groupId={groupBalance.GroupId}");
-        }
-        else
-        {
-            System.Diagnostics.Debug.WriteLine("[Dashboard] groupBalance is null!");
         }
     }
 

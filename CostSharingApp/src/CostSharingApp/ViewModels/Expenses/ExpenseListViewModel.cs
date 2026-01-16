@@ -2,7 +2,6 @@
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace CostSharingApp.ViewModels.Expenses;
 
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -10,6 +9,7 @@ using CommunityToolkit.Mvvm.Input;
 using CostSharing.Core.Models;
 using CostSharingApp.Services;
 
+namespace CostSharingApp.ViewModels.Expenses;
 /// <summary>
 /// View model for expense list.
 /// </summary>

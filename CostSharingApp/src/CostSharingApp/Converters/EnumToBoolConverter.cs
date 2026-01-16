@@ -2,10 +2,10 @@
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace CostSharingApp.Converters;
 
 using System.Globalization;
 
+namespace CostSharingApp.Converters;
 /// <summary>
 /// Converts an enum value to boolean by comparing to a parameter.
 /// </summary>

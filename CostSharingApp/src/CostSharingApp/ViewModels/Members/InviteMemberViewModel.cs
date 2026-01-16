@@ -1,22 +1,25 @@
 using System.Windows.Input;
+using CostSharing.Core.Interfaces;
 using CostSharingApp.Services;
 
 
 namespace CostSharingApp.ViewModels.Members;
 
 /// <summary>
-/// ViewModel for inviting members to a group.
+/// ViewModel for adding members to a group.
 /// </summary>
 public class InviteMemberViewModel : BaseViewModel, IQueryAttributable
 {
-    private readonly IInvitationService invitationService;
+    private readonly IGroupService groupService;
     private readonly IErrorService errorService;
+    private readonly IAuthService authService;
+    private readonly IGmailInvitationService? gmailService;
     private Guid groupId;
-    private bool isEmailMethod = true;
-    private bool isSmsMethod;
-    private string inviteeEmail = string.Empty;
-    private string inviteePhone = string.Empty;
+    private string groupName = string.Empty;
+    private string memberName = string.Empty;
+    private string memberEmail = string.Empty;
     private string errorMessage = string.Empty;
+    private bool sendEmailInvite = true;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="InviteMemberViewModel"/> class.
@@ -24,94 +27,75 @@ public class InviteMemberViewModel : BaseViewModel, IQueryAttributable
     /// </summary>
     public InviteMemberViewModel()
     {
-        this.invitationService = null!;
+        this.groupService = null!;
         this.errorService = null!;
-        this.Title = "Invite Member";
-        this.SendInvitationCommand = new Command(async () => await this.SendInvitationAsync(), this.CanSendInvitation);
+        this.authService = null!;
+        this.gmailService = null;
+        this.Title = "Add Member";
+        this.AddMemberCommand = new Command(async () => await this.AddMemberAsync(), this.CanAddMember);
         this.CancelCommand = new Command(async () => await this.CancelAsync());
     }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="InviteMemberViewModel"/> class.
     /// </summary>
-    public InviteMemberViewModel(IInvitationService invitationService, IErrorService errorService)
+    /// <param name="groupService">Group service.</param>
+    /// <param name="errorService">Error service.</param>
+    /// <param name="authService">Auth service.</param>
+    /// <param name="gmailService">Gmail invitation service.</param>
+    public InviteMemberViewModel(
+        IGroupService groupService,
+        IErrorService errorService,
+        IAuthService authService,
+        IGmailInvitationService gmailService)
     {
-        this.invitationService = invitationService;
+        this.groupService = groupService;
         this.errorService = errorService;
-        this.Title = "Invite Member";
+        this.authService = authService;
+        this.gmailService = gmailService;
+        this.Title = "Add Member";
 
-        this.SendInvitationCommand = new Command(async () => await this.SendInvitationAsync(), this.CanSendInvitation);
+        this.AddMemberCommand = new Command(async () => await this.AddMemberAsync(), this.CanAddMember);
         this.CancelCommand = new Command(async () => await this.CancelAsync());
     }
 
     /// <summary>
-    /// Gets or sets a value indicating whether email method is selected.
+    /// Gets or sets the member name.
     /// </summary>
-    public bool IsEmailMethod
+    public string MemberName
     {
-        get => this.isEmailMethod;
+        get => this.memberName;
         set
         {
-            if (this.SetProperty(ref this.isEmailMethod, value))
+            if (this.SetProperty(ref this.memberName, value))
             {
-                if (value)
-                {
-                    this.IsSmsMethod = false;
-                }
-
-                ((Command)this.SendInvitationCommand).ChangeCanExecute();
+                ((Command)this.AddMemberCommand).ChangeCanExecute();
             }
         }
     }
 
     /// <summary>
-    /// Gets or sets a value indicating whether SMS method is selected.
+    /// Gets or sets the member email.
     /// </summary>
-    public bool IsSmsMethod
+    public string MemberEmail
     {
-        get => this.isSmsMethod;
+        get => this.memberEmail;
         set
         {
-            if (this.SetProperty(ref this.isSmsMethod, value))
+            if (this.SetProperty(ref this.memberEmail, value))
             {
-                if (value)
-                {
-                    this.IsEmailMethod = false;
-                }
-
-                ((Command)this.SendInvitationCommand).ChangeCanExecute();
+                ((Command)this.AddMemberCommand).ChangeCanExecute();
             }
         }
     }
 
     /// <summary>
-    /// Gets or sets the invitee email.
+    /// Gets or sets a value indicating whether to send an email invitation.
     /// </summary>
-    public string InviteeEmail
+    public bool SendEmailInvite
     {
-        get => this.inviteeEmail;
-        set
-        {
-            if (this.SetProperty(ref this.inviteeEmail, value))
-            {
-                ((Command)this.SendInvitationCommand).ChangeCanExecute();
-            }
-        }
-    }
-
-    /// <summary>
-    /// Gets or sets the invitee phone.
-    /// </summary>
-    public string InviteePhone
-    {
-        get => this.inviteePhone;
-        set
-        {
-            if (this.SetProperty(ref this.inviteePhone, value))
-            {
-                ((Command)this.SendInvitationCommand).ChangeCanExecute();
-            }
-        }
+        get => this.sendEmailInvite;
+        set => this.SetProperty(ref this.sendEmailInvite, value);
     }
 
     /// <summary>
@@ -124,9 +108,9 @@ public class InviteMemberViewModel : BaseViewModel, IQueryAttributable
     }
 
     /// <summary>
-    /// Gets the command to send invitation.
+    /// Gets the command to add member.
     /// </summary>
-    public ICommand SendInvitationCommand { get; }
+    public ICommand AddMemberCommand { get; }
 
     /// <summary>
     /// Gets the command to cancel.
@@ -145,29 +129,28 @@ public class InviteMemberViewModel : BaseViewModel, IQueryAttributable
                 this.groupId = parsedGroupId;
             }
         }
+
+        if (query.TryGetValue("groupName", out var groupNameObj) && groupNameObj is string name)
+        {
+            // Decode the URL-encoded group name
+            this.groupName = Uri.UnescapeDataString(name);
+        }
     }
 
     /// <summary>
-    /// Determines if invitation can be sent.
+    /// Determines if member can be added.
     /// </summary>
-    private bool CanSendInvitation()
+    private bool CanAddMember()
     {
-        if (this.IsEmailMethod)
-        {
-            return !string.IsNullOrWhiteSpace(this.inviteeEmail) && this.inviteeEmail.Contains("@");
-        }
-        else if (this.IsSmsMethod)
-        {
-            return !string.IsNullOrWhiteSpace(this.inviteePhone) && this.inviteePhone.StartsWith("+");
-        }
-
-        return false;
+        return !string.IsNullOrWhiteSpace(this.memberName) &&
+               !string.IsNullOrWhiteSpace(this.memberEmail) &&
+               this.memberEmail.Contains("@");
     }
 
     /// <summary>
-    /// Sends the invitation.
+    /// Adds the member to the group.
     /// </summary>
-    private async Task SendInvitationAsync()
+    private async Task AddMemberAsync()
     {
         if (this.IsBusy)
         {
@@ -179,48 +162,79 @@ public class InviteMemberViewModel : BaseViewModel, IQueryAttributable
             this.IsBusy = true;
             this.ErrorMessage = string.Empty;
 
-            CostSharing.Core.Models.Invitation? invitation;
+            var (success, errorMessage) = await this.groupService.AddMemberByEmailAsync(
+                this.groupId,
+                this.memberEmail.Trim(),
+                this.memberName.Trim());
 
-            if (this.IsEmailMethod)
+            if (!success)
             {
-                invitation = await this.invitationService.SendEmailInvitationAsync(this.groupId, this.inviteeEmail);
-            }
-            else
-            {
-                invitation = await this.invitationService.SendSmsInvitationAsync(this.groupId, this.inviteePhone);
-            }
-
-            if (invitation == null)
-            {
-                if (this.IsEmailMethod)
-                {
-                    this.ErrorMessage = $"Failed to send email invitation to {this.inviteeEmail}. Please check:\n" +
-                        "• Email address is correct\n" +
-                        "• You have internet connection\n" +
-                        "• Email service is configured";
-                }
-                else
-                {
-                    this.ErrorMessage = $"Failed to send SMS invitation to {this.inviteePhone}. Please check:\n" +
-                        "• Phone number is in E.164 format (+country code)\n" +
-                        "• You have internet connection\n" +
-                        "• SMS service is configured";
-                }
-                
-                await Application.Current!.MainPage!.DisplayAlert("Invitation Failed", this.ErrorMessage, "OK");
+                this.ErrorMessage = errorMessage ?? "Failed to add member";
+                await Application.Current!.MainPage!.DisplayAlert("Error", this.ErrorMessage, "OK");
                 return;
             }
 
-            await Application.Current!.MainPage!.DisplayAlert(
-                "Invitation Sent",
-                $"Invitation sent successfully to {(this.IsEmailMethod ? this.inviteeEmail : this.inviteePhone)}",
-                "OK");
+            // Send email invitation if enabled
+            if (this.sendEmailInvite)
+            {
+                if (this.gmailService == null)
+                {
+                    await Application.Current!.MainPage!.DisplayAlert(
+                        "Member Added",
+                        $"{this.memberName} has been added to the group.\n\nNote: Gmail service is not available.",
+                        "OK");
+                }
+                else
+                {
+                    var currentUser = this.authService.GetCurrentUser();
+                    if (currentUser == null || currentUser.Id == Guid.Empty)
+                    {
+                        await Application.Current!.MainPage!.DisplayAlert(
+                            "Member Added",
+                            $"{this.memberName} has been added to the group.\n\nNote: Could not send email - user not logged in.",
+                            "OK");
+                    }
+                    else
+                    {
+                        var inviterName = currentUser.Name ?? "A friend";
+
+                        var (emailSuccess, emailError) = await this.gmailService.SendInvitationAsync(
+                            this.memberEmail.Trim(),
+                            this.memberName.Trim(),
+                            this.groupName,
+                            inviterName,
+                            currentUser.Id);
+
+                        if (emailSuccess)
+                        {
+                            await Application.Current!.MainPage!.DisplayAlert(
+                                "Member Added",
+                                $"{this.memberName} has been added to the group and an invitation email has been sent!",
+                                "OK");
+                        }
+                        else
+                        {
+                            await Application.Current!.MainPage!.DisplayAlert(
+                                "Member Added",
+                                $"{this.memberName} has been added to the group.\n\nNote: Email could not be sent: {emailError}\n\nYou can share the app manually.",
+                                "OK");
+                        }
+                    }
+                }
+            }
+            else
+            {
+                await Application.Current!.MainPage!.DisplayAlert(
+                    "Member Added",
+                    $"{this.memberName} has been added to the group!",
+                    "OK");
+            }
 
             await Shell.Current.GoToAsync("..");
         }
         catch (Exception ex)
         {
-            this.ErrorMessage = this.errorService.HandleException(ex, "sending invitation");
+            this.ErrorMessage = this.errorService.HandleException(ex, "adding member");
         }
         finally
         {

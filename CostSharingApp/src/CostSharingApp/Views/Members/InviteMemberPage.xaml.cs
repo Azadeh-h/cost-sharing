@@ -1,7 +1,7 @@
 namespace CostSharingApp.Views.Members;
 
 /// <summary>
-/// Page for inviting members to a group.
+/// Page for adding members to a group.
 /// </summary>
 public partial class InviteMemberPage : ContentPage
 {
@@ -13,13 +13,5 @@ public partial class InviteMemberPage : ContentPage
     {
         this.InitializeComponent();
         this.BindingContext = viewModel;
-    }
-
-    /// <summary>
-    /// Handles invitation method selection change.
-    /// </summary>
-    private void OnMethodChanged(object? sender, CheckedChangedEventArgs e)
-    {
-        // Method change handled by binding
     }
 }

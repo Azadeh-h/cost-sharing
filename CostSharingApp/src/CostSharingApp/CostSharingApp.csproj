@@ -40,8 +40,13 @@
 		<ApplicationId>com.costsharingapp.mobile</ApplicationId>
 
 		<!-- Versions -->
-		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+		<ApplicationDisplayVersion>1.0.0</ApplicationDisplayVersion>
 		<ApplicationVersion>1</ApplicationVersion>
+		
+		<!-- Description -->
+		<Description>Track and split shared expenses with friends and family</Description>
+		<Authors>Cost Sharing Team</Authors>
+		<Copyright>Copyright © 2026</Copyright>
 
 		<!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
 		<WindowsPackageType>None</WindowsPackageType>
@@ -104,10 +109,14 @@
 
 		<!-- Embedded Configuration -->
 		<EmbeddedResource Include="appsettings.json" />
+		<EmbeddedResource Include="appsettings.Development.json" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+		<PackageReference Include="Google.Apis.Auth" Version="1.73.0" />
+		<PackageReference Include="Google.Apis.Drive.v3" Version="1.68.0.3550" />
+		<PackageReference Include="Google.Apis.Gmail.v1" Version="1.73.0.3987" />
 		<PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.101">
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		  <PrivateAssets>all</PrivateAssets>
@@ -115,13 +124,12 @@
 		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.9" />
-		<PackageReference Include="SendGrid" Version="9.29.3" />
 		<PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
 		<PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		  <PrivateAssets>all</PrivateAssets>
 		</PackageReference>
-		<PackageReference Include="Twilio" Version="7.14.0" />
+		<PackageReference Include="Xamarin.AndroidX.Browser" Version="1.8.0.9" Condition="'$(TargetFramework)' == 'net9.0-android'" />
 	</ItemGroup>
 
 	<ItemGroup>

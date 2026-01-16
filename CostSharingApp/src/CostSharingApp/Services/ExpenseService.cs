@@ -2,10 +2,10 @@
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace CostSharingApp.Services;
 
 using CostSharing.Core.Models;
 
+namespace CostSharingApp.Services;
 /// <summary>
 /// Service for managing expenses.
 /// </summary>
@@ -113,13 +113,11 @@ public class ExpenseService : IExpenseService
 
             // Save to cache
             await this.cacheService.SaveAsync(expense);
-            System.Diagnostics.Debug.WriteLine($"[Expense] Saved expense to cache");
             
             foreach (var split in splits)
             {
                 await this.cacheService.SaveAsync(split);
             }
-            System.Diagnostics.Debug.WriteLine($"[Expense] Saved {splits.Count} splits to cache");
 
             this.loggingService.LogInfo($"Created expense {expense.Id} in group {expense.GroupId}");
             return true;
@@ -141,17 +139,10 @@ public class ExpenseService : IExpenseService
         try
         {
             var allExpenses = await this.cacheService.GetAllAsync<Expense>();
-            System.Diagnostics.Debug.WriteLine($"[Expense] GetGroupExpenses: Found {allExpenses.Count} total expenses in database");
             
             var groupExpenses = allExpenses.Where(e => e.GroupId == groupId)
                 .OrderByDescending(e => e.ExpenseDate)
                 .ToList();
-            
-            System.Diagnostics.Debug.WriteLine($"[Expense] GetGroupExpenses: {groupExpenses.Count} expenses for group {groupId}");
-            foreach (var exp in groupExpenses)
-            {
-                System.Diagnostics.Debug.WriteLine($"[Expense]   - {exp.Description}: ${exp.TotalAmount}, PaidBy: {exp.PaidBy}");
-            }
             
             return groupExpenses;
         }
@@ -190,16 +181,7 @@ public class ExpenseService : IExpenseService
         try
         {
             var allSplits = await this.cacheService.GetAllAsync<ExpenseSplit>();
-            System.Diagnostics.Debug.WriteLine($"[Expense] GetExpenseSplits: Found {allSplits.Count} total splits in database");
-            
             var expenseSplits = allSplits.Where(s => s.ExpenseId == expenseId).ToList();
-            System.Diagnostics.Debug.WriteLine($"[Expense] GetExpenseSplits: {expenseSplits.Count} splits for expense {expenseId}");
-            
-            foreach (var split in expenseSplits)
-            {
-                System.Diagnostics.Debug.WriteLine($"[Expense]   - User {split.UserId}: ${split.Amount}");
-            }
-            
             return expenseSplits;
         }
         catch (Exception ex)
@@ -238,7 +220,6 @@ public class ExpenseService : IExpenseService
 
             // Save updated expense and new splits
             await this.cacheService.SaveAsync(expense);
-            System.Diagnostics.Debug.WriteLine($"[Expense] UpdateExpenseAsync: Expense saved, adding {splits.Count} new splits");
             
             foreach (var split in splits)
             {

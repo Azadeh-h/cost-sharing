@@ -1,7 +1,7 @@
-namespace CostSharingApp.Services;
 
 using CostSharing.Core.Models;
 
+namespace CostSharingApp.Services;
 /// <summary>
 /// Service for managing settlement transactions with SQLite storage.
 /// </summary>

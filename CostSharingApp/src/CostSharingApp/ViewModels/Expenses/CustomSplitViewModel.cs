@@ -2,12 +2,12 @@
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace CostSharingApp.ViewModels.Expenses;
 
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
+namespace CostSharingApp.ViewModels.Expenses;
 /// <summary>
 /// View model for custom percentage split.
 /// </summary>

@@ -31,6 +31,22 @@
                 </VerticalStackLayout>
             </Frame>
 
+            <!-- Balance Summary -->
+            <Frame BorderColor="{StaticResource Secondary}" Padding="16" CornerRadius="8" BackgroundColor="{StaticResource Secondary}">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Your Balance"
+                           FontSize="14"
+                           TextColor="{StaticResource Gray600}" />
+                    <Label Text="{Binding UserBalance, StringFormat='${0:F2}'}"
+                           FontSize="28"
+                           FontAttributes="Bold"
+                           TextColor="{Binding UserBalanceColor}" />
+                    <Label Text="{Binding UserBalanceDescription}"
+                           FontSize="12"
+                           TextColor="{StaticResource Gray600}" />
+                </VerticalStackLayout>
+            </Frame>
+
             <!-- Admin actions -->
             <StackLayout Spacing="8" IsVisible="{Binding IsAdmin}">
                 <Label Text="Admin Actions" FontSize="18" FontAttributes="Bold" />
@@ -106,62 +122,77 @@
                 </CollectionView.ItemTemplate>
             </CollectionView>
 
-            <!-- Pending invitations section -->
-            <StackLayout Spacing="8" IsVisible="{Binding IsAdmin}" Margin="0,16,0,0">
-                <Label Text="Pending Invitations" FontSize="18" FontAttributes="Bold" />
-                
-                <CollectionView ItemsSource="{Binding PendingInvitations}">
-                    <CollectionView.EmptyView>
-                        <Label Text="No pending invitations"
-                               TextColor="{StaticResource Gray500}"
-                               FontSize="12"
-                               Margin="0,8,0,0" />
-                    </CollectionView.EmptyView>
-
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate>
-                            <Frame Margin="0,0,0,8" Padding="12" CornerRadius="8" BackgroundColor="{StaticResource Secondary}">
-                                <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="8">
-                                    <Label Grid.Column="0"
-                                           Text="📧"
-                                           FontSize="20"
-                                           VerticalOptions="Center" />
-                                    <StackLayout Grid.Column="1" VerticalOptions="Center">
-                                        <Label Text="{Binding InviteeContact}"
-                                               FontSize="14"
-                                               FontAttributes="Bold" />
-                                        <Label Text="{Binding SentAt, StringFormat='Sent: {0:MMM dd, yyyy}'}"
-                                               TextColor="{StaticResource Gray600}"
-                                               FontSize="12" />
-                                    </StackLayout>
-                                    <Button Grid.Column="2"
-                                            Text="Resend"
-                                            FontSize="12"
-                                            Padding="8,4"
-                                            CornerRadius="4"
-                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GroupDetailsViewModel}}, Path=ResendInvitationCommand}"
-                                            CommandParameter="{Binding .}" />
-                                    <Button Grid.Column="3"
-                                            Text="Cancel"
-                                            FontSize="12"
-                                            Padding="8,4"
-                                            CornerRadius="4"
-                                            BackgroundColor="{StaticResource Gray300}"
-                                            TextColor="{StaticResource Gray900}"
-                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GroupDetailsViewModel}}, Path=CancelInvitationCommand}"
-                                            CommandParameter="{Binding .}" />
-                                </Grid>
-                            </Frame>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
-            </StackLayout>
-
-            <!-- Invite member button -->
-            <Button Text="Invite Member"
+            <!-- Add member button -->
+            <Button Text="Add Member"
                     Command="{Binding InviteMemberCommand}"
                     IsVisible="{Binding IsAdmin}"
                     Margin="0,8,0,0" />
+
+            <!-- Google Integration Section -->
+            <StackLayout Spacing="8" Margin="0,8,0,0">
+                <Label Text="Google Integration" FontSize="18" FontAttributes="Bold" />
+                
+                <!-- Drive Sync Toggle -->
+                <Border StrokeShape="RoundRectangle 8"
+                        Stroke="{StaticResource Gray300}"
+                        StrokeThickness="1"
+                        Padding="12"
+                        IsVisible="{Binding IsAdmin}">
+                    <Grid ColumnDefinitions="*,Auto,Auto" RowDefinitions="Auto,Auto" RowSpacing="4">
+                        <Label Grid.Row="0" Grid.Column="0"
+                               Text="Drive Sync"
+                               FontSize="16"
+                               FontAttributes="Bold"
+                               VerticalOptions="Center" />
+                        <Switch Grid.Row="0" Grid.Column="1"
+                                IsToggled="{Binding IsSyncEnabled}"
+                                OnColor="{StaticResource Primary}"
+                                ThumbColor="White"
+                                VerticalOptions="Center"
+                                Margin="0,0,8,0" />
+                        <Button Grid.Row="0" Grid.Column="2"
+                                Text="⚙️"
+                                FontSize="16"
+                                Padding="8,4"
+                                Command="{Binding OpenSyncSettingsCommand}"
+                                BackgroundColor="Transparent"
+                                TextColor="{StaticResource Primary}" />
+                        
+                        <!-- Sync Status Indicator -->
+                        <HorizontalStackLayout Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Spacing="8"
+                                             IsVisible="{Binding IsSyncEnabled}">
+                            <Label Text="●"
+                                   FontSize="12"
+                                   TextColor="{Binding SyncStatusColor}"
+                                   VerticalOptions="Center" />
+                            <Label Text="{Binding SyncStatusText}"
+                                   FontSize="12"
+                                   TextColor="{StaticResource Gray600}"
+                                   VerticalOptions="Center" />
+                            <Label Text="{Binding LastSyncTime, StringFormat='Last synced: {0}'}"
+                                   FontSize="12"
+                                   TextColor="{StaticResource Gray500}"
+                                   VerticalOptions="Center"
+                                   IsVisible="{Binding LastSyncTime, Converter={StaticResource StringIsNotNullOrEmptyConverter}}" />
+                        </HorizontalStackLayout>
+                    </Grid>
+                </Border>
+                
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                    <Button Grid.Column="0"
+                            Text="🔄 Sync Now"
+                            Command="{Binding SyncGroupCommand}"
+                            BackgroundColor="{StaticResource Primary}"
+                            TextColor="White"
+                            IsVisible="{Binding IsSyncEnabled}" />
+                    <Button Grid.Column="1"
+                            Text="📧 Send Gmail Invite"
+                            Command="{Binding SendGmailInvitationCommand}"
+                            BackgroundColor="{StaticResource Secondary}"
+                            TextColor="{StaticResource SecondaryDarkText}"
+                            IsVisible="{Binding IsAdmin}" />
+                </Grid>
+            </StackLayout>
 
             <!-- Expenses section -->
             <Label Text="Expenses" FontSize="18" FontAttributes="Bold" Margin="0,24,0,8" />
@@ -199,8 +230,8 @@
                                            FontSize="12" />
                                 </StackLayout>
                                 <Label Grid.Column="2"
-                                       Text="{Binding TotalAmount, StringFormat='${0:F2}'}"
-                                       FontSize="16"
+                                       Text="{Binding TotalAmount, StringFormat='${0:F2}'}" 
+                                       FontSize="16"                                       
                                        FontAttributes="Bold"
                                        VerticalOptions="Center" />
                             </Grid>
@@ -234,18 +265,20 @@
                 </CollectionView.EmptyView>
 
                 <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="models:Debt">
+                    <DataTemplate x:DataType="vm:DebtViewModel">
                         <Frame Margin="0,0,0,8" Padding="12" CornerRadius="8" BackgroundColor="{StaticResource Secondary}">
                             <HorizontalStackLayout Spacing="8">
-                                <Label Text="{Binding DebtorId, StringFormat='User {0}'}"
+                                <Label Text="{Binding DebtorName}"
                                        FontSize="14"
+                                       FontAttributes="Bold"
                                        VerticalOptions="Center" />
                                 <Label Text="owes"
                                        TextColor="{StaticResource Gray600}"
                                        FontSize="12"
                                        VerticalOptions="Center" />
-                                <Label Text="{Binding CreditorId, StringFormat='User {0}'}"
+                                <Label Text="{Binding CreditorName}"
                                        FontSize="14"
+                                       FontAttributes="Bold"
                                        VerticalOptions="Center" />
                                 <Label Text="{Binding Amount, StringFormat='${0:F2}'}"
                                        FontSize="16"

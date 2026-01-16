@@ -19,7 +19,7 @@
                            FontSize="16"
                            HorizontalOptions="Center" />
                     <Label Text="{Binding TotalBalance, StringFormat='${0:F2}'}"
-                           TextColor="White"
+                           TextColor="{Binding TotalBalance, Converter={StaticResource BalanceColorConverter}}"
                            FontSize="32"
                            FontAttributes="Bold"
                            HorizontalOptions="Center" />

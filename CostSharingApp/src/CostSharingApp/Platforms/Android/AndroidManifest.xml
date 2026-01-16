@@ -5,6 +5,24 @@
 		android:supportsRtl="true"
 		android:label="Cost Sharing"
 		android:theme="@style/Maui.SplashTheme">
+		
+		<!-- Deep link handler for group invitations -->
+		<activity android:name=".MainActivity" android:exported="true">
+			<intent-filter>
+				<action android:name="android.intent.action.VIEW" />
+				<category android:name="android.intent.category.DEFAULT" />
+				<category android:name="android.intent.category.BROWSABLE" />
+				<data android:scheme="costsharingapp" android:host="join" />
+			</intent-filter>
+			
+			<!-- OAuth redirect handler for Google Drive -->
+			<intent-filter>
+				<action android:name="android.intent.action.VIEW" />
+				<category android:name="android.intent.category.DEFAULT" />
+				<category android:name="android.intent.category.BROWSABLE" />
+				<data android:scheme="com.costsharingapp.mobile" android:host="oauth2redirect" />
+			</intent-filter>
+		</activity>
 	</application>
 	
 	<!-- Permissions -->

@@ -1,4 +1,5 @@
 ﻿using CostSharingApp.Services;
+using CostSharing.Core.Services;
 
 namespace CostSharingApp;
 
@@ -9,16 +10,22 @@ public partial class App : Application
 {
     private readonly ICacheService? _cacheService;
     private readonly IAuthService? _authService;
+    private readonly ILoggingService? _loggingService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="App"/> class.
     /// </summary>
     /// <param name="cacheService">Cache service for initialization.</param>
     /// <param name="authService">Auth service for auto-login.</param>
-    public App(ICacheService? cacheService = null, IAuthService? authService = null)
+    /// <param name="loggingService">Logging service.</param>
+    public App(
+        ICacheService? cacheService = null, 
+        IAuthService? authService = null,
+        ILoggingService? loggingService = null)
     {
         _cacheService = cacheService;
         _authService = authService;
+        _loggingService = loggingService;
         this.InitializeComponent();
     }
 
@@ -32,29 +39,6 @@ public partial class App : Application
         try
         {
             var window = new Window(new AppShell());
-
-            // Handle deep link if present
-            if (activationState is not null)
-            {
-                var uri = activationState.State.TryGetValue("uri", out var uriString)
-                    ? new Uri(uriString?.ToString() ?? string.Empty)
-                    : null;
-
-                if (uri is not null && uri.Scheme == "costsharingapp" && uri.Host == "invite")
-                {
-                    // Extract token from URI path (format: costsharingapp://invite/{token})
-                    var token = uri.AbsolutePath.TrimStart('/');
-                    if (!string.IsNullOrEmpty(token))
-                    {
-                        // Navigate to AcceptInvitationPage with token
-                        Shell.Current.Dispatcher.Dispatch(async () =>
-                        {
-                            await Shell.Current.GoToAsync($"acceptinvitation?token={Uri.EscapeDataString(token)}");
-                        });
-                    }
-                }
-            }
-
             return window;
         }
         catch (Exception)
@@ -76,6 +60,12 @@ public partial class App : Application
             try
             {
                 await Task.Run(async () => await _cacheService.InitializeAsync());
+                
+                // Run database migrations
+                if (_loggingService != null)
+                {
+                    await DatabaseMigrations.UpdateSaraChenEmailAsync(_cacheService, _loggingService);
+                }
             }
             catch (Exception)
             {
