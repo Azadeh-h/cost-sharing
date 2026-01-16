@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using CostSharing.Core.Interfaces;
 using CostSharing.Core.Services;
 using CostSharingApp.Services;
 using Microsoft.Extensions.Configuration;
@@ -75,6 +76,9 @@ public static class MauiProgram
         services.AddSingleton<IDriveSyncService, DriveSyncService>();
         services.AddSingleton<IConflictResolver, ConflictResolutionService>();
         services.AddSingleton<IOfflineQueueService, OfflineQueueService>();
+
+        // Gmail Invitation Service
+        services.AddSingleton<IGmailInvitationService, GmailInvitationService>();
 
         // Phase 3: US1 - ViewModels
         services.AddTransient<ViewModels.Groups.GroupListViewModel>();

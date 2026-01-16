@@ -181,22 +181,37 @@ public class DriveAuthService : IDriveAuthService
 
             if (!string.IsNullOrEmpty(accessToken))
             {
-                // Revoke token with Google
-                var content = new StringContent(
-                    $"token={accessToken}",
-                    Encoding.UTF8,
-                    "application/x-www-form-urlencoded");
+                // Try to revoke token with Google (but don't fail if it doesn't work)
+                try
+                {
+                    var content = new StringContent(
+                        $"token={accessToken}",
+                        Encoding.UTF8,
+                        "application/x-www-form-urlencoded");
 
-                var response = await this.httpClient.PostAsync(RevokeEndpoint, content, cancellationToken);
-                response.EnsureSuccessStatusCode();
+                    var response = await this.httpClient.PostAsync(RevokeEndpoint, content, cancellationToken);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        this.loggingService.LogInfo($"Token revoked with Google for user {userId}");
+                    }
+                    else
+                    {
+                        this.loggingService.LogWarning($"Google revoke returned {response.StatusCode} - token may already be invalid");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Don't fail - just log and continue to clear local tokens
+                    this.loggingService.LogWarning($"Could not revoke token with Google: {ex.Message}");
+                }
             }
 
-            // Clear stored tokens
+            // Always clear stored tokens locally
             SecureStorage.Default.Remove($"drive_access_token_{userId}");
             SecureStorage.Default.Remove($"drive_refresh_token_{userId}");
             SecureStorage.Default.Remove($"drive_token_expiry_{userId}");
 
-            this.loggingService.LogInfo($"Successfully revoked Drive authorization for user {userId}");
+            this.loggingService.LogInfo($"Successfully cleared authorization for user {userId}");
         }
         catch (Exception ex)
         {

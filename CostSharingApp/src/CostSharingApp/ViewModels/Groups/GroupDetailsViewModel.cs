@@ -117,6 +117,7 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
                 ((Command)this.DeleteGroupCommand).ChangeCanExecute();
                 ((Command)this.EditGroupCommand).ChangeCanExecute();
                 ((Command)this.InviteMemberCommand).ChangeCanExecute();
+                ((Command<MemberViewModel>)this.RemoveMemberCommand).ChangeCanExecute();
             }
         }
     }
@@ -523,7 +524,8 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
             return;
         }
 
-        await Shell.Current.GoToAsync($"invitemember?groupId={this.group.Id}");
+        var encodedGroupName = Uri.EscapeDataString(this.group.Name);
+        await Shell.Current.GoToAsync($"invitemember?groupId={this.group.Id}&groupName={encodedGroupName}");
     }
 
     /// <summary>

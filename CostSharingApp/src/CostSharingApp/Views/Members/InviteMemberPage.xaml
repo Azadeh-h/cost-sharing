@@ -39,6 +39,26 @@
                        ReturnType="Done" />
             </StackLayout>
 
+            <!-- Send Email Invitation Option -->
+            <Frame BorderColor="{StaticResource Primary}" 
+                   BackgroundColor="#F0F4FF" 
+                   Padding="12" 
+                   CornerRadius="8" 
+                   Margin="0,8,0,0">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                    <CheckBox Grid.Column="0" 
+                              IsChecked="{Binding SendEmailInvite}" 
+                              Color="{StaticResource Primary}"
+                              VerticalOptions="Center" />
+                    <VerticalStackLayout Grid.Column="1" Spacing="4" VerticalOptions="Center">
+                        <Label Text="📧 Send Email Invitation" FontAttributes="Bold" />
+                        <Label Text="Send an invitation email via your Gmail account with instructions to join."
+                               TextColor="{StaticResource Gray600}"
+                               FontSize="12" />
+                    </VerticalStackLayout>
+                </Grid>
+            </Frame>
+
             <!-- Info box -->
             <Frame BorderColor="{StaticResource Gray300}" Padding="12" CornerRadius="8" Margin="0,8,0,0">
                 <HorizontalStackLayout Spacing="8">
