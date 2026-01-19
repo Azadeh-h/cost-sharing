@@ -39,6 +39,55 @@ public partial class DashboardViewModel : ObservableObject
     private ObservableCollection<GroupBalanceViewModel> groupBalances = new();
 
     /// <summary>
+    /// Gets the display total balance (always positive).
+    /// </summary>
+    public decimal DisplayTotalBalance => Math.Abs(TotalBalance);
+
+    /// <summary>
+    /// Gets the total balance color based on owed/owing status.
+    /// </summary>
+    public Color TotalBalanceColor
+    {
+        get
+        {
+            if (TotalBalance > 0)
+            {
+                return Colors.Green;
+            }
+            else if (TotalBalance < 0)
+            {
+                return Colors.Red;
+            }
+            else
+            {
+                return Colors.White;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets the total balance description.
+    /// </summary>
+    public string TotalBalanceDescription
+    {
+        get
+        {
+            if (TotalBalance > 0)
+            {
+                return "You're owed overall";
+            }
+            else if (TotalBalance < 0)
+            {
+                return "You owe overall";
+            }
+            else
+            {
+                return "All settled up";
+            }
+        }
+    }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="DashboardViewModel"/> class.
     /// </summary>
     public DashboardViewModel(
@@ -128,6 +177,11 @@ public partial class DashboardViewModel : ObservableObject
             this.TotalOwed = totalOwed;
             this.TotalOwing = totalOwing;
             this.TotalBalance = totalOwed - totalOwing;
+            
+            // Notify computed properties
+            this.OnPropertyChanged(nameof(DisplayTotalBalance));
+            this.OnPropertyChanged(nameof(TotalBalanceColor));
+            this.OnPropertyChanged(nameof(TotalBalanceDescription));
             
             System.Diagnostics.Debug.WriteLine($"[Dashboard] Final totals - Owed: {totalOwed}, Owing: {totalOwing}, Balance: {this.TotalBalance}");
             System.Diagnostics.Debug.WriteLine($"[Dashboard] GroupBalances count: {this.GroupBalances.Count}");
@@ -268,6 +322,33 @@ public class GroupBalanceViewModel
     /// Gets or sets the balance. Positive = owed, Negative = owing.
     /// </summary>
     public decimal Balance { get; set; }
+
+    /// <summary>
+    /// Gets the display balance (always positive).
+    /// </summary>
+    public decimal DisplayBalance => Math.Abs(Balance);
+
+    /// <summary>
+    /// Gets the balance color based on owed/owing status.
+    /// </summary>
+    public Color BalanceColor
+    {
+        get
+        {
+            if (Balance > 0)
+            {
+                return Colors.Green;
+            }
+            else if (Balance < 0)
+            {
+                return Colors.Red;
+            }
+            else
+            {
+                return Colors.Gray;
+            }
+        }
+    }
 
     /// <summary>
     /// Gets the balance status text.

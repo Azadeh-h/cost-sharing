@@ -101,14 +101,6 @@ public partial class AddExpenseViewModel : BaseViewModel, IQueryAttributable
             _ = this.LoadMembersAsync();
         }
 
-        // Check if editing existing expense
-        if (query.TryGetValue("expenseId", out var expenseIdObj) && expenseIdObj is string expenseIdStr)
-        {
-            this.ExpenseId = Guid.Parse(expenseIdStr);
-            this.IsEditMode = true;
-            _ = this.LoadExpenseAsync();
-        }
-
         // Receive custom percentages from CustomSplitPage
         if (query.TryGetValue("customPercentages", out var percentagesObj) && percentagesObj is Dictionary<Guid, decimal> percentages)
         {

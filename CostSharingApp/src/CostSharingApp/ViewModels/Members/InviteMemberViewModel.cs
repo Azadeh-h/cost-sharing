@@ -1,9 +1,12 @@
+// <copyright file="InviteMemberViewModel.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
+namespace CostSharingApp.ViewModels.Members;
+
 using System.Windows.Input;
 using CostSharing.Core.Interfaces;
 using CostSharingApp.Services;
-
-
-namespace CostSharingApp.ViewModels.Members;
 
 /// <summary>
 /// ViewModel for adding members to a group.
@@ -120,6 +123,7 @@ public class InviteMemberViewModel : BaseViewModel, IQueryAttributable
     /// <summary>
     /// Applies query attributes from navigation.
     /// </summary>
+    /// <param name="query">The query attributes dictionary.</param>
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
         if (query.TryGetValue("groupId", out var groupIdObj) && groupIdObj is string groupIdString)
@@ -170,7 +174,7 @@ public class InviteMemberViewModel : BaseViewModel, IQueryAttributable
             if (!success)
             {
                 this.ErrorMessage = errorMessage ?? "Failed to add member";
-                await Application.Current!.MainPage!.DisplayAlert("Error", this.ErrorMessage, "OK");
+                await Shell.Current.DisplayAlert("Error", this.ErrorMessage, "OK");
                 return;
             }
 
@@ -179,7 +183,7 @@ public class InviteMemberViewModel : BaseViewModel, IQueryAttributable
             {
                 if (this.gmailService == null)
                 {
-                    await Application.Current!.MainPage!.DisplayAlert(
+                    await Shell.Current.DisplayAlert(
                         "Member Added",
                         $"{this.memberName} has been added to the group.\n\nNote: Gmail service is not available.",
                         "OK");
@@ -189,7 +193,7 @@ public class InviteMemberViewModel : BaseViewModel, IQueryAttributable
                     var currentUser = this.authService.GetCurrentUser();
                     if (currentUser == null || currentUser.Id == Guid.Empty)
                     {
-                        await Application.Current!.MainPage!.DisplayAlert(
+                        await Shell.Current.DisplayAlert(
                             "Member Added",
                             $"{this.memberName} has been added to the group.\n\nNote: Could not send email - user not logged in.",
                             "OK");
@@ -207,14 +211,14 @@ public class InviteMemberViewModel : BaseViewModel, IQueryAttributable
 
                         if (emailSuccess)
                         {
-                            await Application.Current!.MainPage!.DisplayAlert(
+                            await Shell.Current.DisplayAlert(
                                 "Member Added",
                                 $"{this.memberName} has been added to the group and an invitation email has been sent!",
                                 "OK");
                         }
                         else
                         {
-                            await Application.Current!.MainPage!.DisplayAlert(
+                            await Shell.Current.DisplayAlert(
                                 "Member Added",
                                 $"{this.memberName} has been added to the group.\n\nNote: Email could not be sent: {emailError}\n\nYou can share the app manually.",
                                 "OK");
@@ -224,7 +228,7 @@ public class InviteMemberViewModel : BaseViewModel, IQueryAttributable
             }
             else
             {
-                await Application.Current!.MainPage!.DisplayAlert(
+                await Shell.Current.DisplayAlert(
                     "Member Added",
                     $"{this.memberName} has been added to the group!",
                     "OK");

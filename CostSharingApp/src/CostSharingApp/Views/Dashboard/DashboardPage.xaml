@@ -14,12 +14,12 @@
             <!-- Total Balance Card -->
             <Frame Padding="20" CornerRadius="12" BackgroundColor="{StaticResource Primary}" HasShadow="True">
                 <VerticalStackLayout Spacing="8">
-                    <Label Text="Total Balance"
+                    <Label Text="{Binding TotalBalanceDescription}"
                            TextColor="White"
                            FontSize="16"
                            HorizontalOptions="Center" />
-                    <Label Text="{Binding TotalBalance, StringFormat='${0:F2}'}"
-                           TextColor="{Binding TotalBalance, Converter={StaticResource BalanceColorConverter}}"
+                    <Label Text="{Binding DisplayTotalBalance, StringFormat='${0:F2}'}"
+                           TextColor="{Binding TotalBalanceColor}"
                            FontSize="32"
                            FontAttributes="Bold"
                            HorizontalOptions="Center" />
@@ -128,10 +128,10 @@
                                 <VerticalStackLayout Grid.Column="2" 
                                                      VerticalOptions="Center"
                                                      HorizontalOptions="End">
-                                    <Label Text="{Binding Balance, StringFormat='${0:F2}'}"
+                                    <Label Text="{Binding DisplayBalance, StringFormat='${0:F2}'}"
                                            FontSize="18"
                                            FontAttributes="Bold"
-                                           TextColor="{Binding Balance, Converter={StaticResource BalanceColorConverter}}"
+                                           TextColor="{Binding BalanceColor}"
                                            HorizontalTextAlignment="End" />
                                     <Label Text="{Binding BalanceStatus}"
                                            FontSize="11"

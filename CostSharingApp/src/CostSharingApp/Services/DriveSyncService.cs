@@ -62,7 +62,7 @@ public class DriveSyncService : IDriveSyncService
     /// <summary>
     /// The name of the parent folder that contains all CostSharing group folders.
     /// </summary>
-    private const string ParentFolderName = "Costsharing-groups";
+    private const string ParentFolderName = "Costsharing-Groups";
 
     private readonly IAuthService authService;
     private readonly IGroupService groupService;
@@ -93,6 +93,7 @@ public class DriveSyncService : IDriveSyncService
         ISettlementService settlementService,
         ICacheService cacheService,
         ILoggingService loggingService,
+        IDriveAuthService driveAuthService,
         DriveErrorHandler errorHandler)
     {
         this.authService = authService;
@@ -101,6 +102,7 @@ public class DriveSyncService : IDriveSyncService
         this.settlementService = settlementService;
         this.cacheService = cacheService;
         this.loggingService = loggingService;
+        this.driveAuthService = driveAuthService;
         this.errorHandler = errorHandler;
     }
 

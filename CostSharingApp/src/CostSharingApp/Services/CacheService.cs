@@ -1,3 +1,5 @@
+using SQLite;
+
 namespace CostSharingApp.Services;
 /// <summary>
 /// Provides local SQLite caching for offline support and sync queue.
