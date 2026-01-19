@@ -68,4 +68,40 @@ public class Expense
     /// Gets or sets who recorded the expense.
     /// </summary>
     public Guid CreatedBy { get; set; }
+
+    /// <summary>
+    /// Gets or sets when the expense was last modified.
+    /// </summary>
+    public DateTime ModifiedTimestamp { get; set; }
+
+    /// <summary>
+    /// Gets or sets the sync status for this expense.
+    /// </summary>
+    public SyncStatus SyncStatus { get; set; } = SyncStatus.Synced;
+}
+
+/// <summary>
+/// Represents the synchronization status of an entity.
+/// </summary>
+ public enum SyncStatus
+{
+    /// <summary>
+    /// Entity is synced with remote.
+    /// </summary>
+    Synced,
+
+    /// <summary>
+    /// Entity has pending local changes.
+    /// </summary>
+    PendingUpload,
+
+    /// <summary>
+    /// Entity has a conflict that needs resolution.
+    /// </summary>
+    Conflict,
+
+    /// <summary>
+    /// Entity is being synced.
+    /// </summary>
+    Syncing,
 }

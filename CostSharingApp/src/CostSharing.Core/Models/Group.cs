@@ -37,4 +37,14 @@ public class Group
     /// Gets or sets the currency code (fixed to AUD).
     /// </summary>
     public string Currency { get; set; } = "AUD";
+
+    /// <summary>
+    /// Gets or sets the Google Drive folder ID for this group's sync data.
+    /// </summary>
+    public string? DriveFolderId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the timestamp of the last successful sync.
+    /// </summary>
+    public DateTime? LastSyncTimestamp { get; set; }
 }
