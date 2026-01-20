@@ -18,7 +18,7 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     private readonly IExpenseService expenseService;
     private readonly IDebtCalculationService debtCalculationService;
     private readonly ISettlementService settlementService;
-    private readonly IDriveSyncService? driveSyncService;
+    private readonly IDriveSyncService driveSyncService;
     private readonly ILoggingService loggingService;
     private Group? group;
     private ObservableCollection<MemberViewModel> members = new();
@@ -47,7 +47,8 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
         IExpenseService expenseService,
         IDebtCalculationService debtCalculationService,
         ISettlementService settlementService,
-        ILoggingService loggingService)
+        ILoggingService loggingService,
+        IDriveSyncService driveSyncService)
     {
         this.groupService = groupService;
         this.authService = authService;
@@ -56,6 +57,7 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
         this.debtCalculationService = debtCalculationService;
         this.settlementService = settlementService;
         this.loggingService = loggingService;
+        this.driveSyncService = driveSyncService;
 
         this.DeleteGroupCommand = new Command(async () => await this.DeleteGroupAsync(), () => this.isAdmin);
         this.EditGroupCommand = new Command(async () => await this.EditGroupAsync(), () => this.isAdmin);
@@ -702,7 +704,7 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     /// <returns>Task for async operation.</returns>
     private async Task OnSyncEnabledChangedAsync(bool enabled)
     {
-        if (this.group == null || this.driveSyncService == null)
+        if (this.group == null)
         {
             return;
         }
@@ -799,8 +801,11 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     /// <returns>Task for async operation.</returns>
     private async Task SyncNowAsync()
     {
-        if (this.group == null || this.driveSyncService == null || !this.IsSyncEnabled)
+        this.loggingService.LogInfo($"SyncNowAsync called. Group: {this.group?.Id}, IsSyncEnabled: {this.IsSyncEnabled}");
+        
+        if (this.group == null || !this.IsSyncEnabled)
         {
+            this.loggingService.LogWarning($"SyncNowAsync early return: group={this.group == null}, syncEnabled={this.IsSyncEnabled}");
             return;
         }
 
@@ -808,11 +813,21 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
         {
             this.SyncStatusText = "Syncing...";
             this.SyncStatusColor = Colors.Orange;
+            this.loggingService.LogInfo("Starting sync process...");
 
             var currentUser = this.authService.GetCurrentUser();
             if (currentUser == null)
             {
                 throw new InvalidOperationException("User not authenticated");
+            }
+
+            // Create folder if it doesn't exist yet
+            if (string.IsNullOrEmpty(this.group.DriveFolderId))
+            {
+                this.SyncStatusText = "Creating Drive folder...";
+                var folderId = await this.driveSyncService.CreateGroupFolderAsync(this.group.Id, currentUser.Id);
+                this.group.DriveFolderId = folderId;
+                this.loggingService.LogInfo($"Created Drive folder {folderId} for group {this.group.Id}");
             }
 
             // Upload local changes

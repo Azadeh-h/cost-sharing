@@ -151,6 +151,9 @@ public class DriveSyncService : IDriveSyncService
             group.DriveFolderId = folder.Id;
             await this.groupService.UpdateGroupAsync(group);
 
+            // Share folder with all group members
+            await this.ShareFolderWithMembersAsync(folder.Id, groupId, userId, cancellationToken);
+
             return folder.Id;
         }
         catch (Exception ex)
@@ -213,6 +216,38 @@ public class DriveSyncService : IDriveSyncService
         return this.parentFolderId;
     }
 
+    /// <summary>
+    /// Verifies that a folder still exists in Google Drive.
+    /// </summary>
+    /// <param name="folderId">The folder ID to check.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if the folder exists and is not trashed, false otherwise.</returns>
+    private async Task<bool> VerifyFolderExistsAsync(string folderId, CancellationToken cancellationToken = default)
+    {
+        if (this.driveService == null)
+        {
+            return false;
+        }
+
+        try
+        {
+            var request = this.driveService.Files.Get(folderId);
+            request.Fields = "id, trashed";
+            var file = await request.ExecuteAsync(cancellationToken);
+            return file != null && file.Trashed != true;
+        }
+        catch (Google.GoogleApiException ex) when (ex.HttpStatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            this.loggingService.LogInfo($"Folder {folderId} not found in Drive");
+            return false;
+        }
+        catch (Exception ex)
+        {
+            this.loggingService.LogWarning($"Error checking folder existence: {ex.Message}");
+            return false;
+        }
+    }
+
     /// <inheritdoc/>
     public async Task SetFolderPermissionsAsync(
         string folderId,
@@ -258,6 +293,57 @@ public class DriveSyncService : IDriveSyncService
         }
     }
 
+    /// <summary>
+    /// Shares a folder with all members of a group.
+    /// </summary>
+    /// <param name="folderId">The folder ID to share.</param>
+    /// <param name="groupId">The group ID.</param>
+    /// <param name="currentUserId">The current user ID (owner, won't be shared with).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Task for async operation.</returns>
+    private async Task ShareFolderWithMembersAsync(string folderId, Guid groupId, Guid currentUserId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var members = await this.groupService.GetGroupMembersAsync(groupId);
+            var memberEmails = new List<string>();
+
+            foreach (var member in members)
+            {
+                // Don't share with the current user (they already own it)
+                if (member.UserId == currentUserId)
+                {
+                    continue;
+                }
+
+                var user = await this.authService.GetUserByIdAsync(member.UserId);
+                if (user != null && !string.IsNullOrEmpty(user.Email) && user.Email.Contains("@"))
+                {
+                    // Only add real email addresses (not device-generated ones)
+                    if (!user.Email.EndsWith("@device.local"))
+                    {
+                        memberEmails.Add(user.Email);
+                    }
+                }
+            }
+
+            if (memberEmails.Any())
+            {
+                this.loggingService.LogInfo($"Sharing folder {folderId} with {memberEmails.Count} members: {string.Join(", ", memberEmails)}");
+                await this.SetFolderPermissionsAsync(folderId, memberEmails, currentUserId, cancellationToken);
+            }
+            else
+            {
+                this.loggingService.LogInfo($"No members with valid emails to share folder {folderId} with");
+            }
+        }
+        catch (Exception ex)
+        {
+            // Don't fail the whole sync if sharing fails - just log the error
+            this.loggingService.LogError($"Failed to share folder {folderId} with members", ex);
+        }
+    }
+
     /// <inheritdoc/>
     public async Task UploadGroupDataAsync(Guid groupId, Guid userId, CancellationToken cancellationToken = default)
     {
@@ -273,9 +359,27 @@ public class DriveSyncService : IDriveSyncService
             }
 
             var group = await this.groupService.GetGroupAsync(groupId);
-            if (group == null || string.IsNullOrEmpty(group.DriveFolderId))
+            if (group == null)
             {
-                throw new ArgumentException($"Group {groupId} not found or sync not enabled");
+                throw new ArgumentException($"Group {groupId} not found");
+            }
+
+            // Verify the folder still exists in Drive, recreate if deleted
+            if (!string.IsNullOrEmpty(group.DriveFolderId))
+            {
+                var folderExists = await this.VerifyFolderExistsAsync(group.DriveFolderId, cancellationToken);
+                if (!folderExists)
+                {
+                    this.loggingService.LogWarning($"Drive folder {group.DriveFolderId} no longer exists, recreating...");
+                    group.DriveFolderId = null;
+                }
+            }
+
+            // Create folder if it doesn't exist
+            if (string.IsNullOrEmpty(group.DriveFolderId))
+            {
+                var folderId = await this.CreateGroupFolderAsync(groupId, userId, cancellationToken);
+                group = await this.groupService.GetGroupAsync(groupId); // Refresh group after folder creation
             }
 
             // Get all data for the group
