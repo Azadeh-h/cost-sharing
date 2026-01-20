@@ -129,69 +129,20 @@
                     Margin="0,8,0,0" />
 
             <!-- Google Integration Section -->
-            <StackLayout Spacing="8" Margin="0,8,0,0">
+            <StackLayout Spacing="8" Margin="0,8,0,0" IsVisible="{Binding IsAdmin}">
                 <Label Text="Google Integration" FontSize="18" FontAttributes="Bold" />
                 
-                <!-- Drive Sync Toggle -->
-                <Border StrokeShape="RoundRectangle 8"
-                        Stroke="{StaticResource Gray300}"
-                        StrokeThickness="1"
-                        Padding="12"
-                        IsVisible="{Binding IsAdmin}">
-                    <Grid ColumnDefinitions="*,Auto,Auto" RowDefinitions="Auto,Auto" RowSpacing="4">
-                        <Label Grid.Row="0" Grid.Column="0"
-                               Text="Drive Sync"
-                               FontSize="16"
-                               FontAttributes="Bold"
-                               VerticalOptions="Center" />
-                        <Switch Grid.Row="0" Grid.Column="1"
-                                IsToggled="{Binding IsSyncEnabled}"
-                                OnColor="{StaticResource Primary}"
-                                ThumbColor="White"
-                                VerticalOptions="Center"
-                                Margin="0,0,8,0" />
-                        <Button Grid.Row="0" Grid.Column="2"
-                                Text="⚙️"
-                                FontSize="16"
-                                Padding="8,4"
-                                Command="{Binding OpenSyncSettingsCommand}"
-                                BackgroundColor="Transparent"
-                                TextColor="{StaticResource Primary}" />
-                        
-                        <!-- Sync Status Indicator -->
-                        <HorizontalStackLayout Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Spacing="8"
-                                             IsVisible="{Binding IsSyncEnabled}">
-                            <Label Text="●"
-                                   FontSize="12"
-                                   TextColor="{Binding SyncStatusColor}"
-                                   VerticalOptions="Center" />
-                            <Label Text="{Binding SyncStatusText}"
-                                   FontSize="12"
-                                   TextColor="{StaticResource Gray600}"
-                                   VerticalOptions="Center" />
-                            <Label Text="{Binding LastSyncTime, StringFormat='Last synced: {0}'}"
-                                   FontSize="12"
-                                   TextColor="{StaticResource Gray500}"
-                                   VerticalOptions="Center"
-                                   IsVisible="{Binding LastSyncTime, Converter={StaticResource StringIsNotNullOrEmptyConverter}}" />
-                        </HorizontalStackLayout>
-                    </Grid>
-                </Border>
-                
-                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-                    <Button Grid.Column="0"
-                            Text="🔄 Sync Now"
+                <VerticalStackLayout Spacing="4">
+                    <Button Text="{Binding SyncButtonText}"
                             Command="{Binding SyncGroupCommand}"
-                            BackgroundColor="{StaticResource Primary}"
-                            TextColor="White"
-                            IsVisible="{Binding IsSyncEnabled}" />
-                    <Button Grid.Column="1"
-                            Text="📧 Send Gmail Invite"
-                            Command="{Binding SendGmailInvitationCommand}"
-                            BackgroundColor="{StaticResource Secondary}"
-                            TextColor="{StaticResource SecondaryDarkText}"
-                            IsVisible="{Binding IsAdmin}" />
-                </Grid>
+                            BackgroundColor="{Binding SyncButtonColor}"
+                            TextColor="White" />
+                    <Label Text="{Binding LastSyncDisplayText}"
+                           FontSize="11"
+                           TextColor="{StaticResource Gray500}"
+                           HorizontalTextAlignment="Center"
+                           IsVisible="{Binding HasSyncedBefore}" />
+                </VerticalStackLayout>
             </StackLayout>
 
             <!-- Expenses section -->

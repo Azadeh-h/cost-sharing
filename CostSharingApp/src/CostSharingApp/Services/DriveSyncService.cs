@@ -834,6 +834,30 @@ public class DriveSyncService : IDriveSyncService
                 return false;
             }
 
+            // Get the current user's email to verify membership
+            var currentUser = await this.authService.GetUserByIdAsync(userId);
+            if (currentUser == null || string.IsNullOrEmpty(currentUser.Email))
+            {
+                this.loggingService.LogWarning("Cannot verify membership: current user not found or has no email");
+                return false;
+            }
+
+            // Check if current user's email is in the group's member list
+            var memberEmails = syncData.Users?
+                .Select(u => u.Email?.ToLowerInvariant())
+                .Where(e => !string.IsNullOrEmpty(e))
+                .ToHashSet() ?? new HashSet<string?>();
+
+            var currentUserEmail = currentUser.Email.ToLowerInvariant();
+
+            if (!memberEmails.Contains(currentUserEmail))
+            {
+                this.loggingService.LogInfo($"Skipping group {syncData.Group.Name}: current user {currentUserEmail} is not a member");
+                return false;
+            }
+
+            this.loggingService.LogInfo($"User {currentUserEmail} verified as member of group {syncData.Group.Name}");
+
             // Check if this group already exists locally
             var existingGroup = await this.groupService.GetGroupAsync(syncData.Group.Id);
             if (existingGroup != null)
