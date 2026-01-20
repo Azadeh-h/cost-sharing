@@ -59,4 +59,12 @@ public interface IDriveSyncService
     /// <param name="userId">The user ID.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     Task StartPeriodicSyncAsync(Guid groupId, Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Discovers and imports shared groups from Google Drive that the user has access to.
+    /// </summary>
+    /// <param name="userId">The user ID.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The number of groups imported.</returns>
+    Task<int> DiscoverSharedGroupsAsync(Guid userId, CancellationToken cancellationToken = default);
 }

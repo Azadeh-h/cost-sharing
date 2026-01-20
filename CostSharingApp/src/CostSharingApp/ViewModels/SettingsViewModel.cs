@@ -12,6 +12,7 @@ public partial class SettingsViewModel : BaseViewModel
 {
     private readonly IAuthService authService;
     private readonly IDriveAuthService? driveAuthService;
+    private readonly IDriveSyncService? driveSyncService;
 
     [ObservableProperty]
     private string appVersion = AppInfo.VersionString;
@@ -52,15 +53,20 @@ public partial class SettingsViewModel : BaseViewModel
     [ObservableProperty]
     private string deviceInfo = string.Empty;
 
+    [ObservableProperty]
+    private string discoverStatus = string.Empty;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="SettingsViewModel"/> class.
     /// </summary>
     public SettingsViewModel(
         IAuthService authService,
-        IDriveAuthService? driveAuthService = null)
+        IDriveAuthService? driveAuthService = null,
+        IDriveSyncService? driveSyncService = null)
     {
         this.authService = authService;
         this.driveAuthService = driveAuthService;
+        this.driveSyncService = driveSyncService;
 
         this.Title = "Settings";
         this.Platform = Microsoft.Maui.Devices.DeviceInfo.Current.Platform.ToString();
@@ -277,6 +283,66 @@ public partial class SettingsViewModel : BaseViewModel
     private async Task ViewPrivacyPolicyAsync()
     {
         await Launcher.OpenAsync("https://github.com/your-repo/cost-sharing/blob/main/PRIVACY.md");
+    }
+
+    [RelayCommand]
+    private async Task DiscoverSharedGroupsAsync()
+    {
+        if (this.driveSyncService == null)
+        {
+            await Application.Current!.MainPage!.DisplayAlert(
+                "Not Available",
+                "Drive sync service is not available.",
+                "OK");
+            return;
+        }
+
+        try
+        {
+            var currentUser = this.authService.GetCurrentUser();
+            if (currentUser == null)
+            {
+                await Application.Current!.MainPage!.DisplayAlert(
+                    "Error",
+                    "You must be logged in to discover shared groups.",
+                    "OK");
+                return;
+            }
+
+            this.DiscoverStatus = "Searching for shared groups...";
+            this.IsBusy = true;
+
+            var count = await this.driveSyncService.DiscoverSharedGroupsAsync(currentUser.Id);
+
+            if (count > 0)
+            {
+                this.DiscoverStatus = $"Found and imported {count} group(s)!";
+                await Application.Current!.MainPage!.DisplayAlert(
+                    "Groups Found!",
+                    $"Discovered and imported {count} shared group(s). Go to Dashboard to see them.",
+                    "OK");
+            }
+            else
+            {
+                this.DiscoverStatus = "No new shared groups found.";
+                await Application.Current!.MainPage!.DisplayAlert(
+                    "No Groups Found",
+                    "No shared groups were found in your Google Drive. Make sure someone has shared a Cost Sharing group with your email address.",
+                    "OK");
+            }
+        }
+        catch (Exception ex)
+        {
+            this.DiscoverStatus = $"Error: {ex.Message}";
+            await Application.Current!.MainPage!.DisplayAlert(
+                "Error",
+                $"Failed to discover groups: {ex.Message}",
+                "OK");
+        }
+        finally
+        {
+            this.IsBusy = false;
+        }
     }
 
     [RelayCommand]

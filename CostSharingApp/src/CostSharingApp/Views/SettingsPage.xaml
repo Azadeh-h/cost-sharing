@@ -114,6 +114,18 @@
                             BackgroundColor="{StaticResource Danger}"
                             TextColor="White"
                             CornerRadius="8" />
+                    
+                    <Button Text="🔍 Discover Shared Groups"
+                            Command="{Binding DiscoverSharedGroupsCommand}"
+                            IsVisible="{Binding ShowRevokeButton}"
+                            BackgroundColor="{StaticResource Secondary}"
+                            TextColor="{StaticResource SecondaryDarkText}"
+                            CornerRadius="8" />
+                    
+                    <Label Text="{Binding DiscoverStatus}"
+                           FontSize="12"
+                           TextColor="{StaticResource Gray600}"
+                           IsVisible="{Binding DiscoverStatus, Converter={StaticResource StringIsNotNullOrEmptyConverter}}" />
                 </VerticalStackLayout>
             </Border>
             
