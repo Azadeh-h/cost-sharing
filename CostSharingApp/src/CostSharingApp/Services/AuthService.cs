@@ -324,6 +324,35 @@ public class AuthService : IAuthService
         var computedHash = this.HashPassword(password);
         return computedHash == hash;
     }
+
+    /// <summary>
+    /// Restores authentication from a saved session.
+    /// </summary>
+    /// <param name="userId">User ID from session.</param>
+    /// <returns>True if user was restored successfully.</returns>
+    public async Task<bool> RestoreSessionAsync(Guid userId)
+    {
+        try
+        {
+            var user = await this.GetUserByIdAsync(userId);
+            if (user != null)
+            {
+                this.currentUser = user;
+                user.LastLoginAt = DateTime.UtcNow;
+                await this.cacheService.SaveAsync(user);
+                this.loggingService.LogInfo($"Session restored for user: {user.Email}");
+                return true;
+            }
+
+            this.loggingService.LogWarning($"Session restore failed: User {userId} not found");
+            return false;
+        }
+        catch (Exception ex)
+        {
+            this.loggingService.LogError($"Session restore failed for user {userId}", ex);
+            return false;
+        }
+    }
 }
 
 /// <summary>
@@ -401,4 +430,11 @@ public interface IAuthService
     /// <param name="phone">New phone.</param>
     /// <returns>True if successful.</returns>
     Task<bool> UpdateUserAsync(Guid userId, string name, string email, string? phone = null);
+
+    /// <summary>
+    /// Restores authentication from a saved session.
+    /// </summary>
+    /// <param name="userId">User ID from session.</param>
+    /// <returns>True if user was restored successfully.</returns>
+    Task<bool> RestoreSessionAsync(Guid userId);
 }

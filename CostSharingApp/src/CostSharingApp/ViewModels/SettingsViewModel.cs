@@ -14,6 +14,7 @@ public partial class SettingsViewModel : BaseViewModel
     private readonly IDriveAuthService? driveAuthService;
     private readonly IDriveSyncService? driveSyncService;
     private readonly ICacheService? cacheService;
+    private readonly ISessionService? sessionService;
 
     [ObservableProperty]
     private string appVersion = AppInfo.VersionString;
@@ -64,12 +65,14 @@ public partial class SettingsViewModel : BaseViewModel
         IAuthService authService,
         IDriveAuthService? driveAuthService = null,
         IDriveSyncService? driveSyncService = null,
-        ICacheService? cacheService = null)
+        ICacheService? cacheService = null,
+        ISessionService? sessionService = null)
     {
         this.authService = authService;
         this.driveAuthService = driveAuthService;
         this.driveSyncService = driveSyncService;
         this.cacheService = cacheService;
+        this.sessionService = sessionService;
 
         this.Title = "Settings";
         this.Platform = Microsoft.Maui.Devices.DeviceInfo.Current.Platform.ToString();
@@ -133,20 +136,24 @@ public partial class SettingsViewModel : BaseViewModel
     private async Task LogOutAsync()
     {
         var confirm = await Application.Current!.MainPage!.DisplayAlert(
-            "Log Out",
-            "This will clear your stored credentials. You will remain logged in with your device identity.",
-            "Clear Credentials",
+            "Sign Out",
+            "Are you sure you want to sign out?",
+            "Sign Out",
             "Cancel");
 
         if (confirm)
         {
-            // Clear any stored credentials
-            SecureStorage.Default.RemoveAll();
-            
-            await Application.Current!.MainPage!.DisplayAlert(
-                "Credentials Cleared",
-                "Stored credentials have been cleared.",
-                "OK");
+            // Clear session
+            if (this.sessionService != null)
+            {
+                await this.sessionService.ClearSessionAsync();
+            }
+
+            // Sign out from auth service
+            this.authService.SignOut();
+
+            // Navigate to auth page
+            await Shell.Current.GoToAsync("//auth");
         }
     }
 

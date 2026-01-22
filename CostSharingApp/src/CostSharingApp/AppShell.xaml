@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:CostSharingApp"
     xmlns:views="clr-namespace:CostSharingApp.Views"
+    xmlns:auth="clr-namespace:CostSharingApp.Views.Auth"
     xmlns:dashboard="clr-namespace:CostSharingApp.Views.Dashboard"
     xmlns:groups="clr-namespace:CostSharingApp.Views.Groups"
     Shell.FlyoutBehavior="Flyout">
@@ -17,6 +18,9 @@
             </VerticalStackLayout>
         </Grid>
     </Shell.FlyoutHeader>
+
+    <!-- Authentication Page (hidden from flyout) -->
+    <ShellContent ContentTemplate="{DataTemplate auth:AuthPage}" Route="auth" FlyoutItemIsVisible="False" />
 
     <FlyoutItem Title="Dashboard" Icon="home.png">
         <ShellContent ContentTemplate="{DataTemplate dashboard:DashboardPage}" Route="dashboard" />

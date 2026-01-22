@@ -3,6 +3,22 @@ using SQLite;
 namespace CostSharing.Core.Models;
 
 /// <summary>
+/// Represents the type of user account.
+/// </summary>
+public enum AccountType
+{
+    /// <summary>
+    /// Device-based account with auto-generated email (@device.local).
+    /// </summary>
+    Device = 0,
+
+    /// <summary>
+    /// Email-based account with user-provided email and password.
+    /// </summary>
+    Email = 1,
+}
+
+/// <summary>
 /// Represents an application user with authentication credentials and profile information.
 /// </summary>
 public class User
@@ -47,4 +63,15 @@ public class User
     /// Gets or sets a value indicating whether email is verified.
     /// </summary>
     public bool IsEmailVerified { get; set; }
+
+    /// <summary>
+    /// Gets or sets the account type (Device or Email).
+    /// </summary>
+    public AccountType AccountType { get; set; } = AccountType.Device;
+
+    /// <summary>
+    /// Gets a value indicating whether this is a device-based account.
+    /// </summary>
+    [Ignore]
+    public bool IsDeviceAccount => this.Email.EndsWith("@device.local", StringComparison.OrdinalIgnoreCase);
 }

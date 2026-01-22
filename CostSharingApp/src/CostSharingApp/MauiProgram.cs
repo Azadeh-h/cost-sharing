@@ -55,6 +55,7 @@ public static class MauiProgram
         services.AddSingleton<ICacheService, CacheService>();
         services.AddSingleton<IErrorService, ErrorService>();
         services.AddSingleton<IAuthService, AuthService>();
+        services.AddSingleton<ISessionService, SessionService>();
         services.AddSingleton<ConfigurationService>();
         services.AddSingleton<IDriveAuthService, DriveAuthService>();
 
@@ -109,6 +110,7 @@ public static class MauiProgram
         // General ViewModels
         services.AddTransient<ViewModels.SettingsViewModel>();
         services.AddTransient<ViewModels.EditProfileViewModel>();
+        services.AddTransient<ViewModels.Auth.AuthViewModel>();
 
         // Phase 4: US2 - Pages
         services.AddTransient<Views.Members.InviteMemberPage>();
@@ -138,6 +140,7 @@ public static class MauiProgram
         // General Pages
         services.AddTransient<Views.SettingsPage>();
         services.AddTransient<Views.EditProfilePage>();
+        services.AddTransient<Views.Auth.AuthPage>();
 
         // Note: Cache initialization moved to App.xaml.cs OnStart() to avoid blocking startup
     }

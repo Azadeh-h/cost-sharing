@@ -13,7 +13,7 @@ public partial class AppShell : Shell
         this.InitializeComponent();
 
         // Register routes for pages NOT in AppShell.xaml (to avoid duplicate registration)
-        // Note: "dashboard" and "groups" are already defined in AppShell.xaml
+        // Note: "dashboard", "groups", "settings", and "auth" are already defined in AppShell.xaml
         Routing.RegisterRoute("transactionhistory", typeof(Views.Dashboard.TransactionHistoryPage));
         Routing.RegisterRoute("creategroup", typeof(Views.Groups.CreateGroupPage));
         Routing.RegisterRoute("groupdetails", typeof(Views.Groups.GroupDetailsPage));
