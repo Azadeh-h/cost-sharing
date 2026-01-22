@@ -13,6 +13,7 @@ public partial class SettingsViewModel : BaseViewModel
     private readonly IAuthService authService;
     private readonly IDriveAuthService? driveAuthService;
     private readonly IDriveSyncService? driveSyncService;
+    private readonly ICacheService? cacheService;
 
     [ObservableProperty]
     private string appVersion = AppInfo.VersionString;
@@ -62,11 +63,13 @@ public partial class SettingsViewModel : BaseViewModel
     public SettingsViewModel(
         IAuthService authService,
         IDriveAuthService? driveAuthService = null,
-        IDriveSyncService? driveSyncService = null)
+        IDriveSyncService? driveSyncService = null,
+        ICacheService? cacheService = null)
     {
         this.authService = authService;
         this.driveAuthService = driveAuthService;
         this.driveSyncService = driveSyncService;
+        this.cacheService = cacheService;
 
         this.Title = "Settings";
         this.Platform = Microsoft.Maui.Devices.DeviceInfo.Current.Platform.ToString();
@@ -356,16 +359,62 @@ public partial class SettingsViewModel : BaseViewModel
 
         if (confirm)
         {
-            // Clear secure storage
-            SecureStorage.Default.RemoveAll();
-            
-            // Clear preferences
-            Preferences.Default.Clear();
-            
-            await Application.Current!.MainPage!.DisplayAlert(
-                "Data Cleared",
-                "All local data has been deleted. Please restart the app.",
-                "OK");
+            try
+            {
+                this.IsBusy = true;
+
+                // 1. Revoke Google Drive authorization if enabled
+                var currentUser = this.authService.GetCurrentUser();
+                if (currentUser != null && this.driveAuthService != null)
+                {
+                    try
+                    {
+                        var isAuthorized = await this.driveAuthService.IsAuthorizedAsync(currentUser.Id);
+                        if (isAuthorized)
+                        {
+                            await this.driveAuthService.RevokeAuthorizationAsync(currentUser.Id);
+                        }
+                    }
+                    catch
+                    {
+                        // Continue even if revoke fails - we'll clear local tokens anyway
+                    }
+                }
+
+                // 2. Clear SQLite database (all groups, expenses, debts, etc.)
+                if (this.cacheService != null)
+                {
+                    await this.cacheService.ClearAllAsync();
+                }
+
+                // 3. Clear secure storage (tokens, credentials)
+                SecureStorage.Default.RemoveAll();
+
+                // 4. Clear preferences
+                Preferences.Default.Clear();
+
+                await Application.Current!.MainPage!.DisplayAlert(
+                    "Data Cleared",
+                    "All local data has been deleted. Please restart the app.",
+                    "OK");
+
+                // Update UI state
+                this.DriveAuthStatus = "Not Authorized";
+                this.DriveAuthStatusColor = Colors.Red;
+                this.ShowAuthorizeButton = true;
+                this.ShowRevokeButton = false;
+            }
+            catch (Exception ex)
+            {
+                await Application.Current!.MainPage!.DisplayAlert(
+                    "Error",
+                    $"Failed to clear all data: {ex.Message}",
+                    "OK");
+            }
+            finally
+            {
+                this.IsBusy = false;
+            }
         }
     }
 }
