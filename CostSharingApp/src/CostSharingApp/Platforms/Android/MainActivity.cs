@@ -13,11 +13,6 @@ namespace CostSharingApp.Platforms.Android;
     Categories = new[] { global::Android.Content.Intent.CategoryDefault, global::Android.Content.Intent.CategoryBrowsable },
     DataScheme = "costsharingapp",
     DataHost = "join")]
-[IntentFilter(
-    new[] { global::Android.Content.Intent.ActionView },
-    Categories = new[] { global::Android.Content.Intent.CategoryDefault, global::Android.Content.Intent.CategoryBrowsable },
-    DataScheme = "com.costsharingapp.mobile",
-    DataHost = "oauth2redirect")]
 public class MainActivity : MauiAppCompatActivity
 {
 }

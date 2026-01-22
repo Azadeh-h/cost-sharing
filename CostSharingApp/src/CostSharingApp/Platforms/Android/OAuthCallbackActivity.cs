@@ -15,7 +15,7 @@ namespace CostSharingApp.Platforms.Android;
 [IntentFilter(
     new[] { global::Android.Content.Intent.ActionView },
     Categories = new[] { global::Android.Content.Intent.CategoryDefault, global::Android.Content.Intent.CategoryBrowsable },
-    DataScheme = "com.costsharingapp.mobile",
+    DataScheme = "com.googleusercontent.apps.609247949564-c2h9s8bmg4100i7d7l2cfq0q4ofavcup",
     DataPath = "/oauth2redirect")]
 public class OAuthCallbackActivity : Microsoft.Maui.Authentication.WebAuthenticatorCallbackActivity
 {
