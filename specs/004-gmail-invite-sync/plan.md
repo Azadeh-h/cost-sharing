@@ -68,21 +68,35 @@ CostSharingApp/src/
 ├── CostSharing.Core/
 │   ├── Interfaces/
 │   │   ├── IGmailInvitationService.cs  # Existing - sends emails
+│   │   ├── IDriveSyncService.cs        # Modified - added RemoveFolderPermissionAsync
 │   │   └── IInvitationLinkingService.cs # New - links memberships
 │   ├── Models/
 │   │   ├── User.cs          # Existing - email matching
 │   │   ├── Group.cs         # Existing
 │   │   ├── GroupMember.cs   # Existing - junction table
+│   │   ├── Invitation.cs    # Modified - added Cancelled status to InvitationStatus enum
+│   │   ├── InvitationType.cs # New - enum for invitation result types
+│   │   ├── InvitationResult.cs # New - record for invitation operation result
 │   │   └── PendingInvitation.cs # New - tracks pre-signup invites
 │   └── Services/
 │       └── InvitationLinkingService.cs # New - email matching logic
 ├── CostSharingApp/
 │   ├── Services/
-│   │   └── GmailInvitationService.cs # Existing - implements interface
+│   │   ├── GmailInvitationService.cs # Existing - implements interface
+│   │   ├── DriveSyncService.cs       # Modified - implements RemoveFolderPermissionAsync
+│   │   ├── GroupService.cs           # Modified - calls unshare on member removal
+│   │   ├── AuthService.cs            # Modified - calls LinkPendingInvitationsAsync
+│   │   └── InvitationLinkingService.cs # New - invitation linking implementation
 │   ├── ViewModels/
-│   │   └── GroupMemberViewModel.cs   # Modified - add invitation flow
+│   │   ├── Members/
+│   │   │   └── InviteMemberViewModel.cs # Modified - uses IInvitationLinkingService
+│   │   └── Groups/
+│   │       └── GroupDetailsViewModel.cs # Modified - pending invitations display
 │   └── Views/
-│       └── GroupMemberPage.xaml      # Modified - invitation UI
+│       ├── Members/
+│       │   └── InviteMemberPage.xaml    # Modified - email-only invitation UI
+│       └── Groups/
+│           └── GroupDetailsPage.xaml    # Modified - pending invitations section
 
 CostSharingApp/tests/
 ├── CostSharingApp.Tests/

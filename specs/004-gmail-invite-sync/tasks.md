@@ -128,6 +128,24 @@
 
 ---
 
+## Phase 8: User Story 5 - Revoke Drive Access on Member Removal (Priority: P1)
+
+**Goal**: When member is removed from group, revoke their Drive folder access
+
+**Independent Test**: Remove member from group → verify they can no longer access Drive folder
+
+### Implementation for User Story 5
+
+- [X] T037 [US5] Add RemoveFolderPermissionAsync to IDriveSyncService interface in CostSharing.Core/Interfaces/IDriveSyncService.cs
+- [X] T038 [US5] Implement RemoveFolderPermissionAsync in DriveSyncService.cs (list permissions, find by email, delete)
+- [X] T039 [US5] Add IServiceProvider to GroupService constructor for lazy DriveSyncService resolution
+- [X] T040 [US5] Create UnshareFolderWithMemberAsync helper method in GroupService.cs
+- [X] T041 [US5] Modify RemoveMemberAsync to call UnshareFolderWithMemberAsync after deleting GroupMember
+
+**Checkpoint**: User Story 5 complete - removed members lose Drive folder access ✅
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
@@ -149,6 +167,7 @@
 | US2 (See Groups) | Phase 2 only | US1 (but US1 creates invitations to link) |
 | US3 (Prevent Dupe) | US1 (enhances it) | - |
 | US4 (Link Existing) | Phase 2 only | US3 |
+| US5 (Revoke Drive) | Phase 2 only | US3, US4 |
 
 ### Within Each User Story
 

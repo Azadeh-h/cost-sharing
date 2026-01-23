@@ -33,8 +33,11 @@ Tracks invitations sent to email addresses that do not yet have user accounts.
 |-------|-----|-------------|
 | `Pending` | 0 | Awaiting user signup |
 | `Accepted` | 1 | User signed up and linked |
-| `Expired` | 2 | Invitation no longer valid |
-| `Cancelled` | 3 | Inviter revoked invitation |
+| `Declined` | 2 | User declined the invitation |
+| `Expired` | 3 | Invitation no longer valid |
+| `Cancelled` | 4 | Inviter revoked invitation |
+
+**Note**: This enum is defined in `CostSharing.Core/Models/Invitation.cs` and reused by `PendingInvitation`.
 
 ### Indexes
 
@@ -181,6 +184,39 @@ User enters email + password
          │
          ▼
    User sees all groups on dashboard
+```
+
+### 3. Removing a Member
+
+```
+Admin removes member from group
+         │
+         ▼
+   Get member's email
+         │
+         ▼
+   Delete GroupMember record
+         │
+         ▼
+   Has valid email? ──No──► Done ✓
+   (not @device.local)
+         │
+        Yes
+         │
+         ▼
+   Group has DriveFolderId? ──No──► Done ✓
+         │
+        Yes
+         │
+         ▼
+   Call DriveSyncService.RemoveFolderPermissionAsync
+         │
+         ├── List folder permissions
+         ├── Find permission by email
+         └── Delete permission
+         │
+         ▼
+     Done ✓ (even if Drive API fails)
 ```
 
 ---

@@ -141,6 +141,99 @@ var (success, error) = await _gmailService.SendInvitationAsync(
 
 ---
 
+## IDriveSyncService (Modified)
+
+Extended with a new method to remove folder permissions when a member is removed from a group.
+
+### New Method
+
+```csharp
+/// <summary>
+/// Removes a user's permission from a group folder when they are removed from the group.
+/// </summary>
+/// <param name="folderId">The Google Drive folder ID.</param>
+/// <param name="memberEmail">The email of the member to remove access for.</param>
+/// <param name="userId">The current user ID (must be folder owner/admin).</param>
+/// <param name="cancellationToken">Cancellation token.</param>
+/// <returns>True if permission was removed successfully, false otherwise.</returns>
+Task<bool> RemoveFolderPermissionAsync(
+    string folderId, 
+    string memberEmail, 
+    Guid userId, 
+    CancellationToken cancellationToken = default);
+```
+
+### Implementation Details
+
+```csharp
+// In DriveSyncService.RemoveFolderPermissionAsync:
+// 1. Initialize Drive service with user's OAuth token
+// 2. List all permissions on the folder
+// 3. Find permission by matching email (case-insensitive)
+// 4. Delete the permission if found
+// 5. Return true on success, false on failure (non-blocking)
+```
+
+### Error Handling
+
+- If no permission found for email: return `true` (already unshared)
+- If Drive API fails: log error and return `false` (don't block member removal)
+- If driveService not initialized: log warning and return `false`
+
+---
+
+## IGroupService (Modified)
+
+Extended to call `IDriveSyncService.RemoveFolderPermissionAsync` when removing a member.
+
+### Modified Method: RemoveMemberAsync
+
+```csharp
+public async Task<bool> RemoveMemberAsync(Guid groupId, Guid userId)
+{
+    // ... existing admin check and member lookup ...
+    
+    // Get user email for Drive permission removal
+    var userToRemove = await this.authService.GetUserByIdAsync(userId);
+    
+    // Delete member from local database
+    await this.cacheService.DeleteAsync(memberToRemove);
+    
+    // Unshare Drive folder with the removed member (non-blocking)
+    await this.UnshareFolderWithMemberAsync(groupId, userToRemove?.Email, currentUser.Id);
+    
+    return true;
+}
+```
+
+### New Private Helper Method
+
+```csharp
+private async Task UnshareFolderWithMemberAsync(Guid groupId, string? memberEmail, Guid currentUserId)
+{
+    // Skip if no valid email or device-generated email
+    if (string.IsNullOrEmpty(memberEmail) || memberEmail.EndsWith("@device.local"))
+        return;
+    
+    // Get group to find Drive folder ID
+    var group = await this.GetGroupAsync(groupId);
+    if (group == null || string.IsNullOrEmpty(group.DriveFolderId))
+        return;
+    
+    // Call DriveSyncService (resolved lazily to avoid circular dependency)
+    var driveSyncService = this.serviceProvider.GetService<IDriveSyncService>();
+    if (driveSyncService == null)
+        return;
+    
+    await driveSyncService.RemoveFolderPermissionAsync(
+        group.DriveFolderId,
+        memberEmail,
+        currentUserId);
+}
+```
+
+---
+
 ## IAuthService (Modified)
 
 Existing interface needs extension to call invitation linking.

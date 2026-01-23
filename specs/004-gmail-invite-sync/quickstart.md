@@ -194,6 +194,8 @@ public async Task LinkPendingInvitations_MatchingEmail_CreatesGroupMembers()
 - [ ] Non-admin tries to invite → Permission error
 - [ ] Gmail not authorized → Prompt for authorization
 - [ ] Gmail fails → Member still added, error toast shown
+- [ ] Remove member from group → They lose access to Drive folder
+- [ ] Remove member with @device.local email → No Drive unshare attempted (silent skip)
 
 ---
 
@@ -221,12 +223,19 @@ public async Task LinkPendingInvitations_MatchingEmail_CreatesGroupMembers()
 | File | Change |
 |------|--------|
 | `Models/PendingInvitation.cs` | New file |
-| `Models/InvitationResult.cs` | New file |
+| `Models/InvitationType.cs` | New file (enum) |
+| `Models/InvitationResult.cs` | New file (record) |
+| `Models/Invitation.cs` | Added Cancelled = 4 to InvitationStatus enum |
 | `Interfaces/IInvitationLinkingService.cs` | New file |
-| `Services/InvitationLinkingService.cs` | New file |
+| `Interfaces/IDriveSyncService.cs` | Added RemoveFolderPermissionAsync method |
+| `Services/InvitationLinkingService.cs` | New file (implementation) |
+| `Services/DriveSyncService.cs` | Implemented RemoveFolderPermissionAsync |
+| `Services/GroupService.cs` | Added IServiceProvider, calls UnshareFolderWithMemberAsync |
 | `Services/AuthService.cs` | Call linking after auth |
-| `ViewModels/GroupMemberViewModel.cs` | Add invite command |
-| `Views/GroupMemberPage.xaml` | Add email input UI |
+| `ViewModels/Members/InviteMemberViewModel.cs` | Refactored to use IInvitationLinkingService |
+| `ViewModels/Groups/GroupDetailsViewModel.cs` | Added pending invitations display |
+| `Views/Members/InviteMemberPage.xaml` | Email-only input UI |
+| `Views/Groups/GroupDetailsPage.xaml` | Added pending invitations section |
 | `MauiProgram.cs` | Register new services |
 
 ---
@@ -236,5 +245,7 @@ public async Task LinkPendingInvitations_MatchingEmail_CreatesGroupMembers()
 - `IGmailInvitationService` - Existing, sends emails
 - `ICacheService` - Existing, CRUD for entities
 - `IAuthService` - Existing, modified to call linking
+- `IDriveSyncService` - Existing, extended with RemoveFolderPermissionAsync
 - `GroupMember` model - Existing
 - `User` model - Existing (email normalization)
+- `IServiceProvider` - Used for lazy service resolution (avoid circular dependencies)

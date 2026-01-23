@@ -2,7 +2,8 @@
 
 **Feature Branch**: `004-gmail-invite-sync`  
 **Created**: 2026-01-22  
-**Status**: Draft  
+**Updated**: 2026-01-23  
+**Status**: Implemented  
 **Input**: User description: "Gmail invitation for group members - when adding a member use Gmail to send invite, when they sign in with same email they see their groups"
 
 ## User Scenarios & Testing *(mandatory)*
@@ -77,6 +78,26 @@ As an existing user who was recently invited to new groups, when I sign in, I wa
 
 ---
 
+### User Story 5 - Revoke Drive Access When Member Removed (Priority: P1)
+
+As a group admin, when I remove a member from the group, I want their access to the shared Google Drive folder to be automatically revoked so they can no longer see or modify the group's data.
+
+**Why this priority**: Critical for data security and privacy - removed members should not retain access to group data.
+
+**Independent Test**: Can be tested by removing a member from a group and verifying they can no longer access the shared Drive folder.
+
+**Acceptance Scenarios**:
+
+1. **Given** I am a group admin, **When** I remove a member from the group, **Then** their access to the group's Google Drive folder is automatically revoked.
+
+2. **Given** the removed member had "writer" access to the folder, **When** they are removed, **Then** they can no longer view, edit, or access the folder contents.
+
+3. **Given** Google Drive API is unavailable, **When** I remove a member, **Then** the member is still removed from the group (folder unshare is best-effort, logged for retry).
+
+4. **Given** a member has a device-generated email (@device.local), **When** they are removed, **Then** no Drive unshare attempt is made (skip silently).
+
+---
+
 ### Edge Cases
 
 - **Case-insensitive email matching**: John@Example.com and john@example.com should be treated as the same user.
@@ -100,6 +121,8 @@ As an existing user who was recently invited to new groups, when I sign in, I wa
 - **FR-009**: System MUST display clear error messages when adding duplicate members
 - **FR-010**: System MUST continue with member addition even if invitation email fails (non-blocking)
 - **FR-011**: System MUST verify that only group admins can add members
+- **FR-012**: System MUST revoke Google Drive folder access when a member is removed from a group
+- **FR-013**: System MUST continue with member removal even if Drive permission removal fails (non-blocking)
 
 ### Key Entities
 
@@ -118,3 +141,5 @@ As an existing user who was recently invited to new groups, when I sign in, I wa
 - **SC-004**: Users can be members of unlimited groups (no artificial limit)
 - **SC-005**: Email matching is 100% case-insensitive
 - **SC-006**: Invitation email failures do not block member addition (graceful degradation)
+- **SC-007**: 100% of member removals trigger Drive permission revocation attempt (when Drive folder exists)
+- **SC-008**: Drive permission removal failures do not block member removal (graceful degradation)
