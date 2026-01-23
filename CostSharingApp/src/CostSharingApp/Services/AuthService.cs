@@ -1,6 +1,7 @@
 
 using System.Security.Cryptography;
 using System.Text;
+using CostSharing.Core.Interfaces;
 using CostSharing.Core.Models;
 
 namespace CostSharingApp.Services;
@@ -11,6 +12,7 @@ public class AuthService : IAuthService
 {
     private readonly ICacheService cacheService;
     private readonly ILoggingService loggingService;
+    private readonly IServiceProvider serviceProvider;
     private CostSharing.Core.Models.User? currentUser;
 
     /// <summary>
@@ -18,10 +20,12 @@ public class AuthService : IAuthService
     /// </summary>
     /// <param name="cacheService">Cache service for credential storage.</param>
     /// <param name="loggingService">Logging service.</param>
-    public AuthService(ICacheService cacheService, ILoggingService loggingService)
+    /// <param name="serviceProvider">Service provider for lazy dependency resolution.</param>
+    public AuthService(ICacheService cacheService, ILoggingService loggingService, IServiceProvider serviceProvider)
     {
         this.cacheService = cacheService;
         this.loggingService = loggingService;
+        this.serviceProvider = serviceProvider;
     }
 
     /// <summary>
@@ -36,9 +40,12 @@ public class AuthService : IAuthService
     {
         try
         {
+            // Normalize email for case-insensitive comparison
+            var normalizedEmail = email.Trim().ToLowerInvariant();
+
             // Check if user already exists
             var existingUsers = await this.cacheService.GetAllAsync<CostSharing.Core.Models.User>();
-            if (existingUsers.Any(u => u.Email == email))
+            if (existingUsers.Any(u => u.Email.Trim().ToLowerInvariant() == normalizedEmail))
             {
                 this.loggingService.LogWarning($"Registration failed: Email {email} already exists");
                 return false;
@@ -47,7 +54,7 @@ public class AuthService : IAuthService
             var user = new CostSharing.Core.Models.User
             {
                 Id = Guid.NewGuid(),
-                Email = email,
+                Email = normalizedEmail,
                 PasswordHash = this.HashPassword(password),
                 Name = name,
                 Phone = phone,
@@ -57,7 +64,11 @@ public class AuthService : IAuthService
 
             await this.cacheService.SaveAsync(user);
             this.currentUser = user;
-            this.loggingService.LogInfo($"User registered: {email}");
+            this.loggingService.LogInfo($"User registered: {normalizedEmail}");
+
+            // Link any pending invitations for this email
+            await this.LinkPendingInvitationsForUserAsync(user.Id, normalizedEmail);
+
             return true;
         }
         catch (Exception ex)
@@ -77,8 +88,11 @@ public class AuthService : IAuthService
     {
         try
         {
+            // Normalize email for case-insensitive comparison
+            var normalizedEmail = email.Trim().ToLowerInvariant();
+
             var users = await this.cacheService.GetAllAsync<CostSharing.Core.Models.User>();
-            var user = users.FirstOrDefault(u => u.Email == email);
+            var user = users.FirstOrDefault(u => u.Email.Trim().ToLowerInvariant() == normalizedEmail);
 
             if (user == null)
             {
@@ -97,6 +111,10 @@ public class AuthService : IAuthService
 
             this.currentUser = user;
             this.loggingService.LogInfo($"User logged in: {email}");
+
+            // Link any pending invitations for this email (in case new invitations arrived since last login)
+            await this.LinkPendingInvitationsForUserAsync(user.Id, user.Email);
+
             return true;
         }
         catch (Exception ex)
@@ -299,6 +317,33 @@ public class AuthService : IAuthService
         {
             this.loggingService.LogError("User update failed", ex);
             return false;
+        }
+    }
+
+    /// <summary>
+    /// Links pending invitations for a user (called after login/registration).
+    /// Uses IServiceProvider to resolve IInvitationLinkingService to avoid circular dependency.
+    /// </summary>
+    /// <param name="userId">User ID.</param>
+    /// <param name="email">User email.</param>
+    private async Task LinkPendingInvitationsForUserAsync(Guid userId, string email)
+    {
+        try
+        {
+            var invitationLinkingService = this.serviceProvider.GetService<IInvitationLinkingService>();
+            if (invitationLinkingService != null)
+            {
+                var linkedCount = await invitationLinkingService.LinkPendingInvitationsAsync(userId, email);
+                if (linkedCount > 0)
+                {
+                    this.loggingService.LogInfo($"Linked {linkedCount} pending invitation(s) for user {email}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // Non-blocking - log and continue
+            this.loggingService.LogError($"Failed to link pending invitations for {email}", ex);
         }
     }
 

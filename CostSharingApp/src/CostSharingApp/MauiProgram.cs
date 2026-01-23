@@ -81,6 +81,9 @@ public static class MauiProgram
         // Gmail Invitation Service
         services.AddSingleton<IGmailInvitationService, GmailInvitationService>();
 
+        // Invitation Linking Service (004-gmail-invite-sync)
+        services.AddSingleton<IInvitationLinkingService, InvitationLinkingService>();
+
         // Phase 3: US1 - ViewModels
         services.AddTransient<ViewModels.Groups.GroupListViewModel>();
         services.AddTransient<ViewModels.Groups.CreateGroupViewModel>();

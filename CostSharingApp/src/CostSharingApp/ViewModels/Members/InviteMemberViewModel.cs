@@ -6,6 +6,7 @@ namespace CostSharingApp.ViewModels.Members;
 
 using System.Windows.Input;
 using CostSharing.Core.Interfaces;
+using CostSharing.Core.Models;
 using CostSharingApp.Services;
 
 /// <summary>
@@ -13,13 +14,11 @@ using CostSharingApp.Services;
 /// </summary>
 public class InviteMemberViewModel : BaseViewModel, IQueryAttributable
 {
-    private readonly IGroupService groupService;
+    private readonly IInvitationLinkingService invitationLinkingService;
     private readonly IErrorService errorService;
     private readonly IAuthService authService;
-    private readonly IGmailInvitationService? gmailService;
     private Guid groupId;
     private string groupName = string.Empty;
-    private string memberName = string.Empty;
     private string memberEmail = string.Empty;
     private string errorMessage = string.Empty;
     private bool sendEmailInvite = true;
@@ -30,51 +29,32 @@ public class InviteMemberViewModel : BaseViewModel, IQueryAttributable
     /// </summary>
     public InviteMemberViewModel()
     {
-        this.groupService = null!;
+        this.invitationLinkingService = null!;
         this.errorService = null!;
         this.authService = null!;
-        this.gmailService = null;
-        this.Title = "Add Member";
-        this.AddMemberCommand = new Command(async () => await this.AddMemberAsync(), this.CanAddMember);
+        this.Title = "Invite Member";
+        this.InviteMemberCommand = new Command(async () => await this.InviteMemberAsync(), this.CanInviteMember);
         this.CancelCommand = new Command(async () => await this.CancelAsync());
     }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="InviteMemberViewModel"/> class.
     /// </summary>
-    /// <param name="groupService">Group service.</param>
+    /// <param name="invitationLinkingService">Invitation linking service.</param>
     /// <param name="errorService">Error service.</param>
     /// <param name="authService">Auth service.</param>
-    /// <param name="gmailService">Gmail invitation service.</param>
     public InviteMemberViewModel(
-        IGroupService groupService,
+        IInvitationLinkingService invitationLinkingService,
         IErrorService errorService,
-        IAuthService authService,
-        IGmailInvitationService gmailService)
+        IAuthService authService)
     {
-        this.groupService = groupService;
+        this.invitationLinkingService = invitationLinkingService;
         this.errorService = errorService;
         this.authService = authService;
-        this.gmailService = gmailService;
-        this.Title = "Add Member";
+        this.Title = "Invite Member";
 
-        this.AddMemberCommand = new Command(async () => await this.AddMemberAsync(), this.CanAddMember);
+        this.InviteMemberCommand = new Command(async () => await this.InviteMemberAsync(), this.CanInviteMember);
         this.CancelCommand = new Command(async () => await this.CancelAsync());
-    }
-
-    /// <summary>
-    /// Gets or sets the member name.
-    /// </summary>
-    public string MemberName
-    {
-        get => this.memberName;
-        set
-        {
-            if (this.SetProperty(ref this.memberName, value))
-            {
-                ((Command)this.AddMemberCommand).ChangeCanExecute();
-            }
-        }
     }
 
     /// <summary>
@@ -87,7 +67,7 @@ public class InviteMemberViewModel : BaseViewModel, IQueryAttributable
         {
             if (this.SetProperty(ref this.memberEmail, value))
             {
-                ((Command)this.AddMemberCommand).ChangeCanExecute();
+                ((Command)this.InviteMemberCommand).ChangeCanExecute();
             }
         }
     }
@@ -111,9 +91,14 @@ public class InviteMemberViewModel : BaseViewModel, IQueryAttributable
     }
 
     /// <summary>
-    /// Gets the command to add member.
+    /// Gets the command to invite member.
     /// </summary>
-    public ICommand AddMemberCommand { get; }
+    public ICommand InviteMemberCommand { get; }
+
+    /// <summary>
+    /// Gets the command to add member (legacy - maps to InviteMemberCommand).
+    /// </summary>
+    public ICommand AddMemberCommand => this.InviteMemberCommand;
 
     /// <summary>
     /// Gets the command to cancel.
@@ -142,19 +127,18 @@ public class InviteMemberViewModel : BaseViewModel, IQueryAttributable
     }
 
     /// <summary>
-    /// Determines if member can be added.
+    /// Determines if member can be invited.
     /// </summary>
-    private bool CanAddMember()
+    private bool CanInviteMember()
     {
-        return !string.IsNullOrWhiteSpace(this.memberName) &&
-               !string.IsNullOrWhiteSpace(this.memberEmail) &&
-               this.memberEmail.Contains("@");
+        return !string.IsNullOrWhiteSpace(this.memberEmail) &&
+               this.memberEmail.Contains('@');
     }
 
     /// <summary>
-    /// Adds the member to the group.
+    /// Invites the member to the group using InvitationLinkingService.
     /// </summary>
-    private async Task AddMemberAsync()
+    private async Task InviteMemberAsync()
     {
         if (this.IsBusy)
         {
@@ -166,79 +150,42 @@ public class InviteMemberViewModel : BaseViewModel, IQueryAttributable
             this.IsBusy = true;
             this.ErrorMessage = string.Empty;
 
-            var (success, errorMessage) = await this.groupService.AddMemberByEmailAsync(
-                this.groupId,
-                this.memberEmail.Trim(),
-                this.memberName.Trim());
-
-            if (!success)
+            var currentUser = this.authService.GetCurrentUser();
+            if (currentUser == null || currentUser.Id == Guid.Empty)
             {
-                this.ErrorMessage = errorMessage ?? "Failed to add member";
+                this.ErrorMessage = "You must be signed in to invite members";
                 await Shell.Current.DisplayAlert("Error", this.ErrorMessage, "OK");
                 return;
             }
 
-            // Send email invitation if enabled
-            if (this.sendEmailInvite)
-            {
-                if (this.gmailService == null)
-                {
-                    await Shell.Current.DisplayAlert(
-                        "Member Added",
-                        $"{this.memberName} has been added to the group.\n\nNote: Gmail service is not available.",
-                        "OK");
-                }
-                else
-                {
-                    var currentUser = this.authService.GetCurrentUser();
-                    if (currentUser == null || currentUser.Id == Guid.Empty)
-                    {
-                        await Shell.Current.DisplayAlert(
-                            "Member Added",
-                            $"{this.memberName} has been added to the group.\n\nNote: Could not send email - user not logged in.",
-                            "OK");
-                    }
-                    else
-                    {
-                        var inviterName = currentUser.Name ?? "A friend";
+            // Use the new InvitationLinkingService
+            var result = await this.invitationLinkingService.InviteToGroupAsync(
+                this.groupId,
+                this.memberEmail.Trim(),
+                currentUser.Id,
+                this.sendEmailInvite);
 
-                        var (emailSuccess, emailError) = await this.gmailService.SendInvitationAsync(
-                            this.memberEmail.Trim(),
-                            this.memberName.Trim(),
-                            this.groupName,
-                            inviterName,
-                            currentUser.Id);
-
-                        if (emailSuccess)
-                        {
-                            await Shell.Current.DisplayAlert(
-                                "Member Added",
-                                $"{this.memberName} has been added to the group and an invitation email has been sent!",
-                                "OK");
-                        }
-                        else
-                        {
-                            await Shell.Current.DisplayAlert(
-                                "Member Added",
-                                $"{this.memberName} has been added to the group.\n\nNote: Email could not be sent: {emailError}\n\nYou can share the app manually.",
-                                "OK");
-                        }
-                    }
-                }
-            }
-            else
+            if (!result.Success)
             {
-                await Shell.Current.DisplayAlert(
-                    "Member Added",
-                    $"{this.memberName} has been added to the group!",
-                    "OK");
+                this.ErrorMessage = result.Message;
+                await Shell.Current.DisplayAlert("Error", this.ErrorMessage, "OK");
+                return;
             }
 
+            // Show success message based on result type
+            string successMessage = result.Type switch
+            {
+                InvitationType.DirectMember => $"{this.memberEmail} has been added to the group!",
+                InvitationType.PendingInvitation => $"Invitation sent to {this.memberEmail}. They will see this group when they sign in.",
+                _ => result.Message,
+            };
+
+            await Shell.Current.DisplayAlert("Success", successMessage, "OK");
             await Shell.Current.GoToAsync("..");
         }
         catch (Exception ex)
         {
-            this.ErrorMessage = this.errorService.HandleException(ex, "adding member");
+            this.ErrorMessage = this.errorService.HandleException(ex, "inviting member");
         }
         finally
         {

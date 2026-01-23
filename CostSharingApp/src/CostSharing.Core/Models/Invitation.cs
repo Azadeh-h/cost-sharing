@@ -72,5 +72,10 @@ public enum InvitationStatus
     /// <summary>
     /// Invitation expired (not responded within timeframe).
     /// </summary>
-    Expired = 3
+    Expired = 3,
+
+    /// <summary>
+    /// Invitation cancelled by admin.
+    /// </summary>
+    Cancelled = 4,
 }

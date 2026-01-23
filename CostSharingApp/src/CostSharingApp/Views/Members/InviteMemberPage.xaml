@@ -14,21 +14,13 @@
                    IsVisible="{Binding ErrorMessage, Converter={StaticResource StringIsNotNullOrEmptyConverter}}" />
 
             <!-- Instructions -->
-            <Label Text="Add a new member"
+            <Label Text="Invite a new member"
                    FontSize="18"
                    FontAttributes="Bold" />
 
-            <Label Text="Enter the name and email of the person you want to add to the group."
+            <Label Text="Enter the email address of the person you want to invite. If they already have an account, they'll be added immediately. Otherwise, they'll see this group when they sign up."
                    TextColor="{StaticResource Gray600}"
                    FontSize="14" />
-
-            <!-- Name input -->
-            <StackLayout Spacing="8">
-                <Label Text="Name" FontAttributes="Bold" />
-                <Entry Text="{Binding MemberName}"
-                       Placeholder="e.g. John Smith"
-                       ReturnType="Next" />
-            </StackLayout>
 
             <!-- Email input -->
             <StackLayout Spacing="8">
@@ -66,9 +58,9 @@
                     <Label VerticalOptions="Center" TextColor="{StaticResource Gray600}">
                         <Label.FormattedText>
                             <FormattedString>
-                                <Span Text="The member will be " />
-                                <Span Text="added immediately" FontAttributes="Bold" />
-                                <Span Text=" and can start sharing expenses." />
+                                <Span Text="When they " />
+                                <Span Text="sign in with this email" FontAttributes="Bold" />
+                                <Span Text=", they'll automatically see this group." />
                             </FormattedString>
                         </Label.FormattedText>
                     </Label>
@@ -84,8 +76,8 @@
                         TextColor="{StaticResource Gray900}" />
 
                 <Button Grid.Column="1"
-                        Text="Add Member"
-                        Command="{Binding AddMemberCommand}"
+                        Text="Invite Member"
+                        Command="{Binding InviteMemberCommand}"
                         IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />
             </Grid>
 
