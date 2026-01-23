@@ -268,22 +268,36 @@ public class DriveSyncService : IDriveSyncService
 
             foreach (var email in memberEmails)
             {
-                var permission = new Permission
+                try
                 {
-                    Type = "user",
-                    Role = "writer",
-                    EmailAddress = email,
-                };
+                    var permission = new Permission
+                    {
+                        Type = "user",
+                        Role = "writer",
+                        EmailAddress = email,
+                    };
 
-                var permissionRequest = this.driveService.Permissions.Create(permission, folderId);
-                permissionRequest.SendNotificationEmail = true;
-                permissionRequest.EmailMessage = "You've been added to a CostSharing group. You now have access to the shared Drive folder.";
+                    var permissionRequest = this.driveService.Permissions.Create(permission, folderId);
+                    permissionRequest.SendNotificationEmail = true;
+                    permissionRequest.EmailMessage = "You've been added to a CostSharing group. You now have access to the shared Drive folder.";
 
-                await this.errorHandler.ExecuteWithRetryAsync(
-                    async () => await permissionRequest.ExecuteAsync(cancellationToken),
-                    cancellationToken);
+                    await this.errorHandler.ExecuteWithRetryAsync(
+                        async () => await permissionRequest.ExecuteAsync(cancellationToken),
+                        cancellationToken);
 
-                this.loggingService.LogInfo($"Granted access to {email} for folder {folderId}");
+                    this.loggingService.LogInfo($"Granted access to {email} for folder {folderId}");
+                }
+                catch (Google.GoogleApiException ex) when (ex.HttpStatusCode == System.Net.HttpStatusCode.BadRequest && 
+                    ex.Message.Contains("already has access"))
+                {
+                    // User already has access - this is fine, just log it
+                    this.loggingService.LogInfo($"User {email} already has access to folder {folderId}");
+                }
+                catch (Exception ex)
+                {
+                    // Log individual email failures but continue with others
+                    this.loggingService.LogWarning($"Failed to grant access to {email} for folder {folderId}: {ex.Message}");
+                }
             }
         }
         catch (Exception ex)

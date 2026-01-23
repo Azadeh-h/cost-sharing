@@ -172,15 +172,8 @@ public class InviteMemberViewModel : BaseViewModel, IQueryAttributable
                 return;
             }
 
-            // Show success message based on result type
-            string successMessage = result.Type switch
-            {
-                InvitationType.DirectMember => $"{this.memberEmail} has been added to the group!",
-                InvitationType.PendingInvitation => $"Invitation sent to {this.memberEmail}. They will see this group when they sign in.",
-                _ => result.Message,
-            };
-
-            await Shell.Current.DisplayAlert("Success", successMessage, "OK");
+            // Use the result message which includes email status
+            await Shell.Current.DisplayAlert("Success", result.Message, "OK");
             await Shell.Current.GoToAsync("..");
         }
         catch (Exception ex)

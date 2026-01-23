@@ -1,4 +1,4 @@
-# Google Drive & Gmail Integration - Phase 4 Complete
+# Google Drive & Gmail Integration - Phase 5 Complete
 
 ## What's Been Implemented
 
@@ -94,6 +94,31 @@
 - **AndroidManifest.xml**: OAuth callback and deep link intent filters
 - **WebAuthenticatorCallbackActivity**: Handles OAuth redirect
 - **Deep link handler**: Processes invitation links
+
+### Phase 5 Complete ✅
+#### 12. Gmail Invitation Flow ✅
+- **InvitationLinkingService** - Complete invitation management
+  - Invite existing users directly (adds to group immediately)
+  - Create pending invitations for new users
+  - Auto-link invitations when user registers
+  - Cancel pending invitations
+  
+- **GmailInvitationService** - Send emails via Gmail API
+  - OAuth integration with Drive auth tokens
+  - HTML and plain text email templates
+  - MIME message creation with base64url encoding
+  - Message ID tracking for debugging
+  
+- **Required OAuth Scopes**:
+  - `https://www.googleapis.com/auth/drive` - Full Drive access
+  - `https://www.googleapis.com/auth/gmail.send` - Send emails
+  - `https://mail.google.com/` - Full Gmail access (required for reliable sending)
+
+#### 13. Drive Folder Sharing ✅
+- **Auto-share on invite**: When a member is added, Drive folder is shared
+- **Re-add handling**: Sharing works when member is removed and re-added
+- **Permission management**: SetFolderPermissionsAsync and RemoveFolderPermissionAsync
+- **Error handling**: Graceful handling of duplicate permissions
 
 ## Sync Flow Details
 
@@ -198,35 +223,30 @@
 - [ ] Update invitation flow UI to show Gmail option
 - [ ] Add loading indicators during sync operations
 
-### Phase 5: UI Updates (TODO)
-- [ ] Add Google Sign-In button to login screen
-- [ ] Show sync status indicator in app bar
-- [ ] Display "Last synced: X minutes ago"
-- [ ] Add manual sync button
-- [ ] Show conflict resolution dialog when needed
-- [ ] Update invitation flow to use Gmail
+### Phase 5: UI Updates ✅
+- [x] Add Google Sign-In button to Settings screen
+- [x] Show sync status indicator in app bar
+- [x] Add manual sync button
+- [x] Show email status in invitation result
+- [x] Update invitation flow to use Gmail API
 
-### Phase 6: Google Cloud Console Setup (TODO - USER ACTION REQUIRED)
-**This requires manual setup in Google Cloud Console:**
+### Phase 6: Google Cloud Console Setup ✅
+**Required setup in Google Cloud Console:**
 1. Go to https://console.cloud.google.com
 2. Create a new project (or select existing)
-3. Enable Google Drive API
-4. Enable Gmail API
+3. Enable Google Drive API ✅
+4. Enable Gmail API ✅
 5. Create OAuth 2.0 Client ID:
    - Application type: "Android" (for Android app)
    - Application type: "iOS" (for iOS app)
    - Package name: `com.costsharingapp.mobile`
-   - Get SHA-1 certificate fingerprint: `keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android`
-6. Download OAuth client configuration
-7. Copy Client ID to replace `YOUR_CLIENT_ID` in:
-   - `Platforms/Android/GoogleAuthPlatform.cs`
-   - `Platforms/iOS/GoogleAuthPlatform.cs`
-   - `Services/GoogleAuthService.cs`
-   - `Platforms/Android/AndroidManifest.xml`
-8. Configure OAuth consent screen:
+6. Configure OAuth consent screen:
    - Add test users for development
-   - Set scopes: Drive (drive.file), Gmail (gmail.send), email, profile
-9. For deep links, register custom URL scheme in console
+   - Set scopes: 
+     - `https://www.googleapis.com/auth/drive`
+     - `https://www.googleapis.com/auth/gmail.send`
+     - `https://mail.google.com/`
+7. Register SHA-1 fingerprint in console
 
 ### Phase 7: Testing (TODO)
 - [ ] Unit tests for GoogleDriveService

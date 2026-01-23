@@ -5,6 +5,7 @@
 using System.Text.RegularExpressions;
 using CostSharing.Core.Interfaces;
 using CostSharing.Core.Models;
+using CostSharing.Core.Services;
 
 namespace CostSharingApp.Services;
 
@@ -17,6 +18,7 @@ public partial class InvitationLinkingService : IInvitationLinkingService
     private readonly ILoggingService loggingService;
     private readonly IAuthService authService;
     private readonly IGmailInvitationService gmailInvitationService;
+    private readonly IServiceProvider serviceProvider;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="InvitationLinkingService"/> class.
@@ -25,16 +27,19 @@ public partial class InvitationLinkingService : IInvitationLinkingService
     /// <param name="loggingService">Logging service.</param>
     /// <param name="authService">Authentication service for user lookup.</param>
     /// <param name="gmailInvitationService">Gmail service for sending invitations.</param>
+    /// <param name="serviceProvider">Service provider for lazy resolution.</param>
     public InvitationLinkingService(
         ICacheService cacheService,
         ILoggingService loggingService,
         IAuthService authService,
-        IGmailInvitationService gmailInvitationService)
+        IGmailInvitationService gmailInvitationService,
+        IServiceProvider serviceProvider)
     {
         this.cacheService = cacheService;
         this.loggingService = loggingService;
         this.authService = authService;
         this.gmailInvitationService = gmailInvitationService;
+        this.serviceProvider = serviceProvider;
     }
 
     /// <inheritdoc/>
@@ -98,6 +103,9 @@ public partial class InvitationLinkingService : IInvitationLinkingService
                 await this.cacheService.SaveAsync(member);
                 this.loggingService.LogInfo($"Added existing user {normalizedEmail} to group {group.Name}");
 
+                // Share Drive folder with new member (non-blocking)
+                await this.TryShareDriveFolderWithMemberAsync(group, normalizedEmail, inviterUserId, cancellationToken);
+
                 result = new InvitationResult(true, InvitationType.DirectMember, $"{normalizedEmail} has been added to the group", member.Id);
             }
             else
@@ -120,17 +128,28 @@ public partial class InvitationLinkingService : IInvitationLinkingService
             }
 
             // Send email notification (non-blocking)
+            string emailStatus = string.Empty;
             if (sendEmail && inviter != null)
             {
-                await this.TrySendInvitationEmailAsync(
+                var (emailSuccess, emailMessage) = await this.TrySendInvitationEmailAsync(
                     normalizedEmail,
                     group.Name,
                     inviter.Name,
                     inviterUserId,
                     cancellationToken);
+
+                if (emailSuccess)
+                {
+                    emailStatus = $" Email sent ({emailMessage}).";
+                }
+                else
+                {
+                    emailStatus = $" (Email not sent: {emailMessage ?? "unknown error"})";
+                }
             }
 
-            return result;
+            // Append email status to the result message
+            return new InvitationResult(result.Success, result.Type, result.Message + emailStatus, result.MemberOrInvitationId);
         }
         catch (Exception ex)
         {
@@ -184,6 +203,13 @@ public partial class InvitationLinkingService : IInvitationLinkingService
                     invitation.AcceptedAt = DateTime.UtcNow;
                     invitation.LinkedUserId = userId;
                     await this.cacheService.SaveAsync(invitation);
+
+                    // Share Drive folder with the new member (non-blocking)
+                    var group = await this.cacheService.GetAsync<CostSharing.Core.Models.Group>(invitation.GroupId);
+                    if (group != null)
+                    {
+                        await this.TryShareDriveFolderWithMemberAsync(group, normalizedEmail, invitation.InvitedByUserId, cancellationToken);
+                    }
 
                     linkedCount++;
                     this.loggingService.LogInfo($"Linked pending invitation for group {invitation.GroupId} to user {userId}");
@@ -344,7 +370,8 @@ public partial class InvitationLinkingService : IInvitationLinkingService
     /// <summary>
     /// Attempts to send invitation email (non-blocking).
     /// </summary>
-    private async Task TrySendInvitationEmailAsync(
+    /// <returns>Tuple of (success, message) - for user feedback including message ID on success.</returns>
+    private async Task<(bool Success, string? Message)> TrySendInvitationEmailAsync(
         string recipientEmail,
         string groupName,
         string inviterName,
@@ -358,13 +385,13 @@ public partial class InvitationLinkingService : IInvitationLinkingService
             if (!isAuthorized)
             {
                 this.loggingService.LogWarning($"Gmail not authorized for user {inviterUserId}, skipping email");
-                return;
+                return (false, "Gmail not authorized. Go to Settings to authorize Google.");
             }
 
             // Use email prefix as recipient name
             var recipientName = recipientEmail.Split('@')[0];
 
-            var (success, error) = await this.gmailInvitationService.SendInvitationAsync(
+            var (success, error, messageId) = await this.gmailInvitationService.SendInvitationAsync(
                 recipientEmail,
                 recipientName,
                 groupName,
@@ -374,17 +401,78 @@ public partial class InvitationLinkingService : IInvitationLinkingService
 
             if (success)
             {
-                this.loggingService.LogInfo($"Invitation email sent to {recipientEmail}");
+                this.loggingService.LogInfo($"Invitation email sent to {recipientEmail}, ID: {messageId}");
+                return (true, $"ID:{messageId}");
             }
             else
             {
                 this.loggingService.LogWarning($"Failed to send invitation email to {recipientEmail}: {error}");
+                return (false, error);
             }
         }
         catch (Exception ex)
         {
             // Non-blocking - log and continue
             this.loggingService.LogError($"Error sending invitation email to {recipientEmail}", ex);
+            return (false, ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Attempts to share the group's Drive folder with a new member (non-blocking).
+    /// </summary>
+    /// <param name="group">The group.</param>
+    /// <param name="memberEmail">The member's email address.</param>
+    /// <param name="sharingUserId">The user ID to use for Drive API authentication.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    private async Task TryShareDriveFolderWithMemberAsync(
+        CostSharing.Core.Models.Group group,
+        string memberEmail,
+        Guid sharingUserId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            this.loggingService.LogInfo($"TryShareDriveFolderWithMemberAsync called for {memberEmail} in group {group.Name}");
+
+            // Skip if no Drive folder or if it's a device-generated email
+            if (string.IsNullOrEmpty(group.DriveFolderId))
+            {
+                this.loggingService.LogInfo($"No Drive folder for group {group.Name} (DriveFolderId is null/empty), skipping share");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(memberEmail) || memberEmail.EndsWith("@device.local"))
+            {
+                this.loggingService.LogInfo($"Skipping Drive share - invalid email: {memberEmail}");
+                return;
+            }
+
+            this.loggingService.LogInfo($"Resolving DriveSyncService for sharing folder {group.DriveFolderId} with {memberEmail}");
+
+            // Resolve DriveSyncService lazily to avoid circular dependency
+            var driveSyncService = this.serviceProvider.GetService<IDriveSyncService>();
+            if (driveSyncService == null)
+            {
+                this.loggingService.LogWarning("DriveSyncService not available, skipping folder share");
+                return;
+            }
+
+            this.loggingService.LogInfo($"Calling SetFolderPermissionsAsync for folder {group.DriveFolderId} with email {memberEmail}");
+
+            // Share the folder with the new member
+            await driveSyncService.SetFolderPermissionsAsync(
+                group.DriveFolderId,
+                new[] { memberEmail },
+                sharingUserId,
+                cancellationToken);
+
+            this.loggingService.LogInfo($"Successfully shared Drive folder for group {group.Name} with {memberEmail}");
+        }
+        catch (Exception ex)
+        {
+            // Non-blocking - log and continue
+            this.loggingService.LogError($"Error sharing Drive folder with {memberEmail}: {ex.Message}", ex);
         }
     }
 

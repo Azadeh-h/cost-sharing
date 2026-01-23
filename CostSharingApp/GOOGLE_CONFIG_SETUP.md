@@ -20,9 +20,20 @@ Edit `appsettings.json` and replace the placeholders:
   "Google": {
     "AndroidClientId": "YOUR_ANDROID_CLIENT_ID.apps.googleusercontent.com",
     "iOSClientId": "YOUR_IOS_CLIENT_ID.apps.googleusercontent.com"
+  },
+  "GoogleDrive": {
+    "ClientId": "YOUR_ANDROID_CLIENT_ID.apps.googleusercontent.com",
+    "ClientSecret": "",
+    "RedirectUri": "com.googleusercontent.apps.YOUR_CLIENT_ID:/oauth2redirect",
+    "Scopes": "https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/gmail.send https://mail.google.com/"
   }
 }
 ```
+
+**Required OAuth Scopes:**
+- `https://www.googleapis.com/auth/drive` - Full Google Drive access for syncing group data
+- `https://www.googleapis.com/auth/gmail.send` - Send email on behalf of user (for invitations)
+- `https://mail.google.com/` - Full Gmail access (required for reliable email sending)
 
 **Your actual values:**
 - Android: `609247949564-c2h9s8bmg4100i7d7l2cfq0q4ofavcup.apps.googleusercontent.com`
@@ -106,3 +117,34 @@ For production builds:
 ## Reference
 
 Your SHA-1 Fingerprint: `E6:53:6D:74:9E:F9:C0:A4:C9:05:A1:43:8E:EB:83:22:1D:38:BE:BF`
+
+## Gmail API Setup (Required for Email Invitations)
+
+### Enable Gmail API in Google Cloud Console
+
+1. Go to https://console.cloud.google.com
+2. Select your project
+3. Navigate to **APIs & Services → Library**
+4. Search for **"Gmail API"**
+5. Click on Gmail API and click **"Enable"**
+
+### Add Gmail Scopes to OAuth Consent Screen
+
+1. Go to **APIs & Services → OAuth consent screen**
+2. Click **"Edit App"**
+3. Click through to the **"Scopes"** section
+4. Click **"Add or Remove Scopes"**
+5. Search for and add these scopes:
+   - `https://www.googleapis.com/auth/gmail.send`
+   - `https://mail.google.com/`
+6. Click **"Update"** and **"Save and Continue"**
+
+### Re-authorize After Adding Scopes
+
+After adding new scopes, users must re-authorize:
+1. Open the app → **Settings**
+2. Tap **"Revoke Authorization"**
+3. Tap **"Authorize Google"**
+4. Accept all permissions (should now include Gmail access)
+
+**Note:** The Gmail API requires the `https://mail.google.com/` scope for reliable email sending. The `gmail.send` scope alone may not work for all use cases.

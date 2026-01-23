@@ -49,7 +49,7 @@ public class GmailInvitationService : IGmailInvitationService
     }
 
     /// <inheritdoc/>
-    public async Task<(bool Success, string? ErrorMessage)> SendInvitationAsync(
+    public async Task<(bool Success, string? ErrorMessage, string? MessageId)> SendInvitationAsync(
         string recipientEmail,
         string recipientName,
         string groupName,
@@ -66,7 +66,7 @@ public class GmailInvitationService : IGmailInvitationService
             if (this.gmailService == null)
             {
                 this.loggingService.LogError("Gmail service is null after initialization", null);
-                return (false, "Gmail service not initialized. Please authorize Google in Settings.");
+                return (false, "Gmail service not initialized. Please authorize Google in Settings.", null);
             }
 
             this.loggingService.LogInfo("Gmail service initialized, getting user profile...");
@@ -89,18 +89,18 @@ public class GmailInvitationService : IGmailInvitationService
                     var errorDetail = ex.Error?.Message ?? ex.Message;
                     if (errorDetail.Contains("Gmail API has not been used") || errorDetail.Contains("accessNotConfigured"))
                     {
-                        return (false, "Gmail API is not enabled. Please enable it in Google Cloud Console: APIs & Services → Library → Gmail API → Enable");
+                        return (false, "Gmail API is not enabled. Please enable it in Google Cloud Console: APIs & Services → Library → Gmail API → Enable", null);
                     }
                     
-                    return (false, $"Gmail access denied. Error: {errorDetail}\n\nMake sure:\n1. Gmail API is enabled in Google Cloud Console\n2. gmail.send scope is added to OAuth consent screen\n3. You revoked and re-authorized in Settings");
+                    return (false, $"Gmail access denied. Error: {errorDetail}\n\nMake sure:\n1. Gmail API is enabled in Google Cloud Console\n2. gmail.send scope is added to OAuth consent screen\n3. You revoked and re-authorized in Settings", null);
                 }
                 
-                return (false, $"Gmail API error ({ex.HttpStatusCode}): {ex.Error?.Message ?? ex.Message}");
+                return (false, $"Gmail API error ({ex.HttpStatusCode}): {ex.Error?.Message ?? ex.Message}", null);
             }
             catch (Exception ex)
             {
                 this.loggingService.LogError($"Failed to get Gmail profile: {ex.Message}", ex);
-                return (false, $"Failed to access Gmail profile: {ex.Message}");
+                return (false, $"Failed to access Gmail profile: {ex.Message}", null);
             }
 
             // Create the email content
@@ -126,26 +126,41 @@ public class GmailInvitationService : IGmailInvitationService
             var message = new Message { Raw = rawMessage };
             try
             {
-                await this.gmailService.Users.Messages.Send(message, "me").ExecuteAsync(cancellationToken);
+                var sentMessage = await this.gmailService.Users.Messages.Send(message, "me").ExecuteAsync(cancellationToken);
+                
+                // Check the response
+                if (sentMessage == null)
+                {
+                    this.loggingService.LogError("Gmail API returned null response", null);
+                    return (false, "Gmail returned empty response - email may not have been sent", null);
+                }
+                
+                if (string.IsNullOrEmpty(sentMessage.Id))
+                {
+                    this.loggingService.LogError("Gmail API returned message with no ID", null);
+                    return (false, "Gmail returned no message ID - email may not have been sent", null);
+                }
+                
+                var messageId = sentMessage.Id;
+                this.loggingService.LogInfo($"Gmail returned message ID: {messageId}, ThreadId: {sentMessage.ThreadId}");
+                this.loggingService.LogInfo($"Successfully sent Gmail invitation to {recipientEmail} with ID {messageId}");
+                return (true, null, messageId);
             }
             catch (Google.GoogleApiException ex) when (ex.HttpStatusCode == System.Net.HttpStatusCode.Forbidden)
             {
                 this.loggingService.LogError($"Gmail send permission denied", ex);
-                return (false, "Gmail send permission denied. Please go to Settings, tap 'Revoke Authorization', then re-authorize to grant email permission.");
+                return (false, "Gmail send permission denied. Please go to Settings, tap 'Revoke Authorization', then re-authorize to grant email permission.", null);
             }
-
-            this.loggingService.LogInfo($"Successfully sent Gmail invitation to {recipientEmail}");
-            return (true, null);
         }
         catch (Google.GoogleApiException ex)
         {
             this.loggingService.LogError($"Gmail API error: {ex.HttpStatusCode} - {ex.Message}", ex);
-            return (false, $"Gmail error: {ex.Message}\n\nPlease ensure Gmail API is enabled in Google Cloud Console and you've re-authorized after adding the Gmail scope.");
+            return (false, $"Gmail error: {ex.Message}\n\nPlease ensure Gmail API is enabled in Google Cloud Console and you've re-authorized after adding the Gmail scope.", null);
         }
         catch (Exception ex)
         {
             this.loggingService.LogError($"Failed to send Gmail invitation to {recipientEmail}", ex);
-            return (false, $"Failed to send invitation: {ex.Message}");
+            return (false, $"Failed to send invitation: {ex.Message}", null);
         }
     }
 
