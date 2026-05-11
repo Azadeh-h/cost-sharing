@@ -45,9 +45,16 @@ CostSharingApp/
 
 | Command | What It Does |
 |---------|-------------|
-| `dotnet test CostSharingApp/tests/CostSharingApp.Tests/CostSharingApp.Tests.csproj` | Run all 88 tests |
-| `dotnet build CostSharingApp/src/CostSharingApp/CostSharingApp.csproj` | Build the MAUI app |
-| `dotnet restore CostSharingApp/` | Restore NuGet packages |
+| `just validate` | Quick health check: build + 88 tests |
+| `just check` | Full health check: restore + build + test |
+| `just build-app` | Build full MAUI Android APK |
+| `just test-log` | Run tests with trx evidence output |
+| `just setup-emulator` | Create Android AVD (one-time) |
+| `just boot-emulator` | Boot headless emulator (quick boot) |
+| `just launch-app` | Build + deploy + launch app on emulator |
+| `just screenshot "label"` | Capture emulator screenshot |
+| `just smoke-test` | ADB-scripted navigation + screenshots |
+| `just stop-emulator` | Graceful shutdown (saves snapshot) |
 
 ## Architecture Decisions
 

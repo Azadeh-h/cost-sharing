@@ -124,3 +124,6 @@ secrets.json
 ## Build outputs
 output/
 dist/
+
+## Agent harness evidence
+scratch/
