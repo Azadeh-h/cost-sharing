@@ -103,3 +103,77 @@ The `specs/001-cost-sharing-app/quickstart.md` describes an aspirational archite
 - Run: `cd CostSharingApp && dotnet test tests/CostSharingApp.Tests/CostSharingApp.Tests.csproj`
 
 <!-- USER CONTENT END -->
+
+
+## Agent Execution Loop
+
+All code-change tasks must follow this loop:
+
+1. Planner defines minimal scope
+2. Implementer applies smallest change
+3. Verifier runs `just validate`
+
+IF validation passes:
+    → proceed to Domain Validation (if applicable)
+    → mark task as COMPLETE
+
+IF validation fails:
+    → retry ONCE with minimal fix
+
+IF still failing:
+    → STOP and return failure summary
+
+Maximum retries: 2
+
+
+## Multi-Agent Roles
+
+- **Planner**: Defines minimal scope and plan
+- **Implementer**: Applies code changes within allowed scope
+- **Verifier**: Runs `just validate` and evaluates results
+- **Auditor**: Validates financial/domain correctness
+
+### Execution Order
+
+planner → implementer → verifier → (auditor if domain logic)
+
+
+## Domain Validation
+
+For changes affecting business logic, the following must hold:
+
+- Total expense = sum of splits
+- Debt simplification preserves net balances
+- Settlements reduce debt correctly
+- No negative or phantom balances
+- Rounding is deterministic
+
+Failure of any invariant = task failure (even if tests pass)
+
+
+## Stop Conditions
+
+Agent must stop and escalate if:
+
+- More than 2 retries fail
+- More than 5 files affected
+- Platform/UI code required unexpectedly
+- Domain invariant unclear
+- Environment cannot self-heal
+
+Never continue blindly beyond these conditions.
+
+
+
+## Task Output Format
+
+Each task must return:
+
+{
+  "task": "<description>",
+  "files_changed": [...],
+  "commands": ["just validate"],
+  "result": "pass | fail | domain-fail",
+  "retries": 0-2,
+  "notes": "<summary>"
+}

@@ -465,3 +465,7 @@ doctor:
         echo "⚠️  $issues issue(s) found — see fix commands above"
         exit 1
     fi
+
+
+harness task:
+    bash scripts/harness.sh "{{task}}"

@@ -94,3 +94,89 @@ See `docs/project-rules/harness.md` for the full agent harness specification (wh
 ## Difficulty Ledger
 
 See `docs/project-rules/difficulty-ledger.md`. Every time you hit friction — confusing errors, missing tools, undocumented gotchas — log it there. Then fix it. Encoded fixes compound velocity.
+
+
+## Execution Loop (Mandatory)
+
+For any code change:
+
+1. Identify minimal set of files to modify
+2. Apply the smallest possible change
+3. Run `just validate`
+4. If validation passes → STOP
+5. If validation fails:
+   - Inspect failure output
+   - Retry ONCE with minimal fix
+6. If still failing → STOP and summarize root cause
+
+Never perform more than 2 modification attempts per task.
+
+## Allowed Write Scope
+
+Agents may ONLY modify:
+- CostSharingApp/src/CostSharing.Core/**
+- CostSharingApp/tests/CostSharingApp.Tests/**
+
+## Restricted Areas
+
+Do NOT modify unless explicitly instructed:
+- Views/
+- Platforms/Android/
+- Resources/
+- build / publish / keystore config
+
+
+## Domain Invariants (Must Always Hold)
+
+- Total expense = sum of all participant splits
+- Debt simplification must preserve net balances
+- Settlement must reduce outstanding balances
+- No negative or “phantom” debt creation
+- Decimal calculations must be deterministic
+
+If these are violated → task is FAILED even if tests pass
+
+
+
+## Task Output (Required)
+
+Each task must output:
+
+- Files changed
+- Commands executed
+- Test result (pass/fail)
+- Retry count
+- Final status
+
+Example:
+{
+  "files": ["SplitCalculationService.cs"],
+  "commands": ["just validate"],
+  "result": "pass",
+  "retries": 1
+}
+
+
+
+## Stop Conditions
+
+The agent must stop and request human input if:
+
+- Changes affect more than 5 files
+- Tests fail after 2 attempts
+- Domain invariants are unclear
+- Changes involve platform-specific code
+
+Do not continue autonomously in these cases.
+
+
+## Multi-Agent Flow
+
+Default execution order for non-trivial tasks:
+1. planner
+2. implementer
+3. verifier
+4. auditor (only for financial/domain logic changes)
+
+The verifier must approve before a task is considered complete.
+The auditor is required for changes involving split calculation, debt calculation, settlements, or Min-Cash-Flow logic.
