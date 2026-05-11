@@ -1,12 +1,12 @@
 # Agent Harness
 
-**Version**: 1.0.0
+**Version**: 2.0.0
 **Created**: 2026-05-11
-**Maturity Level**: L3
+**Maturity Level**: L4
 **Project Type**: mobile (.NET MAUI — Android only)
 
 ## Purpose
-Enable agents to iterate on the CostSharingApp — a .NET MAUI mobile app with local SQLite storage — using a build → test → observe cycle in 30–60 second loops. At L3, agents can also boot an Android emulator, deploy and launch the app, drive UI interactions via ADB, and capture screenshot evidence.
+Enable agents to iterate on the CostSharingApp — a .NET MAUI mobile app with local SQLite storage — using a build → test → observe cycle in 30–60 second loops. At L4, the harness self-heals from common environment failures (stale builds, NuGet corruption, orphan emulators, missing SDK packages) so agents never get stuck debugging infrastructure.
 
 ## Boot
 - **Command**: `just check` (or `just validate` for quick runs)
@@ -25,12 +25,14 @@ Enable agents to iterate on the CostSharingApp — a .NET MAUI mobile app with l
   - Build: `just build`
   - Test: `just test`
   - Test with evidence: `just test-log`
-  - Full check (restore + build + test): `just check`
+  - Full check (restore + build + test, self-healing): `just check`
+  - Quick validate (build + test, self-healing): `just validate`
   - Full MAUI build: `just build-app` (Android target)
   - Clean: `just clean`
-  - Setup emulator AVD (one-time): `just setup-emulator`
-  - Boot emulator (headless): `just boot-emulator`
-  - Build + deploy + launch app: `just launch-app`
+  - Environment diagnostics: `just doctor`
+  - Setup emulator AVD (one-time, auto-installs image): `just setup-emulator`
+  - Boot emulator (headless, auto-kills orphans): `just boot-emulator`
+  - Build + deploy + launch app (auto-retries on crash): `just launch-app`
   - Capture screenshot: `just screenshot "label"`
   - ADB smoke test (3 screens): `just smoke-test`
   - Stop emulator: `just stop-emulator`
@@ -44,6 +46,8 @@ Enable agents to iterate on the CostSharingApp — a .NET MAUI mobile app with l
 - **Smoke test evidence**: `just smoke-test` → 3 screenshots per run in `scratch/evidence/`
 - **Logs**: Build output (`-v detailed`), test results (`--logger "trx"`)
 - **Evidence directory**: `./scratch/evidence/` (gitignored)
+- **Self-healing signals**: `⚠️ Self-healed: <description>` messages in stdout when auto-recovery occurs
+- **Exit codes**: 0 = clean success, 1 = unrecoverable failure, 2 = self-healed and succeeded
 
 ## Maturity Assessment
 | Level | Status | Notes |
@@ -51,10 +55,10 @@ Enable agents to iterate on the CostSharingApp — a .NET MAUI mobile app with l
 | L0: No harness | ⬜ | Agent writes code, human tests |
 | L1: Manual boot + API | ✅ | Human may need to set up .NET SDK; agent runs build + test |
 | L2: Auto boot + API | ✅ | Agent runs `just validate`, named commands, evidence capture |
-| L3: Full interaction + evidence | ✅ | Agent boots emulator (`just boot-emulator`), deploys app (`just launch-app`), drives UI via ADB, captures screenshots |
-| L4: Self-healing | ⬜ | Auto-recovery from stale builds, NuGet cache issues |
+| L3: Full interaction + evidence | ✅ | Agent boots emulator, deploys app, drives UI via ADB, captures screenshots |
+| L4: Self-healing | ✅ | Auto-recovery: stale builds, NuGet cache, orphan emulators, missing SDK, crash retry. `just doctor` for diagnostics |
 
-Current: **L3** — Agent runs `just validate` (build + 88 tests), boots emulator (`just boot-emulator`), deploys and launches app (`just launch-app`), captures screenshots (`just screenshot`), runs ADB-scripted smoke tests (`just smoke-test`). 15 named commands via justfile.
+Current: **L4** — All L3 capabilities plus self-healing. `just validate` and `just check` auto-recover from stale builds and NuGet corruption. `just boot-emulator` kills orphan emulators. `just setup-emulator` auto-installs missing system images. `just launch-app` retries on crash. `just doctor` diagnoses full environment. 16 named commands via justfile. Exit codes: 0=success, 1=unrecoverable, 2=self-healed.
 
 ## Validation Checklist
 ### Boot
@@ -85,6 +89,7 @@ Current: **L3** — Agent runs `just validate` (build + 88 tests), boots emulato
 |------|------|--------|------------------------|
 | 2026-05-11 | 006-harness-infrastructure | Initial harness creation with justfile and AGENTS.md | — → L2 |
 | 2026-05-11 | 001-harness-l3 | Added emulator lifecycle: setup, boot, launch, screenshot, smoke-test, stop | L2 → L3 |
+| 2026-05-11 | 002-harness-l4 | Added self-healing: auto-recovery for builds, NuGet, emulator, SDK, crash retry. Added `just doctor`. Structured exit codes (0/1/2) | L3 → L4 |
 
 <!-- USER CONTENT START -->
 <!-- Project-specific harness notes, custom boot sequences, domain-specific setup -->

@@ -1,0 +1,481 @@
+diff --git a/AGENTS.md b/AGENTS.md
+index 77a4ac8..6597de0 100644
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -45,17 +45,25 @@ CostSharingApp/
+ 
+ | Command | What It Does |
+ |---------|-------------|
+-| `just validate` | Quick health check: build + 88 tests |
+-| `just check` | Full health check: restore + build + test |
++| `just validate` | Quick health check: build + 88 tests (self-heals stale builds) |
++| `just check` | Full health check: restore + build + test (self-heals NuGet corruption) |
++| `just doctor` | Diagnose full environment: .NET, SDK, emulator, AVD, ADB, NuGet |
+ | `just build-app` | Build full MAUI Android APK |
+ | `just test-log` | Run tests with trx evidence output |
+-| `just setup-emulator` | Create Android AVD (one-time) |
+-| `just boot-emulator` | Boot headless emulator (quick boot) |
+-| `just launch-app` | Build + deploy + launch app on emulator |
++| `just setup-emulator` | Create Android AVD (auto-installs missing system image) |
++| `just boot-emulator` | Boot headless emulator (auto-kills orphan emulators) |
++| `just launch-app` | Build + deploy + launch app (retries on crash) |
+ | `just screenshot "label"` | Capture emulator screenshot |
+ | `just smoke-test` | ADB-scripted navigation + screenshots |
+ | `just stop-emulator` | Graceful shutdown (saves snapshot) |
+ 
++### Exit Codes
++
++All self-healing recipes use structured exit codes:
++- **0**: Clean success
++- **1**: Unrecoverable failure
++- **2**: Self-healed and succeeded (check `⚠️ Self-healed:` messages in output)
++
+ ## Architecture Decisions
+ 
+ - **MVVM**: ViewModels use `CommunityToolkit.Mvvm` with `[ObservableProperty]` and `[RelayCommand]`
+diff --git a/docs/project-rules/harness.md b/docs/project-rules/harness.md
+index bdeb2bd..79abb86 100644
+--- a/docs/project-rules/harness.md
++++ b/docs/project-rules/harness.md
+@@ -1,12 +1,12 @@
+ # Agent Harness
+ 
+-**Version**: 1.0.0
++**Version**: 2.0.0
+ **Created**: 2026-05-11
+-**Maturity Level**: L3
++**Maturity Level**: L4
+ **Project Type**: mobile (.NET MAUI — Android only)
+ 
+ ## Purpose
+-Enable agents to iterate on the CostSharingApp — a .NET MAUI mobile app with local SQLite storage — using a build → test → observe cycle in 30–60 second loops. At L3, agents can also boot an Android emulator, deploy and launch the app, drive UI interactions via ADB, and capture screenshot evidence.
++Enable agents to iterate on the CostSharingApp — a .NET MAUI mobile app with local SQLite storage — using a build → test → observe cycle in 30–60 second loops. At L4, the harness self-heals from common environment failures (stale builds, NuGet corruption, orphan emulators, missing SDK packages) so agents never get stuck debugging infrastructure.
+ 
+ ## Boot
+ - **Command**: `just check` (or `just validate` for quick runs)
+@@ -25,12 +25,14 @@ Enable agents to iterate on the CostSharingApp — a .NET MAUI mobile app with l
+   - Build: `just build`
+   - Test: `just test`
+   - Test with evidence: `just test-log`
+-  - Full check (restore + build + test): `just check`
++  - Full check (restore + build + test, self-healing): `just check`
++  - Quick validate (build + test, self-healing): `just validate`
+   - Full MAUI build: `just build-app` (Android target)
+   - Clean: `just clean`
+-  - Setup emulator AVD (one-time): `just setup-emulator`
+-  - Boot emulator (headless): `just boot-emulator`
+-  - Build + deploy + launch app: `just launch-app`
++  - Environment diagnostics: `just doctor`
++  - Setup emulator AVD (one-time, auto-installs image): `just setup-emulator`
++  - Boot emulator (headless, auto-kills orphans): `just boot-emulator`
++  - Build + deploy + launch app (auto-retries on crash): `just launch-app`
+   - Capture screenshot: `just screenshot "label"`
+   - ADB smoke test (3 screens): `just smoke-test`
+   - Stop emulator: `just stop-emulator`
+@@ -44,6 +46,8 @@ Enable agents to iterate on the CostSharingApp — a .NET MAUI mobile app with l
+ - **Smoke test evidence**: `just smoke-test` → 3 screenshots per run in `scratch/evidence/`
+ - **Logs**: Build output (`-v detailed`), test results (`--logger "trx"`)
+ - **Evidence directory**: `./scratch/evidence/` (gitignored)
++- **Self-healing signals**: `⚠️ Self-healed: <description>` messages in stdout when auto-recovery occurs
++- **Exit codes**: 0 = clean success, 1 = unrecoverable failure, 2 = self-healed and succeeded
+ 
+ ## Maturity Assessment
+ | Level | Status | Notes |
+@@ -51,10 +55,10 @@ Enable agents to iterate on the CostSharingApp — a .NET MAUI mobile app with l
+ | L0: No harness | ⬜ | Agent writes code, human tests |
+ | L1: Manual boot + API | ✅ | Human may need to set up .NET SDK; agent runs build + test |
+ | L2: Auto boot + API | ✅ | Agent runs `just validate`, named commands, evidence capture |
+-| L3: Full interaction + evidence | ✅ | Agent boots emulator (`just boot-emulator`), deploys app (`just launch-app`), drives UI via ADB, captures screenshots |
+-| L4: Self-healing | ⬜ | Auto-recovery from stale builds, NuGet cache issues |
++| L3: Full interaction + evidence | ✅ | Agent boots emulator, deploys app, drives UI via ADB, captures screenshots |
++| L4: Self-healing | ✅ | Auto-recovery: stale builds, NuGet cache, orphan emulators, missing SDK, crash retry. `just doctor` for diagnostics |
+ 
+-Current: **L3** — Agent runs `just validate` (build + 88 tests), boots emulator (`just boot-emulator`), deploys and launches app (`just launch-app`), captures screenshots (`just screenshot`), runs ADB-scripted smoke tests (`just smoke-test`). 15 named commands via justfile.
++Current: **L4** — All L3 capabilities plus self-healing. `just validate` and `just check` auto-recover from stale builds and NuGet corruption. `just boot-emulator` kills orphan emulators. `just setup-emulator` auto-installs missing system images. `just launch-app` retries on crash. `just doctor` diagnoses full environment. 16 named commands via justfile. Exit codes: 0=success, 1=unrecoverable, 2=self-healed.
+ 
+ ## Validation Checklist
+ ### Boot
+@@ -85,6 +89,7 @@ Current: **L3** — Agent runs `just validate` (build + 88 tests), boots emulato
+ |------|------|--------|------------------------|
+ | 2026-05-11 | 006-harness-infrastructure | Initial harness creation with justfile and AGENTS.md | — → L2 |
+ | 2026-05-11 | 001-harness-l3 | Added emulator lifecycle: setup, boot, launch, screenshot, smoke-test, stop | L2 → L3 |
++| 2026-05-11 | 002-harness-l4 | Added self-healing: auto-recovery for builds, NuGet, emulator, SDK, crash retry. Added `just doctor`. Structured exit codes (0/1/2) | L3 → L4 |
+ 
+ <!-- USER CONTENT START -->
+ <!-- Project-specific harness notes, custom boot sequences, domain-specific setup -->
+diff --git a/justfile b/justfile
+index 7e8d94e..ce94014 100644
+--- a/justfile
++++ b/justfile
+@@ -1,5 +1,7 @@
+-# Cost-Sharing App — Agent Harness Commands
++# Cost-Sharing App — Agent Harness Commands (L4 Self-Healing)
+ # See docs/project-rules/harness.md for full harness documentation
++#
++# Exit codes: 0 = clean success, 1 = unrecoverable failure, 2 = self-healed and succeeded
+ 
+ app_dir := "CostSharingApp"
+ test_proj := app_dir / "tests/CostSharingApp.Tests/CostSharingApp.Tests.csproj"
+@@ -7,11 +9,13 @@ app_proj := app_dir / "src/CostSharingApp/CostSharingApp.csproj"
+ evidence_dir := "scratch/evidence"
+ 
+ # Emulator lifecycle
+-avd_name     := "cost-sharing-test"
+-android_home := env("ANDROID_HOME", env("HOME") / "Library/Android/sdk")
+-emulator_bin := android_home / "emulator/emulator"
+-app_package  := "com.costsharingapp.mobile"
+-sys_image    := "system-images;android-35;google_apis;arm64-v8a"
++avd_name       := "cost-sharing-test"
++android_home   := env("ANDROID_HOME", env("HOME") / "Library/Android/sdk")
++emulator_bin   := android_home / "emulator/emulator"
++sdkmanager_bin := android_home / "cmdline-tools/latest/bin/sdkmanager"
++avdmanager_bin := android_home / "cmdline-tools/latest/bin/avdmanager"
++app_package    := "com.costsharingapp.mobile"
++sys_image      := "system-images;android-35;google_apis;arm64-v8a"
+ 
+ # List available commands
+ default:
+@@ -42,44 +46,128 @@ build-app:
+ clean:
+     cd {{app_dir}} && dotnet clean
+ 
+-# Full health check: restore + build + test
+-check: restore build test
++# Full health check with self-healing: restore + build + test (auto-recovers NuGet corruption)
++check:
++    #!/usr/bin/env bash
++    set -uo pipefail
++    healed=0
++
++    # Try restore first
++    set +e
++    restore_out=$(cd {{app_dir}} && dotnet restore 2>&1)
++    rc=$?
++    set -e
++
++    if [ $rc -ne 0 ]; then
++        if echo "$restore_out" | grep -qiE "NU1301|NU1101|NU1403|corrupt|cache"; then
++            echo "⚠️ Self-healed: NuGet cache issue detected — force-restoring"
++            cd {{app_dir}} && dotnet restore --force-evaluate
++            healed=1
++        else
++            echo "❌ Restore failed (unrecoverable):"
++            echo "$restore_out"
++            exit 1
++        fi
++    fi
++
++    # Build
++    set +e
++    build_out=$(cd {{app_dir}} && dotnet build tests/CostSharingApp.Tests/CostSharingApp.Tests.csproj 2>&1)
++    rc=$?
++    set -e
++
++    if [ $rc -ne 0 ]; then
++        echo "⚠️ Self-healed: Build failed — cleaning and rebuilding"
++        cd {{app_dir}} && dotnet clean 2>/dev/null
++        find {{app_dir}} -type d \( -name bin -o -name obj \) -exec rm -rf {} + 2>/dev/null || true
++        cd {{app_dir}} && dotnet restore && dotnet build tests/CostSharingApp.Tests/CostSharingApp.Tests.csproj
++        healed=1
++    fi
++
++    # Test
++    dotnet test {{test_proj}}
++
++    if [ $healed -eq 1 ]; then
++        echo "✅ Check passed (self-healed)"
++        exit 2
++    fi
++    echo "✅ Check passed"
++
++# Quick validate with self-healing: build + test (auto-recovers stale builds)
++validate:
++    #!/usr/bin/env bash
++    set -uo pipefail
++    healed=0
++
++    set +e
++    build_out=$(cd {{app_dir}} && dotnet build tests/CostSharingApp.Tests/CostSharingApp.Tests.csproj 2>&1)
++    rc=$?
++    set -e
++
++    if [ $rc -ne 0 ]; then
++        echo "⚠️ Self-healed: Stale build detected — cleaning and rebuilding"
++        cd {{app_dir}} && dotnet clean 2>/dev/null
++        find {{app_dir}} -type d \( -name bin -o -name obj \) -exec rm -rf {} + 2>/dev/null || true
++        cd {{app_dir}} && dotnet build tests/CostSharingApp.Tests/CostSharingApp.Tests.csproj
++        healed=1
++    fi
++
++    dotnet test {{test_proj}}
+ 
+-# Quick validate: build + test (skip restore)
+-validate: build test
++    if [ $healed -eq 1 ]; then
++        echo "✅ Validate passed (self-healed)"
++        exit 2
++    fi
++    echo "✅ Validate passed"
+ 
+-# --- Emulator Lifecycle (L3 Harness) ---
++# --- Emulator Lifecycle (L4 Self-Healing Harness) ---
+ 
+-# Create AVD if it doesn't exist (one-time setup)
++# Create AVD if it doesn't exist; auto-installs missing system image
+ setup-emulator:
+     #!/usr/bin/env bash
+     set -euo pipefail
++    healed=0
++
+     if [ ! -x "{{emulator_bin}}" ]; then
+         echo "❌ Emulator not found at {{emulator_bin}}"
+         echo "   Set ANDROID_HOME or install Android SDK emulator package"
+         exit 1
+     fi
++
+     if {{emulator_bin}} -list-avds 2>/dev/null | grep -q "{{avd_name}}"; then
+         echo "✅ AVD '{{avd_name}}' already exists"
+-    else
+-        echo "Creating AVD '{{avd_name}}'..."
+-        if [ ! -d "{{android_home}}/system-images/android-35/google_apis/arm64-v8a" ]; then
++        exit 0
++    fi
++
++    # Auto-install system image if missing
++    if [ ! -d "{{android_home}}/system-images/android-35/google_apis/arm64-v8a" ]; then
++        if [ -x "{{sdkmanager_bin}}" ]; then
++            echo "⚠️ Self-healed: System image missing — installing via sdkmanager"
++            yes 2>/dev/null | "{{sdkmanager_bin}}" --licenses >/dev/null 2>&1 || true
++            "{{sdkmanager_bin}}" "{{sys_image}}"
++            healed=1
++        else
+             echo "❌ System image not found: {{sys_image}}"
+-            echo "   Install with: sdkmanager '{{sys_image}}'"
++            echo "   Fix: {{sdkmanager_bin}} '{{sys_image}}'"
+             exit 1
+         fi
+-        echo "no" | avdmanager create avd \
+-            --name "{{avd_name}}" \
+-            --package "{{sys_image}}" \
+-            --device "pixel_7" \
+-            --force
+-        echo "✅ AVD '{{avd_name}}' created"
+     fi
+ 
+-# Boot emulator (headless, quick boot)
++    echo "Creating AVD '{{avd_name}}'..."
++    echo "no" | "{{avdmanager_bin}}" create avd \
++        --name "{{avd_name}}" \
++        --package "{{sys_image}}" \
++        --device "pixel_7" \
++        --force
++    echo "✅ AVD '{{avd_name}}' created"
++    if [ $healed -eq 1 ]; then exit 2; fi
++
++# Boot emulator (headless); auto-kills orphan emulators matching our AVD
+ boot-emulator:
+     #!/usr/bin/env bash
+     set -euo pipefail
++    healed=0
++
+     if ! command -v adb >/dev/null 2>&1; then
+         echo "❌ ADB not found. Install Android SDK platform-tools and add to PATH."
+         exit 1
+@@ -89,14 +177,29 @@ boot-emulator:
+         echo "   Set ANDROID_HOME or install Android SDK emulator package"
+         exit 1
+     fi
++
++    # Check for running emulator — if it's ours, accept it; if orphan, kill it
+     if adb devices 2>/dev/null | grep -q "emulator"; then
+-        echo "✅ Emulator already running"
+-        exit 0
++        serial=$(adb devices 2>/dev/null | grep "emulator" | head -1 | awk '{print $1}')
++        set +e
++        avd_check=$(adb -s "$serial" emu avd name 2>/dev/null | head -1 | tr -d '\r')
++        set -e
++        if [ "$avd_check" = "{{avd_name}}" ]; then
++            echo "✅ Emulator already running (AVD: {{avd_name}})"
++            exit 0
++        else
++            echo "⚠️ Self-healed: Orphan emulator detected (AVD: '$avd_check') — killing"
++            adb -s "$serial" emu kill 2>/dev/null || true
++            sleep 3
++            healed=1
++        fi
+     fi
++
+     if ! {{emulator_bin}} -list-avds 2>/dev/null | grep -q "{{avd_name}}"; then
+         echo "❌ AVD '{{avd_name}}' not found. Run 'just setup-emulator' first."
+         exit 1
+     fi
++
+     echo "Booting emulator..."
+     {{emulator_bin}} @{{avd_name}} -no-window -no-audio -no-boot-anim \
+         -gpu swiftshader_indirect &
+@@ -113,11 +216,14 @@ boot-emulator:
+     adb shell input keyevent 82
+     sleep 2
+     echo "✅ Emulator ready (booted in ${elapsed}s)"
++    if [ $healed -eq 1 ]; then exit 2; fi
+ 
+-# Build, deploy, and launch the app on emulator
++# Build, deploy, and launch the app; retries once on crash
+ launch-app:
+     #!/usr/bin/env bash
+     set -euo pipefail
++    healed=0
++
+     if ! command -v adb >/dev/null 2>&1; then
+         echo "❌ ADB not found. Install Android SDK platform-tools and add to PATH."
+         exit 1
+@@ -126,14 +232,52 @@ launch-app:
+         echo "❌ No emulator running. Run 'just boot-emulator' first."
+         exit 1
+     fi
++
++    launch_once() {
++        local launcher
++        launcher=$(adb shell cmd package resolve-activity --brief \
++            -c android.intent.category.LAUNCHER {{app_package}} 2>/dev/null | tail -1)
++        adb shell am start -n "$launcher"
++        sleep 3
++        # Check if app process is alive
++        if adb shell pidof {{app_package}} >/dev/null 2>&1; then
++            return 0
++        else
++            return 1
++        fi
++    }
++
+     echo "Building and deploying..."
+     dotnet build {{app_proj}} -f net9.0-android -t:Install \
+         -p:AndroidAttachDebugger=false
+     echo "Launching app..."
+-    # Discover the LAUNCHER activity and start it directly (monkey is unreliable)
+-    launcher=$(adb shell cmd package resolve-activity --brief -c android.intent.category.LAUNCHER {{app_package}} | tail -1)
+-    adb shell am start -n "$launcher"
+-    sleep 5
++
++    set +e
++    launch_once
++    rc=$?
++    set -e
++
++    if [ $rc -ne 0 ]; then
++        echo "⚠️ Self-healed: App crashed on launch — uninstalling and redeploying"
++        adb uninstall {{app_package}} 2>/dev/null || true
++        dotnet build {{app_proj}} -f net9.0-android -t:Install \
++            -p:AndroidAttachDebugger=false
++        set +e
++        launch_once
++        rc=$?
++        set -e
++        if [ $rc -ne 0 ]; then
++            echo "❌ App crashed again after clean deploy — unrecoverable"
++            exit 1
++        fi
++        healed=1
++    fi
++
++    sleep 2
++    if [ $healed -eq 1 ]; then
++        echo "✅ App launched on emulator (self-healed)"
++        exit 2
++    fi
+     echo "✅ App launched on emulator"
+ 
+ # Capture screenshot (optional label)
+@@ -209,3 +353,92 @@ stop-emulator:
+     adb emu kill
+     sleep 3
+     echo "✅ Emulator stopped (snapshot saved)"
++
++# --- Diagnostics (L4 Harness) ---
++
++# Diagnose full environment and suggest fixes
++doctor:
++    #!/usr/bin/env bash
++    set -uo pipefail
++    issues=0
++    echo "🩺 Harness Doctor — Environment Diagnostics"
++    echo "============================================"
++    echo ""
++
++    # 1. .NET SDK
++    if command -v dotnet >/dev/null 2>&1; then
++        ver=$(dotnet --version 2>/dev/null)
++        echo "✅ .NET SDK: $ver"
++    else
++        echo "❌ .NET SDK: not found"
++        echo "   Fix: Install from https://dotnet.microsoft.com/download"
++        issues=$((issues + 1))
++    fi
++
++    # 2. Android SDK
++    if [ -d "{{android_home}}" ]; then
++        echo "✅ Android SDK: {{android_home}}"
++    else
++        echo "❌ Android SDK: not found at {{android_home}}"
++        echo "   Fix: Install Android Studio or set ANDROID_HOME"
++        issues=$((issues + 1))
++    fi
++
++    # 3. Emulator binary
++    if [ -x "{{emulator_bin}}" ]; then
++        emu_ver=$("{{emulator_bin}}" -version 2>/dev/null | head -1 || echo "unknown")
++        echo "✅ Emulator: $emu_ver"
++    else
++        echo "❌ Emulator: not found at {{emulator_bin}}"
++        echo "   Fix: {{sdkmanager_bin}} 'emulator'"
++        issues=$((issues + 1))
++    fi
++
++    # 4. ADB
++    if command -v adb >/dev/null 2>&1; then
++        adb_ver=$(adb version 2>/dev/null | head -1)
++        echo "✅ ADB: $adb_ver"
++    else
++        echo "❌ ADB: not found"
++        echo "   Fix: {{sdkmanager_bin}} 'platform-tools'"
++        issues=$((issues + 1))
++    fi
++
++    # 5. System image
++    if [ -d "{{android_home}}/system-images/android-35/google_apis/arm64-v8a" ]; then
++        echo "✅ System image: {{sys_image}}"
++    else
++        echo "❌ System image: {{sys_image}} not installed"
++        echo "   Fix: {{sdkmanager_bin}} '{{sys_image}}'"
++        issues=$((issues + 1))
++    fi
++
++    # 6. AVD
++    if [ -x "{{emulator_bin}}" ] && {{emulator_bin}} -list-avds 2>/dev/null | grep -q "{{avd_name}}"; then
++        echo "✅ AVD: {{avd_name}}"
++    else
++        echo "❌ AVD: '{{avd_name}}' not found"
++        echo "   Fix: just setup-emulator"
++        issues=$((issues + 1))
++    fi
++
++    # 7. NuGet restore
++    set +e
++    restore_out=$(cd {{app_dir}} && dotnet restore --verbosity quiet 2>&1)
++    rc=$?
++    set -e
++    if [ $rc -eq 0 ]; then
++        echo "✅ NuGet restore: packages OK"
++    else
++        echo "❌ NuGet restore: failed"
++        echo "   Fix: just check  (auto-heals NuGet issues)"
++        issues=$((issues + 1))
++    fi
++
++    echo ""
++    if [ $issues -eq 0 ]; then
++        echo "🎉 All 7 checks passed — environment is healthy"
++    else
++        echo "⚠️  $issues issue(s) found — see fix commands above"
++        exit 1
++    fi

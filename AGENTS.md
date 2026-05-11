@@ -45,16 +45,24 @@ CostSharingApp/
 
 | Command | What It Does |
 |---------|-------------|
-| `just validate` | Quick health check: build + 88 tests |
-| `just check` | Full health check: restore + build + test |
+| `just validate` | Quick health check: build + 88 tests (self-heals stale builds) |
+| `just check` | Full health check: restore + build + test (self-heals NuGet corruption) |
+| `just doctor` | Diagnose full environment: .NET, SDK, emulator, AVD, ADB, NuGet |
 | `just build-app` | Build full MAUI Android APK |
 | `just test-log` | Run tests with trx evidence output |
-| `just setup-emulator` | Create Android AVD (one-time) |
-| `just boot-emulator` | Boot headless emulator (quick boot) |
-| `just launch-app` | Build + deploy + launch app on emulator |
+| `just setup-emulator` | Create Android AVD (auto-installs missing system image) |
+| `just boot-emulator` | Boot headless emulator (auto-kills orphan emulators) |
+| `just launch-app` | Build + deploy + launch app (retries on crash) |
 | `just screenshot "label"` | Capture emulator screenshot |
 | `just smoke-test` | ADB-scripted navigation + screenshots |
 | `just stop-emulator` | Graceful shutdown (saves snapshot) |
+
+### Exit Codes
+
+All self-healing recipes use structured exit codes:
+- **0**: Clean success
+- **1**: Unrecoverable failure
+- **2**: Self-healed and succeeded (check `⚠️ Self-healed:` messages in output)
 
 ## Architecture Decisions
 
