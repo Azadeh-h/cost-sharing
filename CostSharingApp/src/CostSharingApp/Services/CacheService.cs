@@ -41,6 +41,7 @@ public class CacheService : ICacheService
         await this.database.CreateTableAsync<CostSharing.Core.Models.Debt>();
         await this.database.CreateTableAsync<CostSharing.Core.Models.Settlement>();
         await this.database.CreateTableAsync<CostSharing.Core.Models.Invitation>();
+        await this.database.CreateTableAsync<CostSharing.Core.Models.PendingInvitation>();
     }
 
     /// <summary>

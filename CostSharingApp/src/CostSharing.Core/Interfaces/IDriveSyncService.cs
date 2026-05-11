@@ -67,4 +67,14 @@ public interface IDriveSyncService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The number of groups imported.</returns>
     Task<int> DiscoverSharedGroupsAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Removes a user's permission from a group folder when they are removed from the group.
+    /// </summary>
+    /// <param name="folderId">The Google Drive folder ID.</param>
+    /// <param name="memberEmail">The email of the member to remove access for.</param>
+    /// <param name="userId">The current user ID (must be folder owner/admin).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if permission was removed successfully, false otherwise.</returns>
+    Task<bool> RemoveFolderPermissionAsync(string folderId, string memberEmail, Guid userId, CancellationToken cancellationToken = default);
 }

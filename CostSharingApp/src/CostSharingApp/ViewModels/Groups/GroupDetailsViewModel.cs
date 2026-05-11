@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
+using CostSharing.Core.Interfaces;
 using CostSharing.Core.Models;
 using CostSharing.Core.Services;
 using CostSharingApp.Services;
@@ -20,8 +21,10 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     private readonly ISettlementService settlementService;
     private readonly IDriveSyncService driveSyncService;
     private readonly ILoggingService loggingService;
+    private readonly IInvitationLinkingService? invitationLinkingService;
     private Group? group;
     private ObservableCollection<MemberViewModel> members = new();
+    private ObservableCollection<PendingInvitation> pendingInvitations = new();
     private ObservableCollection<Expense> expenses = new();
     private ObservableCollection<DebtViewModel> debts = new();
     private ObservableCollection<Settlement> settlements = new();
@@ -47,7 +50,8 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
         IDebtCalculationService debtCalculationService,
         ISettlementService settlementService,
         ILoggingService loggingService,
-        IDriveSyncService driveSyncService)
+        IDriveSyncService driveSyncService,
+        IInvitationLinkingService? invitationLinkingService = null)
     {
         this.groupService = groupService;
         this.authService = authService;
@@ -57,12 +61,14 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
         this.settlementService = settlementService;
         this.loggingService = loggingService;
         this.driveSyncService = driveSyncService;
+        this.invitationLinkingService = invitationLinkingService;
 
         this.DeleteGroupCommand = new Command(async () => await this.DeleteGroupAsync(), () => this.isAdmin);
         this.EditGroupCommand = new Command(async () => await this.EditGroupAsync(), () => this.isAdmin);
         this.InviteMemberCommand = new Command(async () => await this.InviteMemberAsync(), () => this.isAdmin);
         this.AddExpenseCommand = new Command(async () => await this.AddExpenseAsync());
         this.EditExpenseCommand = new Command<Expense>(async (expense) => await this.EditExpenseAsync(expense));
+        this.CancelInvitationCommand = new Command<PendingInvitation>(async (invitation) => await this.CancelInvitationAsync(invitation), (_) => this.isAdmin);
         this.RemoveMemberCommand = new Command<MemberViewModel>(async (member) => await this.RemoveMemberAsync(member), (_) => this.isAdmin);
         this.RefreshCommand = new Command(async () => await this.RefreshAsync());
         this.SyncGroupCommand = new Command(async () => await this.SyncNowAsync());
@@ -93,6 +99,25 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
     }
 
     /// <summary>
+    /// Gets the collection of pending invitations.
+    /// </summary>
+    public ObservableCollection<PendingInvitation> PendingInvitations
+    {
+        get => this.pendingInvitations;
+        set => this.SetProperty(ref this.pendingInvitations, value);
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether there are pending invitations.
+    /// </summary>
+    public bool HasPendingInvitations => this.pendingInvitations.Count > 0;
+
+    /// <summary>
+    /// Gets the command to cancel a pending invitation.
+    /// </summary>
+    public ICommand CancelInvitationCommand { get; }
+
+    /// <summary>
     /// Gets or sets the error message.
     /// </summary>
     public string ErrorMessage
@@ -115,6 +140,7 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
                 ((Command)this.EditGroupCommand).ChangeCanExecute();
                 ((Command)this.InviteMemberCommand).ChangeCanExecute();
                 ((Command<MemberViewModel>)this.RemoveMemberCommand).ChangeCanExecute();
+                ((Command<PendingInvitation>)this.CancelInvitationCommand).ChangeCanExecute();
             }
         }
     }
@@ -293,6 +319,7 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
             // Clear all previous data first
             this.Group = null;
             this.Members.Clear();
+            this.PendingInvitations.Clear();
             this.Expenses.Clear();
             this.Debts.Clear();
             this.Settlements.Clear();
@@ -342,6 +369,19 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
                     AddedByName = addedByUser?.Name ?? "Unknown Admin",
                 };
                 this.Members.Add(memberVm);
+            }
+
+            // Load pending invitations
+            if (this.invitationLinkingService != null)
+            {
+                var pendingInvites = await this.invitationLinkingService.GetPendingInvitationsAsync(groupId);
+                this.PendingInvitations.Clear();
+                foreach (var invite in pendingInvites)
+                {
+                    this.PendingInvitations.Add(invite);
+                }
+
+                this.OnPropertyChanged(nameof(HasPendingInvitations));
             }
 
             // Load expenses
@@ -677,6 +717,19 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
 
         try
         {
+            // Reload pending invitations
+            if (this.invitationLinkingService != null)
+            {
+                var pendingInvites = await this.invitationLinkingService.GetPendingInvitationsAsync(this.group.Id);
+                this.PendingInvitations.Clear();
+                foreach (var invite in pendingInvites)
+                {
+                    this.PendingInvitations.Add(invite);
+                }
+
+                this.OnPropertyChanged(nameof(HasPendingInvitations));
+            }
+
             // Reload expenses
             var expenses = await this.expenseService.GetGroupExpensesAsync(this.group.Id);
             this.Expenses.Clear();
@@ -699,6 +752,56 @@ public partial class GroupDetailsViewModel : BaseViewModel, IQueryAttributable
         catch (Exception ex)
         {
             this.ErrorMessage = this.errorService.HandleException(ex, "refreshing group data");
+        }
+    }
+
+    /// <summary>
+    /// Cancels a pending invitation.
+    /// </summary>
+    /// <param name="invitation">The invitation to cancel.</param>
+    /// <returns>Task for async operation.</returns>
+    private async Task CancelInvitationAsync(PendingInvitation? invitation)
+    {
+        if (invitation == null || this.invitationLinkingService == null)
+        {
+            return;
+        }
+
+        var confirmed = await Shell.Current.DisplayAlert(
+            "Cancel Invitation",
+            $"Are you sure you want to cancel the invitation to {invitation.InvitedEmail}?",
+            "Yes, Cancel",
+            "No");
+
+        if (!confirmed)
+        {
+            return;
+        }
+
+        try
+        {
+            var currentUser = this.authService.GetCurrentUser();
+            if (currentUser == null)
+            {
+                return;
+            }
+
+            var success = await this.invitationLinkingService.CancelInvitationAsync(invitation.Id, currentUser.Id);
+            if (success)
+            {
+                this.PendingInvitations.Remove(invitation);
+                this.OnPropertyChanged(nameof(HasPendingInvitations));
+                await Shell.Current.DisplayAlert("Success", "Invitation cancelled.", "OK");
+            }
+            else
+            {
+                await Shell.Current.DisplayAlert("Error", "Failed to cancel invitation. You may not have permission.", "OK");
+            }
+        }
+        catch (Exception ex)
+        {
+            this.loggingService.LogError("Failed to cancel invitation", ex);
+            await Shell.Current.DisplayAlert("Error", "An error occurred while cancelling the invitation.", "OK");
         }
     }
 

@@ -268,28 +268,107 @@ public class DriveSyncService : IDriveSyncService
 
             foreach (var email in memberEmails)
             {
-                var permission = new Permission
+                try
                 {
-                    Type = "user",
-                    Role = "writer",
-                    EmailAddress = email,
-                };
+                    var permission = new Permission
+                    {
+                        Type = "user",
+                        Role = "writer",
+                        EmailAddress = email,
+                    };
 
-                var permissionRequest = this.driveService.Permissions.Create(permission, folderId);
-                permissionRequest.SendNotificationEmail = true;
-                permissionRequest.EmailMessage = "You've been added to a CostSharing group. You now have access to the shared Drive folder.";
+                    var permissionRequest = this.driveService.Permissions.Create(permission, folderId);
+                    permissionRequest.SendNotificationEmail = true;
+                    permissionRequest.EmailMessage = "You've been added to a CostSharing group. You now have access to the shared Drive folder.";
 
-                await this.errorHandler.ExecuteWithRetryAsync(
-                    async () => await permissionRequest.ExecuteAsync(cancellationToken),
-                    cancellationToken);
+                    await this.errorHandler.ExecuteWithRetryAsync(
+                        async () => await permissionRequest.ExecuteAsync(cancellationToken),
+                        cancellationToken);
 
-                this.loggingService.LogInfo($"Granted access to {email} for folder {folderId}");
+                    this.loggingService.LogInfo($"Granted access to {email} for folder {folderId}");
+                }
+                catch (Google.GoogleApiException ex) when (ex.HttpStatusCode == System.Net.HttpStatusCode.BadRequest && 
+                    ex.Message.Contains("already has access"))
+                {
+                    // User already has access - this is fine, just log it
+                    this.loggingService.LogInfo($"User {email} already has access to folder {folderId}");
+                }
+                catch (Exception ex)
+                {
+                    // Log individual email failures but continue with others
+                    this.loggingService.LogWarning($"Failed to grant access to {email} for folder {folderId}: {ex.Message}");
+                }
             }
         }
         catch (Exception ex)
         {
             this.loggingService.LogError($"Failed to set permissions for folder {folderId}", ex);
             throw;
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task<bool> RemoveFolderPermissionAsync(
+        string folderId,
+        string memberEmail,
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            this.loggingService.LogInfo($"Removing permission for {memberEmail} from folder {folderId}");
+
+            await this.InitializeDriveServiceAsync(userId, cancellationToken);
+
+            if (this.driveService == null)
+            {
+                throw new InvalidOperationException("Drive service not initialized");
+            }
+
+            // List all permissions on the folder to find the one for this email
+            var permissionsRequest = this.driveService.Permissions.List(folderId);
+            permissionsRequest.Fields = "permissions(id, emailAddress, role, type)";
+
+            var permissions = await this.errorHandler.ExecuteWithRetryAsync(
+                async () => await permissionsRequest.ExecuteAsync(cancellationToken),
+                cancellationToken);
+
+            if (permissions?.Permissions == null)
+            {
+                this.loggingService.LogWarning($"No permissions found for folder {folderId}");
+                return false;
+            }
+
+            // Find the permission for this specific email
+            var normalizedEmail = memberEmail.Trim().ToLowerInvariant();
+            var permissionToRemove = permissions.Permissions.FirstOrDefault(p =>
+                p.Type == "user" &&
+                !string.IsNullOrEmpty(p.EmailAddress) &&
+                p.EmailAddress.Trim().ToLowerInvariant() == normalizedEmail);
+
+            if (permissionToRemove == null)
+            {
+                this.loggingService.LogInfo($"No permission found for {memberEmail} on folder {folderId}");
+                return true; // Already no permission, consider it success
+            }
+
+            // Delete the permission
+            var deleteRequest = this.driveService.Permissions.Delete(folderId, permissionToRemove.Id);
+            await this.errorHandler.ExecuteWithRetryAsync(
+                async () =>
+                {
+                    await deleteRequest.ExecuteAsync(cancellationToken);
+                    return true;
+                },
+                cancellationToken);
+
+            this.loggingService.LogInfo($"Successfully removed access for {memberEmail} from folder {folderId}");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            this.loggingService.LogError($"Failed to remove permission for {memberEmail} from folder {folderId}", ex);
+            return false;
         }
     }
 

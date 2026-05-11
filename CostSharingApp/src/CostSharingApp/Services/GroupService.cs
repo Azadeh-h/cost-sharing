@@ -1,5 +1,5 @@
 using CostSharing.Core.Models;
-
+using CostSharing.Core.Services;
 
 namespace CostSharingApp.Services;
 
@@ -11,6 +11,7 @@ public class GroupService : IGroupService
     private readonly ICacheService cacheService;
     private readonly IAuthService authService;
     private readonly ILoggingService loggingService;
+    private readonly IServiceProvider serviceProvider;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GroupService"/> class.
@@ -18,14 +19,17 @@ public class GroupService : IGroupService
     /// <param name="cacheService">Cache service.</param>
     /// <param name="authService">Auth service.</param>
     /// <param name="loggingService">Logging service.</param>
+    /// <param name="serviceProvider">Service provider for lazy resolution.</param>
     public GroupService(
         ICacheService cacheService,
         IAuthService authService,
-        ILoggingService loggingService)
+        ILoggingService loggingService,
+        IServiceProvider serviceProvider)
     {
         this.cacheService = cacheService;
         this.authService = authService;
         this.loggingService = loggingService;
+        this.serviceProvider = serviceProvider;
     }
 
     /// <summary>
@@ -295,8 +299,14 @@ public class GroupService : IGroupService
                 return false;
             }
 
-            // Delete member
+            // Get user email for Drive permission removal
+            var userToRemove = await this.authService.GetUserByIdAsync(userId);
+
+            // Delete member from local database
             await this.cacheService.DeleteAsync(memberToRemove);
+
+            // Unshare Drive folder with the removed member
+            await this.UnshareFolderWithMemberAsync(groupId, userToRemove?.Email, currentUser.Id);
 
             this.loggingService.LogInfo($"User {userId} removed from group {groupId}");
             return true;
@@ -384,6 +394,60 @@ public class GroupService : IGroupService
         {
             this.loggingService.LogError("Failed to add member", ex);
             return (false, $"Failed to add member: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Unshares the group's Google Drive folder with a removed member.
+    /// </summary>
+    /// <param name="groupId">The group ID.</param>
+    /// <param name="memberEmail">The email of the member to remove access for.</param>
+    /// <param name="currentUserId">The current user ID (must be group admin/folder owner).</param>
+    /// <returns>Task for async operation.</returns>
+    private async Task UnshareFolderWithMemberAsync(Guid groupId, string? memberEmail, Guid currentUserId)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(memberEmail) || memberEmail.EndsWith("@device.local"))
+            {
+                this.loggingService.LogInfo("Skipping Drive unshare - no valid email for removed member");
+                return;
+            }
+
+            // Get the group to find its Drive folder ID
+            var group = await this.GetGroupAsync(groupId);
+            if (group == null || string.IsNullOrEmpty(group.DriveFolderId))
+            {
+                this.loggingService.LogInfo($"No Drive folder associated with group {groupId}, skipping unshare");
+                return;
+            }
+
+            // Resolve DriveSyncService lazily to avoid circular dependency
+            var driveSyncService = this.serviceProvider.GetService<IDriveSyncService>();
+            if (driveSyncService == null)
+            {
+                this.loggingService.LogWarning("DriveSyncService not available, skipping folder unshare");
+                return;
+            }
+
+            var success = await driveSyncService.RemoveFolderPermissionAsync(
+                group.DriveFolderId,
+                memberEmail,
+                currentUserId);
+
+            if (success)
+            {
+                this.loggingService.LogInfo($"Successfully unshared Drive folder with {memberEmail}");
+            }
+            else
+            {
+                this.loggingService.LogWarning($"Failed to unshare Drive folder with {memberEmail}");
+            }
+        }
+        catch (Exception ex)
+        {
+            // Don't fail the member removal if Drive unsharing fails
+            this.loggingService.LogError($"Error unsharing Drive folder with member: {ex.Message}", ex);
         }
     }
 }

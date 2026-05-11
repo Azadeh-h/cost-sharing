@@ -26,8 +26,8 @@ public interface IGmailInvitationService
     /// <param name="inviterName">The name of the person sending the invitation.</param>
     /// <param name="userId">The user ID for authentication.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A tuple containing success status and optional error message.</returns>
-    Task<(bool Success, string? ErrorMessage)> SendInvitationAsync(
+    /// <returns>A tuple containing success status, optional error message, and optional message ID.</returns>
+    Task<(bool Success, string? ErrorMessage, string? MessageId)> SendInvitationAsync(
         string recipientEmail,
         string recipientName,
         string groupName,

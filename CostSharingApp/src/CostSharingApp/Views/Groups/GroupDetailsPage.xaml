@@ -123,10 +123,53 @@
             </CollectionView>
 
             <!-- Add member button -->
-            <Button Text="Add Member"
+            <Button Text="Invite Member"
                     Command="{Binding InviteMemberCommand}"
                     IsVisible="{Binding IsAdmin}"
                     Margin="0,8,0,0" />
+
+            <!-- Pending Invitations section -->
+            <StackLayout IsVisible="{Binding HasPendingInvitations}" Margin="0,16,0,0">
+                <Label Text="Pending Invitations" FontSize="16" FontAttributes="Bold" TextColor="{StaticResource Gray600}" />
+                
+                <CollectionView ItemsSource="{Binding PendingInvitations}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:PendingInvitation">
+                            <Frame Margin="0,0,0,8" Padding="12" CornerRadius="8" BackgroundColor="#FFF3E0" BorderColor="#FF9800">
+                                <Grid ColumnDefinitions="Auto,*,Auto">
+                                    <Label Grid.Column="0"
+                                           Text="✉️"
+                                           FontSize="20"
+                                           VerticalOptions="Center"
+                                           Margin="0,0,12,0" />
+                                    <StackLayout Grid.Column="1" VerticalOptions="Center">
+                                        <Label Text="{Binding InvitedEmail}"
+                                               FontSize="14"
+                                               FontAttributes="Bold" />
+                                        <Label Text="{Binding InvitedAt, StringFormat='Invited: {0:MMM dd, yyyy}'}"
+                                               TextColor="{StaticResource Gray500}"
+                                               FontSize="12" />
+                                        <Label Text="Pending"
+                                               TextColor="#FF9800"
+                                               FontSize="12"
+                                               FontAttributes="Italic" />
+                                    </StackLayout>
+                                    <Button Grid.Column="2"
+                                            Text="Cancel"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GroupDetailsViewModel}}, Path=CancelInvitationCommand}"
+                                            CommandParameter="{Binding .}"
+                                            BackgroundColor="#D32F2F"
+                                            TextColor="White"
+                                            FontSize="12"
+                                            Padding="8,4"
+                                            VerticalOptions="Center"
+                                            IsVisible="{Binding Source={RelativeSource AncestorType={x:Type vm:GroupDetailsViewModel}}, Path=IsAdmin}" />
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </StackLayout>
 
             <!-- Google Integration Section -->
             <StackLayout Spacing="8" Margin="0,8,0,0" IsVisible="{Binding IsAdmin}">
