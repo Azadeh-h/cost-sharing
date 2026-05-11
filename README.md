@@ -36,7 +36,7 @@ CostSharingApp/
 │       ├── Converters/             # Value converters
 │       └── Resources/              # Images, styles, colors
 ├── tests/
-│   └── CostSharingApp.Tests/      # Unit tests (40 tests)
+│   └── CostSharingApp.Tests/      # Unit tests (88 tests)
 └── specs/                          # Requirements and task documentation
 ```
 
@@ -87,7 +87,7 @@ cd CostSharingApp
 dotnet test tests/CostSharingApp.Tests/CostSharingApp.Tests.csproj
 ```
 
-All 40 unit tests should pass.
+All 88 unit tests should pass.
 
 #### iOS Simulator
 
@@ -189,7 +189,7 @@ Set `ANDROID_HOME` environment variable to SDK location.
 - **Debt Calculation**: 13 tests (settlements, aggregation, multi-expense)
 - **Debt Simplification**: 11 tests (Min-Cash-Flow algorithm optimization)
 
-**Total: 40 tests, 100% passing**
+**Total: 88 tests, 100% passing**
 
 ### Manual Testing Checklist
 
