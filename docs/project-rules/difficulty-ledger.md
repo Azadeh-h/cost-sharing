@@ -15,8 +15,8 @@ Track friction, fix it, compound velocity. Every entry here is a gift to future 
 | D001 | 2026-05-11 | Full MAUI app build fails on macOS due to Xcode version mismatch (needs 26.0, have 26.2) — iOS/MacCatalyst targets block the build | HIGH | open | Workaround: build tests only (`dotnet test`). Fix: remove non-Android targets (branch `004-gmail-invite-sync`) |
 | D002 | 2026-05-11 | No agent bootstrap doc — new sessions must explore codebase from scratch | MEDIUM | encoded | Created `AGENTS.md` with quick-start, structure, and conventions |
 | D003 | 2026-05-11 | Specs describe aspirational architecture (backend API, React, Google Drive) that doesn't exist — agents waste time investigating phantom components | MEDIUM | encoded | Added warning in `AGENTS.md` |
-| D004 | 2026-05-11 | No automation recipes — agents must discover and type dotnet CLI commands manually | MEDIUM | open | Plan: create `justfile` with named commands (test, build, validate, etc.) |
-| D005 | 2026-05-11 | Test count in README says 40, actual count is 88 — misleading for agents | LOW | open | Plan: fix README test count |
+| D004 | 2026-05-11 | No automation recipes — agents must discover and type dotnet CLI commands manually | MEDIUM | encoded | Created `justfile` with 9 named commands (test, validate, build-app, etc.) |
+| D005 | 2026-05-11 | Test count in README says 40, actual count is 88 — misleading for agents | LOW | encoded | Fixed README: 40 → 88 in 3 locations |
 
 ## Velocity Log
 
@@ -30,7 +30,7 @@ Track how long phases take to measure compounding.
 
 Things that would make development faster if they existed:
 
-- [ ] `justfile` with named recipes (test, validate, build-app, clean, check)
+- [x] `justfile` with named recipes (test, validate, build-app, clean, check)
 - [ ] Pre-commit hook that runs tests
 - [ ] CI pipeline for automated PR validation
 - [ ] Appium/UI test harness for L3 maturity
