@@ -130,8 +130,9 @@ launch-app:
     dotnet build {{app_proj}} -f net9.0-android -t:Install \
         -p:AndroidAttachDebugger=false
     echo "Launching app..."
-    adb shell monkey -p {{app_package}} \
-        -c android.intent.category.LAUNCHER 1
+    # Discover the LAUNCHER activity and start it directly (monkey is unreliable)
+    launcher=$(adb shell cmd package resolve-activity --brief -c android.intent.category.LAUNCHER {{app_package}} | tail -1)
+    adb shell am start -n "$launcher"
     sleep 5
     echo "✅ App launched on emulator"
 
@@ -171,8 +172,8 @@ smoke-test:
     fi
 
     echo "=== Smoke Test: Step 1 — Launch app ==="
-    adb shell monkey -p {{app_package}} \
-        -c android.intent.category.LAUNCHER 1
+    launcher=$(adb shell cmd package resolve-activity --brief -c android.intent.category.LAUNCHER {{app_package}} | tail -1)
+    adb shell am start -n "$launcher"
     sleep 5
     adb exec-out screencap -p > "{{evidence_dir}}/smoke-01-launch-$ts.png"
     echo "📸 smoke-01-launch captured"
