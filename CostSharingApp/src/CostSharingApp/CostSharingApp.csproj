@@ -1,21 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net9.0-android;net9.0-ios;net9.0-maccatalyst</TargetFrameworks>
-		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net9.0-windows10.0.19041.0</TargetFrameworks>
-		<!-- Uncomment to also build the tizen app. You will need to install tizen by following this: https://github.com/Samsung/Tizen.NET -->
-		<!-- <TargetFrameworks>$(TargetFrameworks);net9.0-tizen</TargetFrameworks> -->
-
-		<!-- Use older iOS SDK version that's compatible with Xcode 26.2 -->
-		<_XamarinSdkRoot>/usr/local/share/dotnet/packs/Microsoft.iOS.Sdk.net9.0_18.0/18.0.9617</_XamarinSdkRoot>
-		<_XamarinMacRoot>/usr/local/share/dotnet/packs/Microsoft.MacCatalyst.Sdk.net9.0_18.0/18.0.9617</_XamarinMacRoot>
-
-		<!-- Note for MacCatalyst:
-		The default runtime is maccatalyst-x64, except in Release config, in which case the default is maccatalyst-x64;maccatalyst-arm64.
-		When specifying both architectures, use the plural <RuntimeIdentifiers> instead of the singular <RuntimeIdentifier>.
-		The Mac App Store will NOT accept apps with ONLY maccatalyst-arm64 indicated;
-		either BOTH runtimes must be indicated or ONLY macatalyst-x64. -->
-		<!-- For example: <RuntimeIdentifiers>maccatalyst-x64;maccatalyst-arm64</RuntimeIdentifiers> -->
+		<TargetFrameworks>net9.0-android</TargetFrameworks>
 
 		<OutputType>Exe</OutputType>
 		<RootNamespace>CostSharingApp</RootNamespace>
@@ -48,15 +34,7 @@
 		<Authors>Cost Sharing Team</Authors>
 		<Copyright>Copyright © 2026</Copyright>
 
-		<!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
-		<WindowsPackageType>None</WindowsPackageType>
-
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
-		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
+		<SupportedOSPlatformVersion>21.0</SupportedOSPlatformVersion>
 	</PropertyGroup>
 
 	<!-- Android Configuration -->
@@ -74,20 +52,6 @@
 		<AndroidSigningKeyPass>$(AndroidKeyPassword)</AndroidSigningKeyPass>
 		<AndroidSigningStorePass>$(AndroidStorePassword)</AndroidSigningStorePass>
 		<AndroidPackageFormat>apk</AndroidPackageFormat>
-	</PropertyGroup>
-
-	<!-- iOS Provisioning Configuration (T111) -->
-	<PropertyGroup Condition="'$(Configuration)' == 'Release' AND '$(TargetFramework)' == 'net9.0-ios'">
-		<CodesignKey>iPhone Distribution</CodesignKey>
-		<CodesignProvision>Cost Sharing App Store</CodesignProvision>
-		<CodesignEntitlements>Platforms/iOS/Entitlements.plist</CodesignEntitlements>
-	</PropertyGroup>
-
-	<!-- Windows Packaging Configuration (T112) -->
-	<PropertyGroup Condition="'$(Configuration)' == 'Release' AND '$(TargetFramework)' == 'net9.0-windows10.0.19041.0'">
-		<WindowsPackageType>MSIX</WindowsPackageType>
-		<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
-		<GenerateAppxPackageOnBuild>true</GenerateAppxPackageOnBuild>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -129,7 +93,7 @@
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		  <PrivateAssets>all</PrivateAssets>
 		</PackageReference>
-		<PackageReference Include="Xamarin.AndroidX.Browser" Version="1.8.0.9" Condition="'$(TargetFramework)' == 'net9.0-android'" />
+		<PackageReference Include="Xamarin.AndroidX.Browser" Version="1.8.0.9" />
 	</ItemGroup>
 
 	<ItemGroup>

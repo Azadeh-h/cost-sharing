@@ -3,7 +3,7 @@
 **Version**: 1.0.0
 **Created**: 2026-05-11
 **Maturity Level**: L2
-**Project Type**: mobile (.NET MAUI — cross-platform: Android, iOS, MacCatalyst)
+**Project Type**: mobile (.NET MAUI — Android only)
 
 ## Purpose
 Enable agents to iterate on the CostSharingApp — a .NET MAUI mobile app with local SQLite storage — using a build → test → observe cycle in 30–60 second loops.
@@ -13,7 +13,7 @@ Enable agents to iterate on the CostSharingApp — a .NET MAUI mobile app with l
 - **Health Check**: `just test`
 - **Expected Response**: `Passed!` (exit code 0)
 - **Boot Time**: ~10-30s (build + test)
-- **Known Issue**: Full MAUI app build (`just build-app`) may fail on macOS if Xcode version doesn't match SDK requirements. Tests always work regardless.
+- **Known Issue**: N/A — Android-only build has no Xcode dependency.
 - **Idempotent**: Yes — rebuild is safe; `dotnet build` is incremental
 
 > **Note**: This is a mobile app with no backend server. There is no HTTP health endpoint.
