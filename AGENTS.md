@@ -2,7 +2,7 @@
 
 ## What This Repo Is
 
-A .NET MAUI Android app for tracking shared expenses and settling debts among groups. Local-first with SQLite storage, Google OAuth for identity, MVVM architecture.
+A .NET MAUI mobile app for tracking shared expenses and settling debts among groups. Local-first with SQLite storage, Google OAuth for identity, MVVM architecture.
 
 > **Important**: The `specs/001-cost-sharing-app/` folder describes an aspirational full-stack architecture (backend API + React + Google Drive). The **actual implementation** is a standalone .NET MAUI mobile app with local SQLite only. The harness reflects the real codebase, not the specs.
 
@@ -30,11 +30,11 @@ CostSharingApp/
 │   │   ├── Interfaces/             # Service contracts
 │   │   ├── Services/               # Business services
 │   │   └── Algorithms/             # Debt simplification (Min-Cash-Flow)
-│   └── CostSharingApp/             # MAUI app (net9.0-android)
+│   └── CostSharingApp/             # MAUI app (net9.0-android + net9.0-ios + net9.0-maccatalyst)
 │       ├── Views/                  # XAML pages
 │       ├── ViewModels/             # MVVM ViewModels
 │       ├── Services/               # App services (Auth, Expense, Group, Sync)
-│       ├── Platforms/Android/      # Android-specific code
+│       ├── Platforms/              # Platform-specific code (Android, iOS, etc.)
 │       └── Resources/              # Images, styles, fonts
 ├── tests/
 │   └── CostSharingApp.Tests/      # 88 xUnit tests (net9.0)
