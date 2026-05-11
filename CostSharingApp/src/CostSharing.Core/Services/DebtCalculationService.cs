@@ -93,7 +93,7 @@ public class DebtCalculationService : IDebtCalculationService
                     break;
                 }
 
-                var availableCredit = creditor.Value;
+                var availableCredit = balances[creditor.Key];
                 if (availableCredit < 0.01m)
                 {
                     continue;
@@ -204,7 +204,7 @@ public class DebtCalculationService : IDebtCalculationService
                     break;
                 }
 
-                var availableCredit = creditor.Value;
+                var availableCredit = balances[creditor.Key];
                 if (availableCredit < 0.01m)
                 {
                     continue;

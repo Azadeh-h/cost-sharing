@@ -354,4 +354,54 @@ public class DebtCalculationServiceTests
         Assert.Single(debts);
         Assert.Equal(50m, debts[0].Amount);
     }
+
+    [Fact]
+    public void CalculateDebts_MultipleCreditors_DistributesDebtCorrectly()
+    {
+        // Arrange — Two payers (creditors), two debtors
+        // Exposes stale-snapshot bug: creditors list is not refreshed between debtors
+        var user4Id = Guid.NewGuid();
+
+        // Alice pays $60, split between Bob ($30) and Charlie ($30)
+        var expense1 = new Expense
+        {
+            Id = Guid.NewGuid(),
+            GroupId = this.groupId,
+            PaidBy = this.user1Id, // Alice
+            TotalAmount = 60m
+        };
+        var splits1 = new List<ExpenseSplit>
+        {
+            new ExpenseSplit { ExpenseId = expense1.Id, UserId = this.user2Id, Amount = 30m },
+            new ExpenseSplit { ExpenseId = expense1.Id, UserId = this.user3Id, Amount = 30m },
+        };
+
+        // Dave pays $60, split between Bob ($30) and Charlie ($30)
+        var expense2 = new Expense
+        {
+            Id = Guid.NewGuid(),
+            GroupId = this.groupId,
+            PaidBy = user4Id, // Dave
+            TotalAmount = 60m
+        };
+        var splits2 = new List<ExpenseSplit>
+        {
+            new ExpenseSplit { ExpenseId = expense2.Id, UserId = this.user2Id, Amount = 30m },
+            new ExpenseSplit { ExpenseId = expense2.Id, UserId = this.user3Id, Amount = 30m },
+        };
+
+        // Act
+        // Balances: Alice +60, Dave +60, Bob -60, Charlie -60
+        var debts = this.service.CalculateDebts(
+            new List<Expense> { expense1, expense2 },
+            splits1.Concat(splits2).ToList());
+
+        // Assert — each creditor should receive exactly their credit amount
+        var aliceCredit = debts.Where(d => d.CreditorId == this.user1Id).Sum(d => d.Amount);
+        var daveCredit = debts.Where(d => d.CreditorId == user4Id).Sum(d => d.Amount);
+
+        Assert.Equal(60m, aliceCredit); // Alice is owed exactly $60
+        Assert.Equal(60m, daveCredit);  // Dave is owed exactly $60
+        Assert.Equal(120m, debts.Sum(d => d.Amount)); // Total debt conserved
+    }
 }
