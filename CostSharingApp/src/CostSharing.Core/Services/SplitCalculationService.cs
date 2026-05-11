@@ -104,24 +104,21 @@ public class SplitCalculationService : ISplitCalculationService
         var splits = new List<ExpenseSplit>();
         var totalAssigned = 0m;
 
-        // Calculate amounts based on percentages
-        var orderedUsers = percentages.OrderByDescending(p => p.Value).ToList();
+        // Filter out 0% participants before loop so remainder targets the last non-zero participant
+        var orderedUsers = percentages
+            .Where(p => p.Value > 0)
+            .OrderByDescending(p => p.Value)
+            .ToList();
 
         for (int i = 0; i < orderedUsers.Count; i++)
         {
             var userId = orderedUsers[i].Key;
             var percentage = orderedUsers[i].Value;
 
-            // Skip 0% participants
-            if (percentage <= 0)
-            {
-                continue;
-            }
-
             decimal amount;
             if (i == orderedUsers.Count - 1)
             {
-                // Last participant gets remainder to handle rounding
+                // Last non-zero participant gets remainder to handle rounding
                 amount = totalAmount - totalAssigned;
             }
             else

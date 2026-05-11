@@ -226,4 +226,45 @@ public class SplitCalculationServiceTests
         // Assert
         Assert.Empty(result);
     }
+
+    [Fact]
+    public void CalculateCustomSplit_ZeroParticipantWithIndivisibleAmount_SumsToTotal()
+    {
+        // Arrange — reproduces rounding loss when 0% participant is last in sorted order
+        var totalAmount = 10m;
+        var percentages = new Dictionary<Guid, decimal>
+        {
+            { Guid.NewGuid(), 33.33m },
+            { Guid.NewGuid(), 33.33m },
+            { Guid.NewGuid(), 33.34m },
+            { Guid.NewGuid(), 0m },
+        };
+
+        // Act
+        var result = this.service.CalculateCustomSplit(totalAmount, percentages);
+
+        // Assert
+        Assert.Equal(3, result.Count);
+        Assert.Equal(10m, result.Sum(s => s.Amount));
+    }
+
+    [Fact]
+    public void CalculateCustomSplit_ZeroParticipantWithOddCents_SumsToTotal()
+    {
+        // Arrange
+        var totalAmount = 100.01m;
+        var percentages = new Dictionary<Guid, decimal>
+        {
+            { Guid.NewGuid(), 50m },
+            { Guid.NewGuid(), 50m },
+            { Guid.NewGuid(), 0m },
+        };
+
+        // Act
+        var result = this.service.CalculateCustomSplit(totalAmount, percentages);
+
+        // Assert
+        Assert.Equal(2, result.Count);
+        Assert.Equal(100.01m, result.Sum(s => s.Amount));
+    }
 }
