@@ -37,11 +37,31 @@ domain_check() {
 }
 
 
+run_review() {
+  echo ">> Running AI review sensor..." | tee -a "$LOG_FILE"
+  set +e
+  bash scripts/review.sh HEAD >> "$LOG_FILE" 2>&1
+  rc=$?
+  set -e
+  if [ $rc -eq 2 ]; then
+    echo ">> ⚠️ Review unavailable (non-blocking)" | tee -a "$LOG_FILE"
+    return 0
+  elif [ $rc -eq 1 ]; then
+    echo ">> ❌ Review found critical issues" | tee -a "$LOG_FILE"
+    return 0  # non-blocking in v1 — warn only
+  else
+    echo ">> ✅ Review passed" | tee -a "$LOG_FILE"
+    return 0
+  fi
+}
+
+
 while [ $ATTEMPT -lt $MAX_RETRIES ]; do
   ATTEMPT=$((ATTEMPT+1))
   echo "== Attempt $ATTEMPT ==" | tee -a "$LOG_FILE"
 
   if run_validate; then
+    run_review
     if domain_check; then
       RESULT="pass"
       break

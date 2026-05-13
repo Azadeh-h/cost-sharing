@@ -131,11 +131,12 @@ Maximum retries: 2
 - **Planner**: Defines minimal scope and plan
 - **Implementer**: Applies code changes within allowed scope
 - **Verifier**: Runs `just validate` and evaluates results
+- **Reviewer**: AI code review sensor — automatic inferential feedback (non-blocking)
 - **Auditor**: Validates financial/domain correctness
 
 ### Execution Order
 
-planner → implementer → verifier → (auditor if domain logic)
+planner → implementer → verifier → reviewer → (auditor if domain logic)
 
 
 ## Domain Validation

@@ -48,6 +48,7 @@ CostSharingApp/
 | `just validate` | Quick health check: build + 88 tests (self-heals stale builds) |
 | `just check` | Full health check: restore + build + test (self-heals NuGet corruption) |
 | `just doctor` | Diagnose full environment: .NET, SDK, emulator, AVD, ADB, NuGet |
+| `just review` | AI code review sensor: semantic review of changed files (30s timeout, non-blocking) |
 | `just build-app` | Build full MAUI Android APK |
 | `just test-log` | Run tests with trx evidence output |
 | `just setup-emulator` | Create Android AVD (auto-installs missing system image) |
@@ -176,7 +177,9 @@ Default execution order for non-trivial tasks:
 1. planner
 2. implementer
 3. verifier
-4. auditor (only for financial/domain logic changes)
+4. reviewer (automatic — inferential feedback sensor)
+5. auditor (only for financial/domain logic changes)
 
 The verifier must approve before a task is considered complete.
+The reviewer runs automatically after verification — non-blocking in v1 (warns but doesn't fail).
 The auditor is required for changes involving split calculation, debt calculation, settlements, or Min-Cash-Flow logic.

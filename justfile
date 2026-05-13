@@ -224,7 +224,7 @@ boot-emulator:
     fi
 
     echo "Booting emulator..."
-    {{emulator_bin}} @{{avd_name}} -no-window -no-audio -no-boot-anim \
+    {{emulator_bin}} @{{avd_name}} -no-audio -no-boot-anim \
         -gpu swiftshader_indirect &
     adb wait-for-device
     elapsed=0
@@ -466,6 +466,17 @@ doctor:
         exit 1
     fi
 
+# AI code review sensor — inferential feedback on changed files (30s timeout, non-blocking)
+review base="HEAD":
+    #!/usr/bin/env bash
+    set +e
+    bash scripts/review.sh "{{base}}"
+    rc=$?
+    if [ $rc -eq 1 ]; then
+        echo "⚠️ Review found critical issues (non-blocking in v1)"
+        exit 0
+    fi
+    exit 0
 
 harness task:
     bash scripts/harness.sh "{{task}}"
