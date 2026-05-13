@@ -36,6 +36,7 @@ Enable agents to iterate on the CostSharingApp — a .NET MAUI mobile app with l
   - Capture screenshot: `just screenshot "label"`
   - ADB smoke test (3 screens): `just smoke-test`
   - Stop emulator: `just stop-emulator`
+  - Mutation testing (Stryker.NET): `just mutate` — measures test effectiveness against CostSharing.Core; baseline 64.34%
 - **Auth Strategy**: Google OAuth (persistent profile via `appsettings.json` — client IDs, scopes)
 - **Auth Expiry**: N/A for build/test cycle; OAuth tokens expire for runtime Google Drive features
 - **Auth Detection**: Build/test cycle requires no auth; runtime auth failure surfaces as test assertion failure or exception
@@ -90,6 +91,7 @@ Current: **L4** — All L3 capabilities plus self-healing. `just validate` and `
 | 2026-05-11 | 006-harness-infrastructure | Initial harness creation with justfile and AGENTS.md | — → L2 |
 | 2026-05-11 | 001-harness-l3 | Added emulator lifecycle: setup, boot, launch, screenshot, smoke-test, stop | L2 → L3 |
 | 2026-05-11 | 002-harness-l4 | Added self-healing: auto-recovery for builds, NuGet, emulator, SDK, crash retry. Added `just doctor`. Structured exit codes (0/1/2) | L3 → L4 |
+| 2026-05-13 | 005-mutation-testing | Added `just mutate` command (Stryker.NET mutation testing). Baseline score: 64.34% | L4 → L4 |
 
 <!-- USER CONTENT START -->
 <!-- Project-specific harness notes, custom boot sequences, domain-specific setup -->

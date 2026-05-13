@@ -57,6 +57,7 @@ CostSharingApp/
 | `just screenshot "label"` | Capture emulator screenshot |
 | `just smoke-test` | ADB-scripted navigation + screenshots |
 | `just stop-emulator` | Graceful shutdown (saves snapshot) |
+| `just mutate` | Run Stryker.NET mutation testing against CostSharing.Core (baseline: 64.34%) |
 
 ### Exit Codes
 
@@ -80,6 +81,20 @@ Tests cover core algorithms only (not UI or services):
 - Debt calculation (13 tests)
 - Debt simplification / Min-Cash-Flow (11 tests)
 - Plus additional model and service tests
+
+## Mutation Testing
+
+Run `just mutate` to measure test effectiveness via Stryker.NET. Mutation testing introduces small code changes (mutants) and checks whether tests catch them.
+
+- **Baseline score**: 64.34% (2026-05-13)
+- **Thresholds**: break=60%, low=70%, high=80%
+- **Per-file scores**:
+  - SplitCalculationService: 90.91% 🟢
+  - DebtSimplificationAlgorithm: 61.76% 🟡
+  - DebtCalculationService: 53.95% 🔴
+- **Interpreting results**: Surviving mutants indicate assertion gaps — tests pass despite meaningful code changes. Focus on killed/survived ratio per file. A low score means tests need stronger assertions, not that production code is wrong.
+- **Config**: `CostSharingApp/stryker-config.json`
+- **Reports**: Generated locally in `StrykerOutput/` (gitignored)
 
 ## Working Agreements
 

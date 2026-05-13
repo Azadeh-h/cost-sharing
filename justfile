@@ -23,15 +23,15 @@ default:
 
 # Restore NuGet dependencies
 restore:
-    cd {{app_dir}} && dotnet restore
+    scripts/agent-wrap.sh "restore" bash -c "cd {{app_dir}} && dotnet restore"
 
 # Build the test project (fast health check)
 build:
-    cd {{app_dir}} && dotnet build tests/CostSharingApp.Tests/CostSharingApp.Tests.csproj
+    scripts/agent-wrap.sh "build" bash -c "cd {{app_dir}} && dotnet build tests/CostSharingApp.Tests/CostSharingApp.Tests.csproj"
 
 # Run all tests
 test:
-    dotnet test {{test_proj}}
+    scripts/agent-wrap.sh "test" dotnet test {{test_proj}}
 
 # Run tests with detailed output and trx log
 test-log:
@@ -480,3 +480,9 @@ review base="HEAD":
 
 harness task:
     bash scripts/harness.sh "{{task}}"
+
+# --- Mutation Testing (Quality Sensor) ---
+
+# Run Stryker.NET mutation testing against CostSharing.Core
+mutate:
+    scripts/agent-wrap.sh "mutate" bash -c "cd {{app_dir}} && dotnet tool restore --verbosity quiet && dotnet stryker"
