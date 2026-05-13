@@ -31,7 +31,7 @@ Add an **automated AI code review sensor** that runs after every successful vali
 
 ## Non-Goals
 
-- **Replacing human review** — the sensor augments, not replaces, human judgment for complex decisions
+- **Replacing human review** — the sensor augments, not replaces, human judgment for complex decisions/
 - **Duplicating computational sensors** — no style checking (StyleCop does this), no null warnings (.NET analyzers), no test failures (xUnit)
 - **CI/CD pipeline** — this is local-first. GitHub Actions integration is a future enhancement
 - **Full codebase scanning** — the sensor reviews only *changed* files, not the entire repository

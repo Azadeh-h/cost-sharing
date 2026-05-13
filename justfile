@@ -486,3 +486,9 @@ harness task:
 # Run Stryker.NET mutation testing against CostSharing.Core
 mutate:
     scripts/agent-wrap.sh "mutate" bash -c "cd {{app_dir}} && dotnet tool restore --verbosity quiet && dotnet stryker"
+
+# --- Drift Detection (Health Sensor) ---
+
+# Run all 4 drift sensors: dependencies, coverage, dead code, doc drift
+drift:
+    scripts/drift-scan.sh

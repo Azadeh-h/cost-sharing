@@ -58,6 +58,7 @@ CostSharingApp/
 | `just smoke-test` | ADB-scripted navigation + screenshots |
 | `just stop-emulator` | Graceful shutdown (saves snapshot) |
 | `just mutate` | Run Stryker.NET mutation testing against CostSharing.Core (baseline: 64.34%) |
+| `just drift` | Run 4 drift sensors: dependencies, coverage, dead code, doc drift (JSON report) |
 
 ### Exit Codes
 
@@ -95,6 +96,19 @@ Run `just mutate` to measure test effectiveness via Stryker.NET. Mutation testin
 - **Interpreting results**: Surviving mutants indicate assertion gaps — tests pass despite meaningful code changes. Focus on killed/survived ratio per file. A low score means tests need stronger assertions, not that production code is wrong.
 - **Config**: `CostSharingApp/stryker-config.json`
 - **Reports**: Generated locally in `StrykerOutput/` (gitignored)
+
+## Drift Detection
+
+Run `just drift` to scan for gradual codebase degradation across 4 sensors:
+
+- **Dependencies**: Flags outdated and vulnerable NuGet packages (`dotnet list package --outdated/--vulnerable`)
+- **Coverage**: Per-file line coverage for CostSharing.Core via coverlet (baseline: 79%)
+- **Dead Code**: Identifies unreferenced interfaces in `CostSharing.Core/Interfaces/` (DI-registered interfaces excluded from "dead" status but flagged if untested)
+- **Doc Drift**: Checks documented facts (test count, command count) in AGENTS.md and harness.md against reality
+
+**Output**: Structured JSON to stdout with per-sensor status (✅ healthy / ⚠️ drifting / ❌ critical) and overall verdict.
+
+**Interpreting results**: Each sensor runs independently. "Drifting" means gradual degradation detected — not blocking but worth attention. "Critical" means significant mismatch between documented and actual state.
 
 ## Working Agreements
 
