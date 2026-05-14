@@ -1,0 +1,45 @@
+{
+  "description": "Approved fixtures for end-to-end financial pipeline: expense → split → debt → simplification → settlement → remainder.",
+  "scenarios": [
+    {
+      "name": "DinnerAndTaxi",
+      "description": "Alice pays $150 dinner (even 3-way), Bob pays $90 taxi (60% Alice, 40% Bob). Charlie settles with Alice.",
+      "expenses": [
+        {
+          "paidBy": 0,
+          "totalAmount": 150.00,
+          "splitType": "even",
+          "participants": [0, 1, 2]
+        },
+        {
+          "paidBy": 1,
+          "totalAmount": 90.00,
+          "splitType": "custom",
+          "customPercentages": { "0": 60.00, "1": 40.00 }
+        }
+      ],
+      "expectedSplits": [
+        {
+          "expenseIndex": 0,
+          "amounts": { "0": 50.00, "1": 50.00, "2": 50.00 }
+        },
+        {
+          "expenseIndex": 1,
+          "amounts": { "0": 54.00, "1": 36.00 }
+        }
+      ],
+      "expectedDebts": [
+        { "from": 2, "to": 0, "amount": 46.00 },
+        { "from": 2, "to": 1, "amount": 4.00 }
+      ],
+      "expectedSimplified": [
+        { "from": 2, "to": 0, "amount": 46.00 },
+        { "from": 2, "to": 1, "amount": 4.00 }
+      ],
+      "settlement": { "paidBy": 2, "paidTo": 0, "amount": 46.00 },
+      "expectedPostSettlementDebts": [
+        { "from": 2, "to": 1, "amount": 4.00 }
+      ]
+    }
+  ]
+}
