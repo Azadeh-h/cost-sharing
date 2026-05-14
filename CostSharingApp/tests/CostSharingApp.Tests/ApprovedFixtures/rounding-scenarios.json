@@ -1,0 +1,47 @@
+{
+  "description": "Approved fixtures for split rounding behavior. First participant absorbs remainder in even splits. Last non-zero participant absorbs remainder in custom splits.",
+  "scenarios": [
+    {
+      "name": "EvenSplit_100_by_3",
+      "type": "even",
+      "totalAmount": 100.00,
+      "participantCount": 3,
+      "expectedAmounts": [33.34, 33.33, 33.33]
+    },
+    {
+      "name": "EvenSplit_10_by_3",
+      "type": "even",
+      "totalAmount": 10.00,
+      "participantCount": 3,
+      "expectedAmounts": [3.34, 3.33, 3.33]
+    },
+    {
+      "name": "EvenSplit_1_by_3",
+      "type": "even",
+      "totalAmount": 1.00,
+      "participantCount": 3,
+      "expectedAmounts": [0.34, 0.33, 0.33]
+    },
+    {
+      "name": "EvenSplit_9999_by_7",
+      "type": "even",
+      "totalAmount": 99.99,
+      "participantCount": 7,
+      "expectedAmounts": [14.31, 14.28, 14.28, 14.28, 14.28, 14.28, 14.28]
+    },
+    {
+      "name": "EvenSplit_10001_by_2",
+      "type": "even",
+      "totalAmount": 100.01,
+      "participantCount": 2,
+      "expectedAmounts": [50.00, 50.01]
+    },
+    {
+      "name": "CustomSplit_100_thirds",
+      "type": "custom",
+      "totalAmount": 100.00,
+      "percentages": [33.33, 33.33, 33.34],
+      "expectedAmounts": [33.34, 33.33, 33.33]
+    }
+  ]
+}

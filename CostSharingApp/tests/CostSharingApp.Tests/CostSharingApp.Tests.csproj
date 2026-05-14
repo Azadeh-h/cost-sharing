@@ -29,4 +29,8 @@
     <ProjectReference Include="..\..\src\CostSharing.Core\CostSharing.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="ApprovedFixtures\**\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

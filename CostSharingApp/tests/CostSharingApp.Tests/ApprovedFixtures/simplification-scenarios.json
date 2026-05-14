@@ -1,0 +1,57 @@
+{
+  "description": "Approved fixtures for debt simplification (Min-Cash-Flow greedy matching). Participant indices map to fixed GUIDs in test code.",
+  "scenarios": [
+    {
+      "name": "CircularThreePerson",
+      "description": "A owes B $50, B owes C $30, C owes A $20. Net: A=-30, B=+20, C=+10",
+      "debts": [
+        { "from": 0, "to": 1, "amount": 50.00 },
+        { "from": 1, "to": 2, "amount": 30.00 },
+        { "from": 2, "to": 0, "amount": 20.00 }
+      ],
+      "expectedTransactions": [
+        { "from": 0, "to": 1, "amount": 20.00 },
+        { "from": 0, "to": 2, "amount": 10.00 }
+      ]
+    },
+    {
+      "name": "ComplexFourPerson",
+      "description": "6 debts among 4 people. Net: A=-30, B=0, C=0, D=+30. Collapses to single transaction.",
+      "debts": [
+        { "from": 0, "to": 1, "amount": 40.00 },
+        { "from": 0, "to": 2, "amount": 20.00 },
+        { "from": 1, "to": 2, "amount": 30.00 },
+        { "from": 1, "to": 3, "amount": 10.00 },
+        { "from": 2, "to": 3, "amount": 50.00 },
+        { "from": 3, "to": 0, "amount": 30.00 }
+      ],
+      "expectedTransactions": [
+        { "from": 0, "to": 3, "amount": 30.00 }
+      ]
+    },
+    {
+      "name": "SymmetricTwoDebtors",
+      "description": "U1 and U2 both owe U3 $50 each. Already optimal.",
+      "debts": [
+        { "from": 0, "to": 2, "amount": 50.00 },
+        { "from": 1, "to": 2, "amount": 50.00 }
+      ],
+      "expectedTransactions": [
+        { "from": 0, "to": 2, "amount": 50.00 },
+        { "from": 1, "to": 2, "amount": 50.00 }
+      ]
+    },
+    {
+      "name": "LargeAmounts",
+      "description": "U1 owes U2 $1,234,567.89, U2 owes U3 $987,654.32. Tests decimal precision at scale.",
+      "debts": [
+        { "from": 0, "to": 1, "amount": 1234567.89 },
+        { "from": 1, "to": 2, "amount": 987654.32 }
+      ],
+      "expectedTransactions": [
+        { "from": 0, "to": 2, "amount": 987654.32 },
+        { "from": 0, "to": 1, "amount": 246913.57 }
+      ]
+    }
+  ]
+}
