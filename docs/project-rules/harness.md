@@ -60,7 +60,7 @@ Enable agents to iterate on the CostSharingApp — a .NET MAUI mobile app with l
 | L3: Full interaction + evidence | ✅ | Agent boots emulator, deploys app, drives UI via ADB, captures screenshots |
 | L4: Self-healing | ✅ | Auto-recovery: stale builds, NuGet cache, orphan emulators, missing SDK, crash retry. `just doctor` for diagnostics |
 
-Current: **L4** — All L3 capabilities plus self-healing. `just validate` and `just check` auto-recover from stale builds and NuGet corruption. `just boot-emulator` kills orphan emulators. `just setup-emulator` auto-installs missing system images. `just launch-app` retries on crash. `just doctor` diagnoses full environment. 16 named commands via justfile. Exit codes: 0=success, 1=unrecoverable, 2=self-healed.
+Current: **L4** — All L3 capabilities plus self-healing. `just validate` and `just check` auto-recover from stale builds and NuGet corruption. `just boot-emulator` kills orphan emulators. `just setup-emulator` auto-installs missing system images. `just launch-app` retries on crash. `just doctor` diagnoses full environment. 20 named commands via justfile. Exit codes: 0=success, 1=unrecoverable, 2=self-healed.
 
 ## Validation Checklist
 ### Boot
@@ -102,7 +102,7 @@ Current: **L4** — All L3 capabilities plus self-healing. `just validate` and `
 The `specs/001-cost-sharing-app/quickstart.md` describes an aspirational architecture with a .NET backend API, React frontend, and Google Drive integration. The **actual implementation** is a standalone .NET MAUI mobile app with local SQLite storage only. The harness reflects the real codebase, not the spec.
 
 ### Test Suite
-- 88 xUnit tests in `CostSharingApp/tests/CostSharingApp.Tests/`
+- 91 xUnit tests in `CostSharingApp/tests/CostSharingApp.Tests/`
 - Coverage via `coverlet.collector`
 - Run: `cd CostSharingApp && dotnet test tests/CostSharingApp.Tests/CostSharingApp.Tests.csproj`
 
