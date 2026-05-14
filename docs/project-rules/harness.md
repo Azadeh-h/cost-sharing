@@ -102,7 +102,7 @@ Current: **L4** — All L3 capabilities plus self-healing. `just validate` and `
 The `specs/001-cost-sharing-app/quickstart.md` describes an aspirational architecture with a .NET backend API, React frontend, and Google Drive integration. The **actual implementation** is a standalone .NET MAUI mobile app with local SQLite storage only. The harness reflects the real codebase, not the spec.
 
 ### Test Suite
-- 91 xUnit tests in `CostSharingApp/tests/CostSharingApp.Tests/`
+- 98 xUnit tests in `CostSharingApp/tests/CostSharingApp.Tests/`
 - Coverage via `coverlet.collector`
 - Run: `cd CostSharingApp && dotnet test tests/CostSharingApp.Tests/CostSharingApp.Tests.csproj`
 

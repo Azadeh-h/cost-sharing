@@ -12,10 +12,10 @@ A .NET MAUI Android app for tracking shared expenses and settling debts among gr
 # 1. Verify .NET 9 SDK is installed
 dotnet --version  # expecting 9.x
 
-# 2. Run full validation (build + 91 tests)
+# 2. Run full validation (build + 98 tests)
 cd CostSharingApp && dotnet test tests/CostSharingApp.Tests/CostSharingApp.Tests.csproj
 
-# 3. Expected output: Passed! Failed: 0, Passed: 91
+# 3. Expected output: Passed! Failed: 0, Passed: 98
 ```
 
 **Time to healthy**: ~10 seconds from clone.
@@ -37,7 +37,7 @@ CostSharingApp/
 │       ├── Platforms/Android/      # Android-specific code
 │       └── Resources/              # Images, styles, fonts
 ├── tests/
-│   └── CostSharingApp.Tests/      # 91 xUnit tests (net9.0)
+│   └── CostSharingApp.Tests/      # 98 xUnit tests (net9.0)
 └── specs/                          # Requirements docs (aspirational — see note above)
 ```
 
@@ -45,7 +45,7 @@ CostSharingApp/
 
 | Command | What It Does |
 |---------|-------------|
-| `just validate` | Quick health check: build + 91 tests (self-heals stale builds) |
+| `just validate` | Quick health check: build + 98 tests (self-heals stale builds) |
 | `just check` | Full health check: restore + build + test (self-heals NuGet corruption) |
 | `just doctor` | Diagnose full environment: .NET, SDK, emulator, AVD, ADB, NuGet |
 | `just review` | AI code review sensor: semantic review of changed files (30s timeout, non-blocking) |
