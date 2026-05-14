@@ -23,15 +23,15 @@ default:
 
 # Restore NuGet dependencies
 restore:
-    cd {{app_dir}} && dotnet restore
+    scripts/agent-wrap.sh "restore" bash -c "cd {{app_dir}} && dotnet restore"
 
 # Build the test project (fast health check)
 build:
-    cd {{app_dir}} && dotnet build tests/CostSharingApp.Tests/CostSharingApp.Tests.csproj
+    scripts/agent-wrap.sh "build" bash -c "cd {{app_dir}} && dotnet build tests/CostSharingApp.Tests/CostSharingApp.Tests.csproj"
 
 # Run all tests
 test:
-    dotnet test {{test_proj}}
+    scripts/agent-wrap.sh "test" dotnet test {{test_proj}}
 
 # Run tests with detailed output and trx log
 test-log:
@@ -224,7 +224,7 @@ boot-emulator:
     fi
 
     echo "Booting emulator..."
-    {{emulator_bin}} @{{avd_name}} -no-window -no-audio -no-boot-anim \
+    {{emulator_bin}} @{{avd_name}} -no-audio -no-boot-anim \
         -gpu swiftshader_indirect &
     adb wait-for-device
     elapsed=0
@@ -466,6 +466,29 @@ doctor:
         exit 1
     fi
 
+# AI code review sensor — inferential feedback on changed files (30s timeout, non-blocking)
+review base="HEAD":
+    #!/usr/bin/env bash
+    set +e
+    bash scripts/review.sh "{{base}}"
+    rc=$?
+    if [ $rc -eq 1 ]; then
+        echo "⚠️ Review found critical issues (non-blocking in v1)"
+        exit 0
+    fi
+    exit 0
 
 harness task:
     bash scripts/harness.sh "{{task}}"
+
+# --- Mutation Testing (Quality Sensor) ---
+
+# Run Stryker.NET mutation testing against CostSharing.Core
+mutate:
+    scripts/agent-wrap.sh "mutate" bash -c "cd {{app_dir}} && dotnet tool restore --verbosity quiet && dotnet stryker"
+
+# --- Drift Detection (Health Sensor) ---
+
+# Run all 4 drift sensors: dependencies, coverage, dead code, doc drift
+drift:
+    scripts/drift-scan.sh

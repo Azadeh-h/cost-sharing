@@ -12,10 +12,10 @@ A .NET MAUI Android app for tracking shared expenses and settling debts among gr
 # 1. Verify .NET 9 SDK is installed
 dotnet --version  # expecting 9.x
 
-# 2. Run full validation (build + 88 tests)
+# 2. Run full validation (build + 98 tests)
 cd CostSharingApp && dotnet test tests/CostSharingApp.Tests/CostSharingApp.Tests.csproj
 
-# 3. Expected output: Passed! Failed: 0, Passed: 88
+# 3. Expected output: Passed! Failed: 0, Passed: 98
 ```
 
 **Time to healthy**: ~10 seconds from clone.
@@ -37,7 +37,7 @@ CostSharingApp/
 │       ├── Platforms/Android/      # Android-specific code
 │       └── Resources/              # Images, styles, fonts
 ├── tests/
-│   └── CostSharingApp.Tests/      # 88 xUnit tests (net9.0)
+│   └── CostSharingApp.Tests/      # 98 xUnit tests (net9.0)
 └── specs/                          # Requirements docs (aspirational — see note above)
 ```
 
@@ -45,9 +45,10 @@ CostSharingApp/
 
 | Command | What It Does |
 |---------|-------------|
-| `just validate` | Quick health check: build + 88 tests (self-heals stale builds) |
+| `just validate` | Quick health check: build + 98 tests (self-heals stale builds) |
 | `just check` | Full health check: restore + build + test (self-heals NuGet corruption) |
 | `just doctor` | Diagnose full environment: .NET, SDK, emulator, AVD, ADB, NuGet |
+| `just review` | AI code review sensor: semantic review of changed files (30s timeout, non-blocking) |
 | `just build-app` | Build full MAUI Android APK |
 | `just test-log` | Run tests with trx evidence output |
 | `just setup-emulator` | Create Android AVD (auto-installs missing system image) |
@@ -56,6 +57,8 @@ CostSharingApp/
 | `just screenshot "label"` | Capture emulator screenshot |
 | `just smoke-test` | ADB-scripted navigation + screenshots |
 | `just stop-emulator` | Graceful shutdown (saves snapshot) |
+| `just mutate` | Run Stryker.NET mutation testing against CostSharing.Core (baseline: 64.34%) |
+| `just drift` | Run 4 drift sensors: dependencies, coverage, dead code, doc drift (JSON report) |
 
 ### Exit Codes
 
@@ -79,6 +82,33 @@ Tests cover core algorithms only (not UI or services):
 - Debt calculation (13 tests)
 - Debt simplification / Min-Cash-Flow (11 tests)
 - Plus additional model and service tests
+
+## Mutation Testing
+
+Run `just mutate` to measure test effectiveness via Stryker.NET. Mutation testing introduces small code changes (mutants) and checks whether tests catch them.
+
+- **Baseline score**: 64.34% (2026-05-13)
+- **Thresholds**: break=60%, low=70%, high=80%
+- **Per-file scores**:
+  - SplitCalculationService: 90.91% 🟢
+  - DebtSimplificationAlgorithm: 61.76% 🟡
+  - DebtCalculationService: 53.95% 🔴
+- **Interpreting results**: Surviving mutants indicate assertion gaps — tests pass despite meaningful code changes. Focus on killed/survived ratio per file. A low score means tests need stronger assertions, not that production code is wrong.
+- **Config**: `CostSharingApp/stryker-config.json`
+- **Reports**: Generated locally in `StrykerOutput/` (gitignored)
+
+## Drift Detection
+
+Run `just drift` to scan for gradual codebase degradation across 4 sensors:
+
+- **Dependencies**: Flags outdated and vulnerable NuGet packages (`dotnet list package --outdated/--vulnerable`)
+- **Coverage**: Per-file line coverage for CostSharing.Core via coverlet (baseline: 79%)
+- **Dead Code**: Identifies unreferenced interfaces in `CostSharing.Core/Interfaces/` (DI-registered interfaces excluded from "dead" status but flagged if untested)
+- **Doc Drift**: Checks documented facts (test count, command count) in AGENTS.md and harness.md against reality
+
+**Output**: Structured JSON to stdout with per-sensor status (✅ healthy / ⚠️ drifting / ❌ critical) and overall verdict.
+
+**Interpreting results**: Each sensor runs independently. "Drifting" means gradual degradation detected — not blocking but worth attention. "Critical" means significant mismatch between documented and actual state.
 
 ## Working Agreements
 
@@ -176,7 +206,9 @@ Default execution order for non-trivial tasks:
 1. planner
 2. implementer
 3. verifier
-4. auditor (only for financial/domain logic changes)
+4. reviewer (automatic — inferential feedback sensor)
+5. auditor (only for financial/domain logic changes)
 
 The verifier must approve before a task is considered complete.
+The reviewer runs automatically after verification — non-blocking in v1 (warns but doesn't fail).
 The auditor is required for changes involving split calculation, debt calculation, settlements, or Min-Cash-Flow logic.

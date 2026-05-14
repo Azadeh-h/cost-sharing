@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/stryker-mutator/stryker-net/master/src/Stryker.Core/Stryker.Core/stryker-config.schema.json",
+  "stryker-config": {
+    "project": "CostSharing.Core.csproj",
+    "test-projects": [
+      "./tests/CostSharingApp.Tests/CostSharingApp.Tests.csproj"
+    ],
+    "mutate": [
+      "Services/**/*.cs",
+      "Algorithms/**/*.cs",
+      "!Models/**/*.cs"
+    ],
+    "thresholds": {
+      "high": 80,
+      "low": 70,
+      "break": 60
+    },
+    "reporters": [
+      "html",
+      "progress",
+      "cleartext"
+    ],
+    "concurrency": 4,
+    "language-version": "latest"
+  }
+}
